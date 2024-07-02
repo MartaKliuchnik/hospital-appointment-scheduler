@@ -7,24 +7,24 @@
 3. [Base URL](#base-url)
 4. [API Documentation](#api-documentation)
 
-   1. [User Management](#user-management)
+   4.1 [User Management](#user-management)
 
-   - Endpoint /api/users/register
-   - Endpoint /api/users/login
+   - Endpoint /api/auth/register
+   - Endpoint /api/auth/login
 
-   2. [Doctor Management](#doctor-management)
+     4.2 [Doctor Management](#doctor-management)
 
    - Endpoint /api/doctors
 
-   3. [Specialization Management](#specialization-management)
+     4.3 [Specialization Management](#specialization-management)
 
    - Endpoint /api/specializations
 
-   4. [Appointment Management](#appointment-management)
+     4.4 [Appointment Management](#appointment-management)
 
    - Endpoint /api/appointments
-   - Endpoint /api/users/:userId/appointments
-   - Endpoint /api/appointments/:id
+   - Endpoint /api/:userId/appointments
+   - Endpoint /api/:userId/appointments/:appointmentId
 
 5. [Install](#install)
 6. [Running in Docker ContainerRun](#run)
@@ -68,7 +68,7 @@ The base URL for accessing the Hospital Appointment Scheduler API is:
 
 Endpoint
 
-- URL Path: **_/api/users/register_**
+- URL Path: **_/api/auth/register_**
 - Description: This endpoint registers a new user. It accepts user details in
   the request body and returns a response indicating the result of the
   registration process.
@@ -91,7 +91,7 @@ payload in the request body with the user's desired username, email, and
 password for registration.
 
 ```
-curl -X POST http://localhost:8080/api/users/register \
+curl -X POST http://localhost:8080/api/auth/register \
 -H "Content-Type: application/json" \
 -d '{
   "username": "username",
@@ -126,11 +126,11 @@ Description: The provided email address is already registered with another user.
 
 Status code: **400 Bad Request**
 
-Description: The provided email address is not in a valid format.
+Description: The provided email address or password is not in a valid format.
 
 ```
 {
-   "error": "Invalid email format"
+   "error": "Invalid email or password"
 }
 ```
 
@@ -138,7 +138,7 @@ Description: The provided email address is not in a valid format.
 
 Endpoint
 
-- URL Path: **_/api/users/login_**
+- URL Path: **_/api/auth/login_**
 - Description: This endpoint logs a user into the system by validating their
   email and password. Upon successful authentication, the user receives a JSON
   Web Token (JWT) which is used for subsequent authenticated requests.
