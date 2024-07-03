@@ -1,96 +1,48 @@
-const path = require('path');
-const rootDir = require('../utils/path');
-const { hashPassword, comparePassword } = require('../utils/auth');
+require('dotenv').config();
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_OAUTH_URL = process.env.GOOGLE_OAUTH_URL;
+const GOOGLE_CALLBACK_URL = 'http%3A//localhost:8080/google/callback';
+const GOOGLE_OAUTH_SCOPES = [
+	'https%3A//www.googleapis.com/auth/userinfo.email',
+	'https%3A//www.googleapis.com/auth/userinfo.profile',
+];
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const GOOGLE_ACCESS_TOKEN_URL = process.env.GOOGLE_ACCESS_TOKEN_URL;
 
-exports.getLogin = (req, res) => {
-	res.sendFile(path.join(rootDir, 'views', 'login-page.html'));
+exports.getOAuth = async (req, res) => {
+	const state = 'some_state';
+	const scopes = GOOGLE_OAUTH_SCOPES.join(' ');
+	const GOOGLE_OAUTH_CONSENT_SCREEN_URL = `${GOOGLE_OAUTH_URL}?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${GOOGLE_CALLBACK_URL}&access_type=offline&response_type=code&state=${state}&scope=${scopes}`;
+	res.redirect(GOOGLE_OAUTH_CONSENT_SCREEN_URL);
 };
 
-exports.postLogin = async (req, res) => {
-	const { email, password } = req.body;
+exports.getGoogleCallback = async (req, res) => {
+	console.log(req.query);
+	const { code } = req.query;
 
-	if (!email || !password) {
-		return res.status(400).send({
-			error: 'Incorrect email or password',
-		});
-	}
+	const data = {
+		code,
+		client_id: GOOGLE_CLIENT_ID,
+		client_secret: GOOGLE_CLIENT_SECRET,
+		redirect_uri: 'http://localhost:8080/google/callback',
+		grant_type: 'authorization_code',
+	};
+	console.log(data);
 
-	try {
-		const registeredUser = req.session.users?.find(
-			(user) => user.email === email
-		);
+	// exchange authorization code for access token & id_token
 
-		if (!registeredUser) {
-			return res.status(401).send({
-				error: 'The users does not exist',
-			});
-		}
+	const response = await fetch(GOOGLE_ACCESS_TOKEN_URL, {
+		method: 'POST',
+		body: JSON.stringify(data),
+	});
+	const access_token_data = await response.json();
+	const { id_token } = access_token_data;
 
-		const isPasswordMatched = await comparePassword(
-			password,
-			registeredUser.password
-		);
+	console.log(id_token);
+	// verify and extract the information in the id token
 
-		if (!isPasswordMatched) {
-			return res.status(400).send({
-				error: 'Incorrect email or password',
-			});
-		}
-
-		res.status(200).send({
-			userId: registeredUser.userId,
-			username: registeredUser.username,
-			email: registeredUser.email,
-			password: registeredUser.password,
-			createdAt: registeredUser.createdAt,
-		});
-	} catch {
-		res.status(500).send({ error: 'Error logging in' });
-	}
-};
-
-exports.getRegister = (req, res) => {
-	res.sendFile(path.join(rootDir, 'views', 'register-page.html'));
-};
-
-exports.postRegister = async (req, res) => {
-	const { username, email, password } = req.body;
-
-	if (!username || !email || !password) {
-		res.status(400).send({
-			error: 'Username, email, and password are required fields',
-		});
-	}
-
-	try {
-		const hashedPassword = await hashPassword(password);
-		const registeredUser = {
-			userId: Date.now(),
-			username,
-			email,
-			password: hashedPassword,
-			createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
-		};
-
-		if (!req.session?.users) {
-			req.session.users = [registeredUser];
-		} else {
-			const isUserExist = req.session.users.find(
-				(user) => user.email === email
-			);
-			if (isUserExist) {
-				return res.status(409).send({
-					error: 'Email already in use',
-				});
-			}
-			req.session.users.push(registeredUser);
-		}
-
-		res.status(201).send({
-			message: 'User registered successfully',
-			userId: registeredUser.userId,
-		});
-	} catch {
-		res.status(500).send({ error: 'Error registering user' });
-	}
+	const token_info_response = await fetch(
+		`${process.env.GOOGLE_TOKEN_INFO_URL}?id_token=${id_token}`
+	);
+	res.status(token_info_response.status).json(await token_info_response.json());
 };

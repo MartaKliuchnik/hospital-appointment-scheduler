@@ -12,15 +12,15 @@
    - Endpoint /api/auth/register
    - Endpoint /api/auth/login
 
-   4.2 [Doctor Management](#doctor-management)
+     4.2 [Doctor Management](#doctor-management)
 
    - Endpoint /api/doctors
 
-   4.3 [Specialization Management](#specialization-management)
+     4.3 [Specialization Management](#specialization-management)
 
    - Endpoint /api/specializations
 
-   4.4 [Appointment Management](#appointment-management)
+     4.4 [Appointment Management](#appointment-management)
 
    - Endpoint /api/appointments
    - Endpoint /api/:userId/appointments
@@ -130,7 +130,18 @@ Description: The provided email address or password is not in a valid format.
 
 ```
 {
-   "error": "Invalid email or password"
+   "error": "Username, email, and password are required fields"
+}
+```
+
+Status code: **500 Internal Server Error**
+
+Description: The server encountered an unexpected condition that prevented it
+from processing the request.
+
+```
+{
+   error: 'Error registering user'
 }
 ```
 
@@ -185,13 +196,34 @@ server responds with a JSON object containing a JWT token and user information.
 }
 ```
 
+Status code: **400 Bad Request**
+
+Description: The provided email address or password is not in a valid format.
+
+```
+{
+   "error": "Email and password are required"
+}
+```
+
 Status code: **401 Unauthorized**
 
 Description: The login request failed due to incorrect email or password.
 
 ```
 {
-   "error": "Incorrect email or password"
+   "error": "User not found"
+}
+```
+
+Status code: **500 Internal Server Error**
+
+Description: The server encountered an unexpected condition that prevented it
+from processing the request.
+
+```
+{
+   error: 'Error logging in user'
 }
 ```
 
