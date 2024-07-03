@@ -21,7 +21,7 @@ exports.postLogin = (req, res) => {
 			});
 		} else {
 			res.status(401).send({
-				message: 'The users does not exist',
+				error: 'The users does not exist',
 			});
 		}
 	} else {

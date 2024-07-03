@@ -5,6 +5,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 
 const authRoutes = require('./routes/auth');
+const appointmentRoutes = require('./routes/appointments');
 
 const PORT = process.env.PORT || 8080;
 
@@ -20,12 +21,13 @@ app.use(
 	})
 );
 app.use('/auth', authRoutes);
+app.use('/appointments', appointmentRoutes);
 
-app.get('/', (req, res, next) => {
+app.get('/welcome-page', (req, res) => {
 	res.sendFile(path.join(rootDir, 'views', 'home-page.html'));
 });
 
-app.use((req, res, next) => {
+app.use((req, res) => {
 	res.status(404).send('<h1>Page Not Found!</h1>');
 });
 

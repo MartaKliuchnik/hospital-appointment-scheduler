@@ -12,15 +12,15 @@
    - Endpoint /api/auth/register
    - Endpoint /api/auth/login
 
-     4.2 [Doctor Management](#doctor-management)
+   4.2 [Doctor Management](#doctor-management)
 
    - Endpoint /api/doctors
 
-     4.3 [Specialization Management](#specialization-management)
+   4.3 [Specialization Management](#specialization-management)
 
    - Endpoint /api/specializations
 
-     4.4 [Appointment Management](#appointment-management)
+   4.4 [Appointment Management](#appointment-management)
 
    - Endpoint /api/appointments
    - Endpoint /api/:userId/appointments
