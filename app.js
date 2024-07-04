@@ -1,25 +1,30 @@
 const express = require('express');
-const rootDir = require('./utils/path');
 const path = require('path');
 const session = require('express-session');
-const bodyParser = require('body-parser');
+const crypto = require('crypto');
+require('dotenv').config();
 
+const rootDir = require('./utils/path');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments');
 
-const PORT = process.env.PORT || 8080;
-
 const app = express();
+const PORT = process.env.PORT || 8080;
+const sessionSecret =
+	process.env.SESSION_SECRET || crypto.randomBytes(64).toString('hex');
 
-app.use(express.json()); // postman
-app.use(bodyParser.urlencoded({ extended: true })); // browser
+// Middleware
+app.use(express.json()); // For parsing application/json
+app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 app.use(
 	session({
-		secret: 'bde60e6a8b6348c1c0e98d2f2', // change with crypto
+		secret: sessionSecret,
 		resave: false,
 		saveUninitialized: false,
 	})
 );
+
+// Routes
 app.use('/auth', authRoutes);
 app.use('/appointments', appointmentRoutes);
 
@@ -27,10 +32,12 @@ app.get('/welcome-page', (req, res) => {
 	res.sendFile(path.join(rootDir, 'views', 'home-page.html'));
 });
 
+// Error handling middleware
 app.use((req, res) => {
 	res.status(404).send('<h1>Page Not Found!</h1>');
 });
 
+// Server start
 app.listen(PORT, () => {
 	console.log(`\n\nServer started on ${PORT} port...`);
 });

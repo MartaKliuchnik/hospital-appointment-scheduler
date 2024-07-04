@@ -1,6 +1,7 @@
 const path = require('path');
 const rootDir = require('../utils/path');
 const { hashPassword, comparePassword } = require('../utils/auth');
+const { createJWT } = require('../utils/jwt');
 
 exports.getLogin = (req, res) => {
 	res.sendFile(path.join(rootDir, 'views', 'login-page.html'));
@@ -37,12 +38,29 @@ exports.postLogin = async (req, res) => {
 			});
 		}
 
+		const header = {
+			alg: 'HS256',
+			typ: 'JWT',
+		};
+
+		const payload = {
+			sub: registeredUser.userId,
+			name: registeredUser.username,
+			iat: Math.floor(Date.now() / 1000),
+		};
+
+		const secret = process.env.JWT_SECRET;
+		const token = createJWT(header, payload, secret);
+
 		res.status(200).send({
-			userId: registeredUser.userId,
-			username: registeredUser.username,
-			email: registeredUser.email,
-			password: registeredUser.password,
-			createdAt: registeredUser.createdAt,
+			token: token,
+			user: {
+				userId: registeredUser.userId,
+				username: registeredUser.username,
+				email: registeredUser.email,
+				password: registeredUser.password,
+				createdAt: registeredUser.createdAt,
+			},
 		});
 	} catch {
 		res.status(500).send({ error: 'Error logging in' });
@@ -85,6 +103,7 @@ exports.postRegister = async (req, res) => {
 			}
 			req.session.users.push(registeredUser);
 		}
+
 		res.status(201).send({
 			message: 'User registered successfully',
 			userId: registeredUser.userId,
