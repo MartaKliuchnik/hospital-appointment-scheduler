@@ -4,7 +4,7 @@ const { hashPassword, comparePassword } = require('../utils/auth');
 const { createJWT } = require('../utils/jwt');
 
 exports.getLogin = (req, res) => {
-	res.sendFile(path.join(rootDir, 'views', 'login-page.html'));
+	res.sendFile(path.join(rootDir, '../views', 'login-page.html'));
 };
 
 exports.postLogin = async (req, res) => {
@@ -68,7 +68,7 @@ exports.postLogin = async (req, res) => {
 };
 
 exports.getRegister = (req, res) => {
-	res.sendFile(path.join(rootDir, 'views', 'register-page.html'));
+	res.sendFile(path.join(rootDir, '../views', 'register-page.html'));
 };
 
 exports.postRegister = async (req, res) => {

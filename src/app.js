@@ -25,11 +25,11 @@ app.use(
 );
 
 // Routes
-app.use('/auth', authRoutes);
-app.use('/appointments', appointmentRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/appointments', appointmentRoutes);
 
-app.get('/welcome-page', (req, res) => {
-	res.sendFile(path.join(rootDir, 'views', 'home-page.html'));
+app.get('/api/v1/welcome-page', (req, res) => {
+	res.sendFile(path.join(rootDir, '../views', 'home-page.html'));
 });
 
 // Error handling middleware

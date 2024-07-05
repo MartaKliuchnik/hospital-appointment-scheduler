@@ -34,5 +34,5 @@ exports.authenticateJWT = (req, res, next) => {
 };
 
 exports.getAppointments = (req, res) => {
-	res.sendFile(path.join(rootDir, 'views', 'schedule-page.html'));
+	res.sendFile(path.join(rootDir, '../views', 'schedule-page.html'));
 };

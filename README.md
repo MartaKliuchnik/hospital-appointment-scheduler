@@ -9,22 +9,24 @@
 
    4.1 [User Management](#user-management)
 
-   - Endpoint /api/auth/register
-   - Endpoint /api/auth/login
+   - Endpoint **/api/v1/auth/register**
+   - Endpoint **/api/v1/auth/login**
 
-     4.2 [Doctor Management](#doctor-management)
+   4.2 [Doctor Management](#doctor-management)
 
-   - Endpoint /api/doctors
+   - Endpoint **/api/v1/doctors**
 
-     4.3 [Specialization Management](#specialization-management)
+   4.3 [Specialization Management](#specialization-management)
 
-   - Endpoint /api/specializations
+   - Endpoint **/api/v1/specializations**
 
-     4.4 [Appointment Management](#appointment-management)
+   4.4 [Authentication](#authentication)
 
-   - Endpoint /api/appointments
-   - Endpoint /api/:userId/appointments
-   - Endpoint /api/:userId/appointments/:appointmentId
+   4.5 [Appointment Management](#appointment-management)
+
+   - Endpoint **/api/v1/appointments**
+   - Endpoint **/api/v1/user/:userId/appointments**
+   - Endpoint **/api/v1/user/:userId/appointment/:appointmentId**
 
 5. [Install](#install)
 6. [Running in Docker ContainerRun](#run)
@@ -49,7 +51,7 @@ plays a crucial role in managing the scheduling process, including:
 
 Project is created with:
 
-- Programming Language: Node.js.
+- Runtime environment: Node.js.
 - Web application framework: Express.js.
 - Database: MySQL.
 - Containerization: Docker.
@@ -58,7 +60,15 @@ Project is created with:
 
 The base URL for accessing the Hospital Appointment Scheduler API is:
 
-`http://localhost:8080/api`
+`http://localhost:8080/api/v1/`
+
+All endpoints for the Hospital Appointment Scheduler API are accessed through
+the base URL provided above.
+
+**Example Usage** To make a request to the API, prepend the base URL to the
+endpoint path. For instance, to access the register page:
+
+`GET http://localhost:8080/api/v1/auth/register`
 
 ## API Documentation
 
@@ -68,7 +78,7 @@ The base URL for accessing the Hospital Appointment Scheduler API is:
 
 Endpoint
 
-- URL Path: **_/api/auth/register_**
+- URL Path: **_/api/v1/auth/register_**
 - Description: This endpoint registers a new user. It accepts user details in
   the request body and returns a response indicating the result of the
   registration process.
@@ -91,7 +101,7 @@ payload in the request body with the user's desired username, email, and
 password for registration.
 
 ```
-curl -X POST http://localhost:8080/api/auth/register \
+curl -X POST http://localhost:8080/api/v1/auth/register \
 -H "Content-Type: application/json" \
 -d '{
   "username": "username",
@@ -149,7 +159,7 @@ from processing the request.
 
 Endpoint
 
-- URL Path: **_/api/auth/login_**
+- URL Path: **_/api/v1/auth/login_**
 - Description: This endpoint logs a user into the system by validating their
   email and password. Upon successful authentication, the user receives a JSON
   Web Token (JWT) which is used for subsequent authenticated requests.
@@ -168,7 +178,7 @@ Description: POST request to the login endpoint for user authentication. It
 includes a JSON payload in the request body with the user's email and password.
 
 ```
-curl -X POST http://localhost:8080/api/users/login \
+curl -X POST http://localhost:8080/api/v1/auth/login \
 -H "Content-Type: application/json" \
 -d '{
   "email": "email@example.com",
@@ -233,7 +243,7 @@ from processing the request.
 
 Endpoint
 
-- URL Path: **_/api/doctors_**
+- URL Path: **_/api/v1/doctors_**
 - Description: This endpoint retrieves a list of all doctors along with their
   schedules. Client sends a GET request to the server to retrieve a list of
   doctors. Server processes the request by querying the database for all doctors
@@ -243,7 +253,7 @@ Endpoint
 **Example Request**
 
 ```
-curl -X GET http://localhost:8080/api/doctors \
+curl -X GET http://localhost:8080/api/v1/doctors \
 ```
 
 **Responses**
@@ -289,7 +299,7 @@ Description: The server cannot find any doctors in the database.
 
 Endpoint
 
-- URL Path: **_/api/specializations_**
+- URL Path: **_/api/v1/specializations_**
 - Description: This endpoint retrieves a list of all specializations available
   in the system. Client sends a GET request to the server to retrieve a list of
   specializations. Server processes the request by querying the database for all
@@ -299,7 +309,7 @@ Endpoint
 **Example Request**
 
 ```
-curl -X GET http://localhost:8080/api/specializations \
+curl -X GET http://localhost:8080/api/v1/specializations \
 ```
 
 **Responses**
@@ -325,13 +335,39 @@ Description: The server cannot find any specializations in the database.
 }
 ```
 
+### Authentication
+
+To access protected resources, such as appointment management processes, you
+need to include a valid JWT token in your request headers. The header should
+look like this:
+
+```
+{
+   Authorization: Bearer <your-jwt-token>
+}
+```
+
+**Example Request**
+
+When making a GET request (or any other type of request) to
+authentication-protected endpoints, you must include an Authorization header
+with a bearer token. This token authenticates the user and grants access to the
+requested resource. The Content-Type header should also be specified as
+application/json for requests that include a body.
+
+```
+  GET /api/v1/appointments HTTP/1.1
+  Authorization: Bearer <your-jwt-token>
+  Content-Type: application/json
+```
+
 ### Appointment Management
 
 #### 1. Creates a new appointment for a user with a doctor of the specified specialization
 
 Endpoint
 
-- URL Path: **_/api/appointments_**
+- URL Path: **_/api/v1/appointments_**
 - Description: This endpoint allows users to schedule appointments with doctors
   of a specified specialization.
 - Authentication: Authentication is required for this endpoint.
@@ -354,16 +390,13 @@ including its ID, the user's ID, the doctor's ID, the specialization ID, and the
 appointment time.
 
 ```
-curl -X POST http://localhost:8080/api/appointments \
+
+curl -X POST http://localhost:8080/api/v1/appointments \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{
-    "id": 1,
-    "userId": 1,
-    "doctorId": 1,
-    "specializationId": 1,
-    "appointmentTime": “2024-06-10 09:00:00”,
-}'
+-d '{ "id": 1, "userId": 1, "doctorId": 1, "specializationId": 1, "appointmentTime":
+“2024-06-10 09:00:00”, }'
+
 ```
 
 **Responses**
@@ -373,12 +406,10 @@ Status code: **201 Created**
 Description: The appointment is successfully created.
 
 ```
-{
-    "message": "Appointment created successfully",
-    "userId": 1,
-    "appointmentId": 1,
-    "createdAt": “2024-06-01 10:00:00”
-}
+
+{ "message": "Appointment created successfully", "userId": 1, "appointmentId":
+1, "createdAt": “2024-06-01 10:00:00” }
+
 ```
 
 Status Code: **401 Unauthorized**
@@ -388,9 +419,10 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-{
-   "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
-}
+
+{ "error": "Authentication failed: Ensure that the correct authentication token
+is provided in the request header." }
+
 ```
 
 Status Code: **404 Not Found**
@@ -398,16 +430,16 @@ Status Code: **404 Not Found**
 Description: The server cannot find the specialization.
 
 ```
-{
-   "error": "Specialization not found"
-}
+
+{ "error": "Specialization not found" }
+
 ```
 
 #### 2. Retrieves all appointments for a specific user
 
 Endpoint
 
-- URL Path: **_/api/users/:userId/appointments_**
+- URL Path: **_/api/v1/users/:userId/appointments_**
 - Description: This endpoint retrieves all appointments for a specific user.
 - Authentication: Authentication is required for this endpoint.
 
@@ -423,8 +455,10 @@ Description: GET request to retrieve all appointments for the user with ID 1. It
 includes an Authorization header with a bearer token for authentication.
 
 ```
-curl -X GET http://localhost:8080/api/users/1/appointments \
+
+curl -X GET http://localhost:8080/api/v1/users/1/appointments \
 -H "Authorization: token" \
+
 ```
 
 **Responses**
@@ -435,15 +469,10 @@ Description: The server successfully retrieved all appointments for the
 specified user and provided the list of appointments in the response body.
 
 ```
-{
-    "userId": 1,
-    "appointments": [
-        { "appointmentId": 1,
-        "doctorId": 1,
-        "specializationId": 1,
-        "appointmentTime": "2024-06-10 09:00:00" }
-    ]
-}
+
+{ "userId": 1, "appointments": [ { "appointmentId": 1, "doctorId": 1,
+"specializationId": 1, "appointmentTime": "2024-06-10 09:00:00" } ] }
+
 ```
 
 Status Code: **401 Unauthorized**
@@ -453,16 +482,17 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-{
-   "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
-}
+
+{ "error": "Authentication failed: Ensure that the correct authentication token
+is provided in the request header." }
+
 ```
 
 #### 3. Changes the specialization and/or date of an existing appointment
 
 Endpoint
 
-- URL Path: **_api/:userId/appointments/:appointmentId_**
+- URL Path: **_api/v1/user/:userId/appointment/:appointmentId_**
 - Description: This endpoint allows authenticated users to change the
   specialization and/or date of an existing appointment.
 - Authentication: Authentication is required for this endpoint.
@@ -486,13 +516,12 @@ details of the appointment, such as the new specialization ID and appointment
 time.
 
 ```
-curl -X PUT http://localhost:8080/api/users/1/appointments/1 \
+
+curl -X PUT http://localhost:8080/api/v1/user/1/appointment/1 \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{
-    "specializationId": 2,
-    "appointmentTime": "2024-06-15 10:00:00"
-}'
+-d '{ "specializationId": 2, "appointmentTime": "2024-06-15 10:00:00" }'
+
 ```
 
 **Responses**
@@ -503,15 +532,11 @@ Description: The server successfully updated the appointment with the provided
 changes.
 
 ```
-{
-    "message": "Appointment updated successfully",
-    "userId": 1,
-    "appointmentId": 1,
-    "updatedFields": {
-        "specializationId": 2,
-        "appointmentTime": "2024-06-15 10:00:00"
-    }
-}
+
+{ "message": "Appointment updated successfully", "userId": 1, "appointmentId":
+1, "updatedFields": { "specializationId": 2, "appointmentTime": "2024-06-15
+10:00:00" } }
+
 ```
 
 Status Code: **404 Not Found**
@@ -519,9 +544,9 @@ Status Code: **404 Not Found**
 Description: The server cannot find the specified user or appointment.
 
 ```
-{
-   "error": "User or appointment not found"
-}
+
+{ "error": "User or appointment not found" }
+
 ```
 
 Status Code: **400 Bad Request**
@@ -529,9 +554,9 @@ Status Code: **400 Bad Request**
 Description: The request is invalid or missing required parameters.
 
 ```
-{
-   "error": "Invalid request: Missing required parameters"
-}
+
+{ "error": "Invalid request: Missing required parameters" }
+
 ```
 
 Status Code: **401 Unauthorized**
@@ -541,16 +566,17 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-{
-   "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
-}
+
+{ "error": "Authentication failed: Ensure that the correct authentication token
+is provided in the request header." }
+
 ```
 
 #### 4. Deletes an appointment
 
 Endpoint
 
-- URL Path: **_/api/:userId/appointments/:appointmentId_**
+- URL Path: **_/api/v1/user/:userId/appointment/:appointmentId_**
 - Description: This endpoint allows authenticated users to delete a specific
   appointment associated with a user.
 - Authentication: Authentication is required for this endpoint.
@@ -562,8 +588,10 @@ with ID 1. It includes authentication token in the request header for
 authorization.
 
 ```
-curl -X DELETE http://localhost:8080/api/1/appointments/2 \
+
+curl -X DELETE http://localhost:8080/api/v1/user/1/appointment/2 \
 -H "Authorization: token" \
+
 ```
 
 Status Code: **204 No Content**
@@ -571,9 +599,9 @@ Status Code: **204 No Content**
 Description: The server successfully deleted the appointment.
 
 ```
-{
-    "message": "Appointment deleted successfully"
-}
+
+{ "message": "Appointment deleted successfully" }
+
 ```
 
 Status Code: **404 Not Found**
@@ -581,9 +609,9 @@ Status Code: **404 Not Found**
 Description: The server cannot find the specified user or appointment.
 
 ```
-{
-   "error": "User or appointment not found"
-}
+
+{ "error": "User or appointment not found" }
+
 ```
 
 Status Code: **401 Unauthorized**
@@ -593,9 +621,10 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-{
-   "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
-}
+
+{ "error": "Authentication failed: Ensure that the correct authentication token
+is provided in the request header." }
+
 ```
 
 ## Install
@@ -603,19 +632,25 @@ Ensure that the correct authentication token is provided in the request header.
 1. Clone current repository into a your directory:
 
 ```
+
 git clone https://github.com/MartaKliuchnik/hospital-appointment-scheduler.git
+
 ```
 
 2. Switch to project folder:
 
 ```
+
 cd hospital-appointment-scheduler
+
 ```
 
 3. Install the dependencies:
 
 ```
+
 npm install
+
 ```
 
 ## Running in Docker Container
@@ -626,11 +661,19 @@ on your system. Use the following commands:
 1. Build and run the application:
 
 ```
+
 docker compose up
+
 ```
 
 2. Stop the application
 
 ```
+
 docker compose down
+
+```
+
+```
+
 ```
