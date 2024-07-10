@@ -7,6 +7,7 @@ require('dotenv').config();
 const rootDir = require('./utils/path');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments');
+const db = require('./utils/database');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -23,6 +24,15 @@ app.use(
 		saveUninitialized: false,
 	})
 );
+
+// Database connection
+db.execute('SELECT * FROM user')
+	.then((res) => {
+		console.log(res);
+	})
+	.catch((err) => {
+		console.error(err);
+	});
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
