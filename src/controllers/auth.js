@@ -45,7 +45,8 @@ exports.postLogin = async (req, res) => {
 
 		const payload = {
 			sub: registeredUser.userId,
-			name: registeredUser.username,
+			firstName: registeredUser.firstName,
+			lastName: registeredUser.lastName,
 			iat: Math.floor(Date.now() / 1000),
 		};
 
@@ -56,7 +57,8 @@ exports.postLogin = async (req, res) => {
 			token: token,
 			user: {
 				userId: registeredUser.userId,
-				username: registeredUser.username,
+				firstName: registeredUser.firstName,
+				lastName: registeredUser.lastName,
 				email: registeredUser.email,
 				password: registeredUser.password,
 				createdAt: registeredUser.createdAt,
@@ -72,11 +74,11 @@ exports.getRegister = (req, res) => {
 };
 
 exports.postRegister = async (req, res) => {
-	const { username, email, password } = req.body;
+	const { firstName, lastName, email, password } = req.body;
 
-	if (!username || !email || !password) {
+	if (!firstName || !lastName || !email || !password) {
 		res.status(400).send({
-			error: 'Username, email, and password are required fields',
+			error: 'First name, last name, email, and password are required fields',
 		});
 	}
 
@@ -84,7 +86,8 @@ exports.postRegister = async (req, res) => {
 		const hashedPassword = await hashPassword(password);
 		const registeredUser = {
 			userId: Date.now(),
-			username,
+			firstName,
+			lastName,
 			email,
 			password: hashedPassword,
 			createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),

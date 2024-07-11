@@ -96,15 +96,16 @@ The request body must be in JSON format and include the following fields:
 
 **Example Request**
 
-Description: POST request to the user registration endpoint. It includes a JSON
-payload in the request body with the user's desired username, email, and
-password for registration.
+Description: A 'POST' request to the user registration endpoint. It includes a
+JSON payload in the request body with the user's first name, last name, email,
+and password for registration.
 
 ```
 curl -X POST http://localhost:8080/api/v1/auth/register \
 -H "Content-Type: application/json" \
 -d '{
-  "username": "username",
+  "firstName": "firstName",
+  "lastName": "lastName",
   "email": "email@example.com",
   "password": "password"
 }'
@@ -140,7 +141,7 @@ Description: The provided email address or password is not in a valid format.
 
 ```
 {
-   "error": "Username, email, and password are required fields"
+   "error": "First name, last name, email, and password are required fields"
 }
 ```
 
@@ -174,7 +175,7 @@ The request body should be in JSON format and include the following fields:
 
 **Example Request**
 
-Description: POST request to the login endpoint for user authentication. It
+Description: A 'POST' request to the login endpoint for user authentication. It
 includes a JSON payload in the request body with the user's email and password.
 
 ```
@@ -198,9 +199,10 @@ server responds with a JSON object containing a JWT token and user information.
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
     user:{
         "userId": 1
-        "username": "username",
-        "email": "email@example.com",
-        "password": "password",
+        "firstName": "Alex",
+        "lastName": "Fox",
+        "email": "alex_email@example.com",
+        "password": "some123password",
         "createdAt": “2024-01-02 10:00:00”
     }
 }
@@ -267,9 +269,10 @@ schedules.
 {
   "doctors": [
     {
-      "id": 1,
-      "doctorname": "Dr. Tom",
-      "specializationId": 1,
+      "doctorId": 1,
+      "firstName": "Jonh",
+      "lastName": "Smith",
+      "specialization": "Cardiology",
       "schedule": [
         { "day": "Friday",
           "startTime": "09:00 AM",
@@ -320,8 +323,7 @@ Description: The server successfully retrieves the list of specializations.
 
 ```
 {
-    "id": 1
-    "name": “Cardiology”
+    "specializations": ["Cardiology", "Neurology", "Oncology", "Pediatrics", "Radiology"]
 }
 ```
 
@@ -378,23 +380,23 @@ The request body should contain the following parameters:
 
 - userId: The ID of the user scheduling the appointment.
 - doctorId: The ID of the doctor with whom the appointment is scheduled.
-- specializationId: The ID of the specialization to which the doctor belongs.
+- specialization: The specialization to which the doctor belongs.
 - appointmentTime: The date and time of the appointment.
 
 **Example Request**
 
-Description: POST request to create a new appointment. It includes an
+Description: A 'POST' request to create a new appointment. It includes an
 Authorization header with a bearer token for authentication and specifies the
 content type as JSON. The request body contains the details of the appointment,
-including its ID, the user's ID, the doctor's ID, the specialization ID, and the
-appointment time.
+including its ID, the user's ID, the doctor's ID, the doctor's specialization,
+and the appointment time.
 
 ```
 
 curl -X POST http://localhost:8080/api/v1/appointments \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{ "id": 1, "userId": 1, "doctorId": 1, "specializationId": 1, "appointmentTime":
+-d '{ "id": 1, "userId": 1, "doctorId": 1, "specialization": "Cardiology", "appointmentTime":
 “2024-06-10 09:00:00”, }'
 
 ```
@@ -451,8 +453,9 @@ The request body should contain the following parameter:
 
 **Example Request**
 
-Description: GET request to retrieve all appointments for the user with ID 1. It
-includes an Authorization header with a bearer token for authentication.
+Description: A 'GET' request to retrieve all appointments for the user with
+ID 1. It includes an Authorization header with a bearer token for
+authentication.
 
 ```
 
@@ -469,10 +472,10 @@ Description: The server successfully retrieved all appointments for the
 specified user and provided the list of appointments in the response body.
 
 ```
-
-{ "userId": 1, "appointments": [ { "appointmentId": 1, "doctorId": 1,
-"specializationId": 1, "appointmentTime": "2024-06-10 09:00:00" } ] }
-
+{
+  "userId": 1,
+  "appointments": [ { "appointmentId": 1, "doctorId": 1, "specialization": "Cardiology", "appointmentTime": "2024-06-10 09:00:00" } ]
+}
 ```
 
 Status Code: **401 Unauthorized**
@@ -503,7 +506,7 @@ The request body should contain the following parameters:
 
 - userId: The ID of the user for whom the appointment belongs;
 - appointmentId: The ID of the appointment to be updated;
-- specializationId: additional parameters to specify the changes to the
+- specialization: additional parameters to specify the changes to the
   appointment;
 - appointmentTime: additional parameters to specify the changes to the
   appointment.
@@ -520,7 +523,7 @@ time.
 curl -X PUT http://localhost:8080/api/v1/user/1/appointment/1 \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{ "specializationId": 2, "appointmentTime": "2024-06-15 10:00:00" }'
+-d '{ "specialization": "Cardiology", "appointmentTime": "2024-06-15 10:00:00" }'
 
 ```
 
@@ -533,9 +536,12 @@ changes.
 
 ```
 
-{ "message": "Appointment updated successfully", "userId": 1, "appointmentId":
-1, "updatedFields": { "specializationId": 2, "appointmentTime": "2024-06-15
-10:00:00" } }
+{
+  "message": "Appointment updated successfully",
+  "userId": 1,
+  "appointmentId":1,
+  "updatedFields": { "specialization": "Cardiology", "appointmentTime": "2024-06-1510:00:00" }
+}
 
 ```
 

@@ -7,12 +7,6 @@ CREATE TABLE IF NOT EXISTS user (
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-;
-
-null;
-
-undefined;
-
 CREATE TABLE IF NOT EXISTS doctor (
     doctorId INT AUTO_INCREMENT PRIMARY KEY,
     firstName VARCHAR(50) NOT NULL,
