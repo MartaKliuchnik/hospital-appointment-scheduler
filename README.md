@@ -88,7 +88,7 @@ Endpoint
 
 The request body must be in JSON format and include the following fields:
 
-- username: (string, required) - The username for the new user.
+- firstName, lastName: (string, required) - The first and last name of the new user.
 - email: (string, required) - The email address for the new user. Must be a
   valid email format.
 - password: (string, required) - The password for the new user. Should meet
@@ -101,6 +101,7 @@ JSON payload in the request body with the user's first name, last name, email,
 and password for registration.
 
 ```
+
 curl -X POST http://localhost:8080/api/v1/auth/register \
 -H "Content-Type: application/json" \
 -d '{
@@ -109,6 +110,7 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
   "email": "email@example.com",
   "password": "password"
 }'
+
 ```
 
 **Responses**
@@ -137,7 +139,7 @@ Description: The provided email address is already registered with another user.
 
 Status code: **400 Bad Request**
 
-Description: The provided email address or password is not in a valid format.
+Description: The provided first name, last name, email address or password is not in a valid format.
 
 ```
 {
@@ -179,12 +181,14 @@ Description: A 'POST' request to the login endpoint for user authentication. It
 includes a JSON payload in the request body with the user's email and password.
 
 ```
+
 curl -X POST http://localhost:8080/api/v1/auth/login \
 -H "Content-Type: application/json" \
 -d '{
   "email": "email@example.com",
   "password": "password"
 }'
+
 ```
 
 **Responses**
@@ -255,7 +259,9 @@ Endpoint
 **Example Request**
 
 ```
+
 curl -X GET http://localhost:8080/api/v1/doctors \
+
 ```
 
 **Responses**
@@ -312,7 +318,9 @@ Endpoint
 **Example Request**
 
 ```
+
 curl -X GET http://localhost:8080/api/v1/specializations \
+
 ```
 
 **Responses**
@@ -358,9 +366,11 @@ requested resource. The Content-Type header should also be specified as
 application/json for requests that include a body.
 
 ```
+
   GET /api/v1/appointments HTTP/1.1
   Authorization: Bearer <your-jwt-token>
   Content-Type: application/json
+
 ```
 
 ### Appointment Management
@@ -408,10 +418,12 @@ Status code: **201 Created**
 Description: The appointment is successfully created.
 
 ```
-
-{ "message": "Appointment created successfully", "userId": 1, "appointmentId":
-1, "createdAt": “2024-06-01 10:00:00” }
-
+{ 
+  "message": "Appointment created successfully", 
+  "userId": 1, 
+  "appointmentId":1, 
+  "createdAt": “2024-06-01 10:00:00” 
+}
 ```
 
 Status Code: **401 Unauthorized**
@@ -421,10 +433,9 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-
-{ "error": "Authentication failed: Ensure that the correct authentication token
-is provided in the request header." }
-
+{ 
+  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header." 
+}
 ```
 
 Status Code: **404 Not Found**
@@ -432,9 +443,9 @@ Status Code: **404 Not Found**
 Description: The server cannot find the specialization.
 
 ```
-
-{ "error": "Specialization not found" }
-
+{ 
+  "error": "Specialization not found" 
+}
 ```
 
 #### 2. Retrieves all appointments for a specific user
@@ -485,10 +496,9 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-
-{ "error": "Authentication failed: Ensure that the correct authentication token
-is provided in the request header." }
-
+{ 
+  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header." 
+}
 ```
 
 #### 3. Changes the specialization and/or date of an existing appointment
@@ -535,14 +545,12 @@ Description: The server successfully updated the appointment with the provided
 changes.
 
 ```
-
 {
   "message": "Appointment updated successfully",
   "userId": 1,
   "appointmentId":1,
   "updatedFields": { "specialization": "Cardiology", "appointmentTime": "2024-06-1510:00:00" }
 }
-
 ```
 
 Status Code: **404 Not Found**
@@ -550,9 +558,9 @@ Status Code: **404 Not Found**
 Description: The server cannot find the specified user or appointment.
 
 ```
-
-{ "error": "User or appointment not found" }
-
+{ 
+  "error": "User or appointment not found" 
+}
 ```
 
 Status Code: **400 Bad Request**
@@ -560,9 +568,9 @@ Status Code: **400 Bad Request**
 Description: The request is invalid or missing required parameters.
 
 ```
-
-{ "error": "Invalid request: Missing required parameters" }
-
+{ 
+  "error": "Invalid request: Missing required parameters" 
+}
 ```
 
 Status Code: **401 Unauthorized**
@@ -572,10 +580,9 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-
-{ "error": "Authentication failed: Ensure that the correct authentication token
-is provided in the request header." }
-
+{ 
+  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header." 
+}
 ```
 
 #### 4. Deletes an appointment
@@ -589,7 +596,7 @@ Endpoint
 
 **Example Request**
 
-Description: DELETE request to delete the appointment with ID 2 for the user
+Description: A 'DELETE' request to delete the appointment with ID 2 for the user
 with ID 1. It includes authentication token in the request header for
 authorization.
 
@@ -605,9 +612,9 @@ Status Code: **204 No Content**
 Description: The server successfully deleted the appointment.
 
 ```
-
-{ "message": "Appointment deleted successfully" }
-
+{ 
+  "message": "Appointment deleted successfully" 
+}
 ```
 
 Status Code: **404 Not Found**
@@ -615,9 +622,9 @@ Status Code: **404 Not Found**
 Description: The server cannot find the specified user or appointment.
 
 ```
-
-{ "error": "User or appointment not found" }
-
+{ 
+  "error": "User or appointment not found" 
+}
 ```
 
 Status Code: **401 Unauthorized**
@@ -627,10 +634,9 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-
-{ "error": "Authentication failed: Ensure that the correct authentication token
-is provided in the request header." }
-
+{ 
+  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header." 
+}
 ```
 
 ## Install
@@ -638,25 +644,19 @@ is provided in the request header." }
 1. Clone current repository into a your directory:
 
 ```
-
 git clone https://github.com/MartaKliuchnik/hospital-appointment-scheduler.git
-
 ```
 
 2. Switch to project folder:
 
 ```
-
 cd hospital-appointment-scheduler
-
 ```
 
 3. Install the dependencies:
 
 ```
-
 npm install
-
 ```
 
 ## Running in Docker Container
@@ -667,19 +667,12 @@ on your system. Use the following commands:
 1. Build and run the application:
 
 ```
-
 docker compose up
-
 ```
 
 2. Stop the application
 
 ```
-
 docker compose down
-
-```
-
-```
 
 ```
