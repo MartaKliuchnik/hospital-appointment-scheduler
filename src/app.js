@@ -7,7 +7,7 @@ require('dotenv').config();
 const rootDir = require('./utils/path');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments');
-const db = require('./utils/database');
+const { createDatabase } = require('./utils/database');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -25,15 +25,6 @@ app.use(
 	})
 );
 
-// Database connection
-db.execute('SELECT * FROM user')
-	.then((res) => {
-		console.log(res);
-	})
-	.catch((err) => {
-		console.error(err);
-	});
-
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/appointments', appointmentRoutes);
@@ -47,7 +38,10 @@ app.use((req, res) => {
 	res.status(404).send('<h1>Page Not Found!</h1>');
 });
 
-// Server start
-app.listen(PORT, () => {
-	console.log(`\n\nServer started on ${PORT} port...`);
+// Run database creation script
+createDatabase().then((res) => {
+	// Server start
+	app.listen(PORT, () => {
+		console.log(`\n\nServer started on ${PORT} port...`);
+	});
 });
