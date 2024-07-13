@@ -17,7 +17,7 @@ exports.postLogin = async (req, res) => {
 	}
 
 	try {
-		const registeredUser = req.session.users?.find(
+		const registeredUser = req.session.client?.find(
 			(user) => user.email === email
 		);
 
@@ -44,9 +44,9 @@ exports.postLogin = async (req, res) => {
 		};
 
 		const payload = {
-			sub: registeredUser.userId,
-			firstName: registeredUser.firstName,
-			lastName: registeredUser.lastName,
+			sub: registeredUser.client_id,
+			first_name: registeredUser.first_name,
+			last_name: registeredUser.last_name,
 			iat: Math.floor(Date.now() / 1000),
 		};
 
@@ -55,13 +55,14 @@ exports.postLogin = async (req, res) => {
 
 		res.status(200).send({
 			token: token,
-			user: {
-				userId: registeredUser.userId,
-				firstName: registeredUser.firstName,
-				lastName: registeredUser.lastName,
+			client: {
+				client_id: registeredUser.client_id,
+				first_name: registeredUser.first_name,
+				last_name: registeredUser.last_name,
+				phone_number: registeredUser.phone_number,
 				email: registeredUser.email,
 				password: registeredUser.password,
-				createdAt: registeredUser.createdAt,
+				registration_date: registeredUser.registration_date,
 			},
 		});
 	} catch {
@@ -74,29 +75,33 @@ exports.getRegister = (req, res) => {
 };
 
 exports.postRegister = async (req, res) => {
-	const { firstName, lastName, email, password } = req.body;
+	const { first_name, last_name, phone_number, email, password } = req.body;
 
-	if (!firstName || !lastName || !email || !password) {
+	if (!first_name || !last_name || !phone_number || !email || !password) {
 		res.status(400).send({
-			error: 'First name, last name, email, and password are required fields',
+			error:
+				'Invalid input: all fields are required and must be in a valid format.',
 		});
 	}
 
 	try {
 		const hashedPassword = await hashPassword(password);
 		const registeredUser = {
-			userId: Date.now(),
-			firstName,
-			lastName,
+			client_id: Date.now(),
+			first_name,
+			last_name,
 			email,
 			password: hashedPassword,
-			createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+			registration_date: new Date()
+				.toISOString()
+				.slice(0, 19)
+				.replace('T', ' '),
 		};
 
-		if (!req.session?.users) {
-			req.session.users = [registeredUser];
+		if (!req.session?.client) {
+			req.session.client = [registeredUser];
 		} else {
-			const isUserExist = req.session.users.find(
+			const isUserExist = req.session.client.find(
 				(user) => user.email === email
 			);
 			if (isUserExist) {
@@ -104,12 +109,12 @@ exports.postRegister = async (req, res) => {
 					error: 'Email already in use',
 				});
 			}
-			req.session.users.push(registeredUser);
+			req.session.client.push(registeredUser);
 		}
 
 		res.status(201).send({
 			message: 'User registered successfully',
-			userId: registeredUser.userId,
+			client_id: registeredUser.client_id,
 		});
 	} catch {
 		res.status(500).send({ error: 'Error registering user' });

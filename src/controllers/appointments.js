@@ -3,7 +3,7 @@ const rootDir = require('../utils/path');
 const { verifyJWT } = require('../utils/jwt');
 
 exports.checkUser = (req, res, next) => {
-	if (req.session?.users) next();
+	if (req.session?.client) next();
 	else
 		res.status(401).send({
 			error:

@@ -10,20 +10,24 @@
 		<main>
 			<form class="register-form" action="/api/v1/auth/register" method="POST">
 				<div class="form-control">
-					<label for="firstName">First name</label>
-					<input type="text" name="firstName" id="firstName" />
+					<label for="first_name">First Name</label>
+					<input type="text" name="first_name" id="first_name" />
 				</div>
 				<div class="form-control">
-					<label for="lastName">Last Name</label>
-					<input type="text" name="lastName" id="lastName" />
+					<label for="last_name">Last Name</label>
+					<input type="text" name="last_name" id="last_name" />
 				</div>
 				<div class="form-control">
-					<label for="email">E-mail</label>
-					<input type="email" name="email" id="email" />
+					<label for="phone_number">Phone Number</label>
+					<input type="number" name="phone_number" id="phone_number" />
 				</div>
 				<div class="form-control">
-					<label for="password">Password</label>
-					<input type="password" name="password" id="password" />
+					<label for="client_email">Email</label>
+					<input type="email" name="client_email" id="client_email" />
+				</div>
+				<div class="form-control">
+					<label for="client_password">Password</label>
+					<input type="password" name="client_password" id="client_password" />
 				</div>
 				<button type="submit">Register</button>
 			</form>
