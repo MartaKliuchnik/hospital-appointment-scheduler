@@ -7,7 +7,7 @@
 3. [Base URL](#base-url)
 4. [API Documentation](#api-documentation)
 
-   4.1 [User Management](#user-management)
+   4.1 [User Management](#patient-management)
 
    - Endpoint **/api/v1/auth/register**
    - Endpoint **/api/v1/auth/login**
@@ -25,8 +25,8 @@
    4.5 [Appointment Management](#appointment-management)
 
    - Endpoint **/api/v1/appointments**
-   - Endpoint **/api/v1/user/:userId/appointments**
-   - Endpoint **/api/v1/user/:userId/appointment/:appointmentId**
+   - Endpoint **/api/v1/client/:client_id/appointments**
+   - Endpoint **/api/v1/client/:client_id/appointment/:appointment_id**
 
 5. [Install](#install)
 6. [Running in Docker ContainerRun](#run)
@@ -39,7 +39,7 @@ plays a crucial role in managing the scheduling process, including:
 
 - **Authentication and Authorization**: To ensure secure access to the system,
   the server implements robust authentication and authorization mechanisms. This
-  ensures that only authorized users can access sensitive information and
+  ensures that only authorized clients can access sensitive information and
   perform actions within the application.
 - **Managing Data**: The server is responsible for storing and managing patient
   information, doctor schedules, and appointment details. It handles tasks such
@@ -88,7 +88,9 @@ Endpoint
 
 The request body must be in JSON format and include the following fields:
 
-- firstName, lastName: (string, required) - The first and last name of the new user.
+- first_name (string, required): The first name of the new user.
+- last_name (string, required): The last name of the new user.
+- phone_number: (string, required) - The user's phone number.
 - email: (string, required) - The email address for the new user. Must be a
   valid email format.
 - password: (string, required) - The password for the new user. Should meet
@@ -96,19 +98,20 @@ The request body must be in JSON format and include the following fields:
 
 **Example Request**
 
-Description: A 'POST' request to the user registration endpoint. It includes a
-JSON payload in the request body with the user's first name, last name, email,
-and password for registration.
+Description: A 'POST' request to the client registration endpoint. It includes a
+JSON payload in the request body with the user's first name, last name, phone
+number, email, and password for registration.
 
 ```
 
 curl -X POST http://localhost:8080/api/v1/auth/register \
 -H "Content-Type: application/json" \
 -d '{
-  "firstName": "firstName",
-  "lastName": "lastName",
-  "email": "email@example.com",
-  "password": "password"
+  "first_name": "Alex",
+  "last_name": "Doe",
+  "phone_number": "1234567890",
+  "email": "alex@example.com",
+  "password": "hashed_password"
 }'
 
 ```
@@ -118,12 +121,12 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
 Status code: **201 Created**
 
 Description: The user has been successfully registered. The response includes a
-success message and the userId of the newly created user.
+success message and the client_id of the newly created client.
 
 ```
 {
   "message": "User registered successfully",
-  "userId": 1
+  "client_id": 1
 }
 ```
 
@@ -139,11 +142,12 @@ Description: The provided email address is already registered with another user.
 
 Status code: **400 Bad Request**
 
-Description: The provided first name, last name, email address or password is not in a valid format.
+Description: The provided first name, last name, phone number, email address or
+password is not in a valid format.
 
 ```
 {
-   "error": "First name, last name, email, and password are required fields"
+   "error": "Invalid input: all fields are required and must be in a valid format."
 }
 ```
 
@@ -164,7 +168,7 @@ Endpoint
 
 - URL Path: **_/api/v1/auth/login_**
 - Description: This endpoint logs a user into the system by validating their
-  email and password. Upon successful authentication, the user receives a JSON
+  email and password. Upon successful authentication, the client receives a JSON
   Web Token (JWT) which is used for subsequent authenticated requests.
 - Authentication: No authentication required for this endpoint.
 
@@ -201,13 +205,14 @@ server responds with a JSON object containing a JWT token and user information.
 ```
 {
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-    user:{
-        "userId": 1
-        "firstName": "Alex",
-        "lastName": "Fox",
-        "email": "alex_email@example.com",
+    client:{
+        "client_id": 1
+        "first_name": "Alex",
+        "last_name": "Fox",
+        "phone_number": "1234567890",
+        "email": "alex@example.com",
         "password": "some123password",
-        "createdAt": “2024-01-02 10:00:00”
+        "registration_date": “2024-01-02 10:00:00”
     }
 }
 ```
@@ -275,17 +280,17 @@ schedules.
 {
   "doctors": [
     {
-      "doctorId": 1,
-      "firstName": "Jonh",
-      "lastName": "Smith",
-      "specialization": "Cardiology",
-      "schedule": [
-        { "day": "Friday",
-          "startTime": "09:00 AM",
-          "endTime": "05:00 PM" },
-        { "day": "Tuesday",
-          "startTime": "09:00 AM",
-          "endTime": "12:00 PM" }
+      "doctor_id": 1,
+      "first_name": "Jonh",
+      "last_name": "Smith",
+      "specialization": "CARDIOLOGY",
+      "schedules": [
+        { "schedule_day": "TUESDAY",
+          "start_time": "09:00 AM",
+          "end_time": "05:00 PM" },
+        { "schedule_day": "FRIDAY",
+          "start_time": "09:00 AM",
+          "end_time": "12:00 PM" }
       ]
     }
   ]
@@ -331,7 +336,7 @@ Description: The server successfully retrieves the list of specializations.
 
 ```
 {
-    "specializations": ["Cardiology", "Neurology", "Oncology", "Pediatrics", "Radiology"]
+    "medical_specializations": ["CARDIOLOGY", "NEUROLOGY", "ONCOLOGY", "PEDIATRICS", "DERMATOLOGY"]
 }
 ```
 
@@ -375,39 +380,38 @@ application/json for requests that include a body.
 
 ### Appointment Management
 
-#### 1. Creates a new appointment for a user with a doctor of the specified specialization
+#### 1. Creates a new appointment for a client with a doctor of the specified specialization
 
 Endpoint
 
 - URL Path: **_/api/v1/appointments_**
-- Description: This endpoint allows users to schedule appointments with doctors
-  of a specified specialization.
+- Description: This endpoint allows clients to schedule appointments with
+  doctors of a specified specialization.
 - Authentication: Authentication is required for this endpoint.
 
 **Request Body**
 
 The request body should contain the following parameters:
 
-- userId: The ID of the user scheduling the appointment.
-- doctorId: The ID of the doctor with whom the appointment is scheduled.
+- client_id: The ID of the client scheduling the appointment.
+- doctor_id: The ID of the doctor with whom the appointment is scheduled.
 - specialization: The specialization to which the doctor belongs.
-- appointmentTime: The date and time of the appointment.
+- appointment_time: The date and time of the appointment.
 
 **Example Request**
 
 Description: A 'POST' request to create a new appointment. It includes an
 Authorization header with a bearer token for authentication and specifies the
 content type as JSON. The request body contains the details of the appointment,
-including its ID, the user's ID, the doctor's ID, the doctor's specialization,
-and the appointment time.
+including the client's ID, the doctor's ID, the doctor's specialization, and the
+appointment time.
 
 ```
 
 curl -X POST http://localhost:8080/api/v1/appointments \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{ "id": 1, "userId": 1, "doctorId": 1, "specialization": "Cardiology", "appointmentTime":
-“2024-06-10 09:00:00”, }'
+-d '{ "client_id": 1, "doctor_id": 1, "specialization": "CARDIOLOGY", "appointment_time": “2024-06-10 09:00:00” }'
 
 ```
 
@@ -418,11 +422,13 @@ Status code: **201 Created**
 Description: The appointment is successfully created.
 
 ```
-{ 
-  "message": "Appointment created successfully", 
-  "userId": 1, 
-  "appointmentId":1, 
-  "createdAt": “2024-06-01 10:00:00” 
+{
+  "message": "Appointment created successfully",
+  "appointment_id": 1,
+  "client_id": 1,
+  "doctor_id": 1,
+  "appointment_time" : "2024-06-10 09:00:00",
+  "appointment_status": "SCHEDULED"
 }
 ```
 
@@ -433,8 +439,8 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-{ 
-  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header." 
+{
+  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
 }
 ```
 
@@ -443,8 +449,8 @@ Status Code: **404 Not Found**
 Description: The server cannot find the specialization.
 
 ```
-{ 
-  "error": "Specialization not found" 
+{
+  "error": "Specialization not found"
 }
 ```
 
@@ -452,25 +458,25 @@ Description: The server cannot find the specialization.
 
 Endpoint
 
-- URL Path: **_/api/v1/users/:userId/appointments_**
-- Description: This endpoint retrieves all appointments for a specific user.
+- URL Path: **_/api/v1/clients/:client_id/appointments_**
+- Description: This endpoint retrieves all appointments for a specific client.
 - Authentication: Authentication is required for this endpoint.
 
 **Request Body**
 
 The request body should contain the following parameter:
 
-- userId: The ID of the user for whom appointments are to be retrieved.
+- client_id: The ID of the client for whom appointments are to be retrieved.
 
 **Example Request**
 
-Description: A 'GET' request to retrieve all appointments for the user with
+Description: A 'GET' request to retrieve all appointments for the client with
 ID 1. It includes an Authorization header with a bearer token for
 authentication.
 
 ```
 
-curl -X GET http://localhost:8080/api/v1/users/1/appointments \
+curl -X GET http://localhost:8080/api/v1/clients/1/appointments \
 -H "Authorization: token" \
 
 ```
@@ -480,12 +486,12 @@ curl -X GET http://localhost:8080/api/v1/users/1/appointments \
 Status code: **200 OK**
 
 Description: The server successfully retrieved all appointments for the
-specified user and provided the list of appointments in the response body.
+specified client and provided the list of appointments in the response body.
 
 ```
 {
-  "userId": 1,
-  "appointments": [ { "appointmentId": 1, "doctorId": 1, "specialization": "Cardiology", "appointmentTime": "2024-06-10 09:00:00" } ]
+  "client_id": 1,
+  "appointments": [ { "appointment_id": 1, "doctor_id": 1, "specialization": "CARDIOLOGY", "appointment_time" : "2024-06-10 09:00:00", "appointment_status": "SCHEDULED"} ]
 }
 ```
 
@@ -496,8 +502,8 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-{ 
-  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header." 
+{
+  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
 }
 ```
 
@@ -505,8 +511,8 @@ Ensure that the correct authentication token is provided in the request header.
 
 Endpoint
 
-- URL Path: **_api/v1/user/:userId/appointment/:appointmentId_**
-- Description: This endpoint allows authenticated users to change the
+- URL Path: **_api/v1/client/:client_id/appointment/:appointmentId_**
+- Description: This endpoint allows authenticated clients to change the
   specialization and/or date of an existing appointment.
 - Authentication: Authentication is required for this endpoint.
 
@@ -514,26 +520,26 @@ Endpoint
 
 The request body should contain the following parameters:
 
-- userId: The ID of the user for whom the appointment belongs;
-- appointmentId: The ID of the appointment to be updated;
+- client_id: The ID of the client for whom the appointment belongs;
+- appointment_id: The ID of the appointment to be updated;
 - specialization: additional parameters to specify the changes to the
   appointment;
-- appointmentTime: additional parameters to specify the changes to the
+- appointment_time: additional parameters to specify the changes to the
   appointment.
 
 **Example Request**
 
-Description: PUT request to update the appointment with ID 1 for the user with
-ID 1. It includes the necessary authentication token and specifies the updated
-details of the appointment, such as the new specialization ID and appointment
-time.
+Description: A 'PUT' request to update the appointment with ID 1 for the client
+with ID 1. It includes the necessary authentication token and specifies the
+updated details of the appointment, such as the new specialization ID and
+appointment time.
 
 ```
 
-curl -X PUT http://localhost:8080/api/v1/user/1/appointment/1 \
+curl -X PUT http://localhost:8080/api/v1/client/1/appointment/1 \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{ "specialization": "Cardiology", "appointmentTime": "2024-06-15 10:00:00" }'
+-d '{ "specialization": "CARDIOLOGY", "appointment_time": "2024-06-15 10:00:00" }'
 
 ```
 
@@ -547,9 +553,9 @@ changes.
 ```
 {
   "message": "Appointment updated successfully",
-  "userId": 1,
-  "appointmentId":1,
-  "updatedFields": { "specialization": "Cardiology", "appointmentTime": "2024-06-1510:00:00" }
+  "client_id": 1,
+  "appointment_id":1,
+  "updated_fields": { "specialization": "NEUROLOGY", "appointment_time": "2024-06-15 14:00:00" }
 }
 ```
 
@@ -558,8 +564,8 @@ Status Code: **404 Not Found**
 Description: The server cannot find the specified user or appointment.
 
 ```
-{ 
-  "error": "User or appointment not found" 
+{
+  "error": "User or appointment not found"
 }
 ```
 
@@ -568,8 +574,8 @@ Status Code: **400 Bad Request**
 Description: The request is invalid or missing required parameters.
 
 ```
-{ 
-  "error": "Invalid request: Missing required parameters" 
+{
+  "error": "Invalid request: Missing required parameters"
 }
 ```
 
@@ -580,8 +586,8 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-{ 
-  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header." 
+{
+  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
 }
 ```
 
@@ -589,20 +595,20 @@ Ensure that the correct authentication token is provided in the request header.
 
 Endpoint
 
-- URL Path: **_/api/v1/user/:userId/appointment/:appointmentId_**
-- Description: This endpoint allows authenticated users to delete a specific
-  appointment associated with a user.
+- URL Path: **_/api/v1/client/:client_id/appointment/:appointment_id_**
+- Description: This endpoint allows authenticated clients to delete a specific
+  appointment associated with a client.
 - Authentication: Authentication is required for this endpoint.
 
 **Example Request**
 
-Description: A 'DELETE' request to delete the appointment with ID 2 for the user
-with ID 1. It includes authentication token in the request header for
+Description: A 'DELETE' request to delete the appointment with ID 2 for the
+client with ID 1. It includes authentication token in the request header for
 authorization.
 
 ```
 
-curl -X DELETE http://localhost:8080/api/v1/user/1/appointment/2 \
+curl -X DELETE http://localhost:8080/api/v1/client/1/appointment/2 \
 -H "Authorization: token" \
 
 ```
@@ -612,8 +618,8 @@ Status Code: **204 No Content**
 Description: The server successfully deleted the appointment.
 
 ```
-{ 
-  "message": "Appointment deleted successfully" 
+{
+  "message": "Appointment deleted successfully"
 }
 ```
 
@@ -622,8 +628,8 @@ Status Code: **404 Not Found**
 Description: The server cannot find the specified user or appointment.
 
 ```
-{ 
-  "error": "User or appointment not found" 
+{
+  "error": "User or appointment not found"
 }
 ```
 
@@ -634,8 +640,8 @@ token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
 ```
-{ 
-  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header." 
+{
+  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
 }
 ```
 
