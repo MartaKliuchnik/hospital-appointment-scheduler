@@ -136,7 +136,7 @@ Description: The provided email address is already registered with another user.
 
 ```
 {
-   "error": "Email already in use"
+   "error": "Email or phone number already in use"
 }
 ```
 
