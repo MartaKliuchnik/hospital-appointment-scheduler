@@ -8,25 +8,29 @@
 4. [API Documentation](#api-documentation)
 
    4.1 [User Management](#patient-management)
-
+   
+   - Client data model.
    - Endpoint **/api/v1/auth/register**
    - Endpoint **/api/v1/auth/login**
 
    4.2 [Doctor Management](#doctor-management)
 
+   - Doctor data model.
    - Endpoint **/api/v1/doctors**
 
-   4.3 [Specialization Management](#specialization-management)
+   4.3 [Schedule Management](#schedule-management)
 
+   - Schedule data model.
    - Endpoint **/api/v1/specializations**
 
    4.4 [Authentication](#authentication)
 
    4.5 [Appointment Management](#appointment-management)
 
+   - Appointment data model.
    - Endpoint **/api/v1/appointments**
-   - Endpoint **/api/v1/client/:client_id/appointments**
-   - Endpoint **/api/v1/client/:client_id/appointment/:appointment_id**
+   - Endpoint **/api/v1/client/:clientId/appointments**
+   - Endpoint **/api/v1/client/:clientId/appointment/:appointmentId**
 
 5. [Install](#install)
 6. [Running in Docker ContainerRun](#run)
@@ -74,7 +78,21 @@ endpoint path. For instance, to access the register page:
 
 ### User Management
 
-#### 1. Register a new user
+#### 1. Client data model
+
+Information about clients.
+
+| Key  | Column Name      | Data Type     | Description                                   |
+| :--- | :--------------- | :------------ | :-------------------------------------------- |
+| PK   | clientId         | int           | Primary key for the Client record             |
+|      | firstName        | varchar(50)   | First name of the client                      |
+|      | lastName         | varchar(50)   | Last name of the client                       |
+|      | phoneNumber      | varchar(15)   | Phone number of the client (must be unique)   |
+|      | email            | varchar(255)  | Email address of the client (must be unique)  |
+|      | password         | varchar(255)  | Password for the client's account             |
+|      | registrationDate | datetime      | Date and time when the client registered      |
+
+#### 2. Register a new user
 
 Endpoint
 
@@ -88,9 +106,9 @@ Endpoint
 
 The request body must be in JSON format and include the following fields:
 
-- first_name (string, required): The first name of the new user.
-- last_name (string, required): The last name of the new user.
-- phone_number: (string, required) - The user's phone number.
+- firstName (string, required): The first name of the new user.
+- lastName (string, required): The last name of the new user.
+- phoneNumber: (string, required) - The user's phone number.
 - email: (string, required) - The email address for the new user. Must be a
   valid email format.
 - password: (string, required) - The password for the new user. Should meet
@@ -107,9 +125,9 @@ number, email, and password for registration.
 curl -X POST http://localhost:8080/api/v1/auth/register \
 -H "Content-Type: application/json" \
 -d '{
-  "first_name": "Alex",
-  "last_name": "Doe",
-  "phone_number": "1234567890",
+  "firstName": "Alex",
+  "lastName": "Doe",
+  "phoneNumber": "1234567890",
   "email": "alex@example.com",
   "password": "hashed_password"
 }'
@@ -121,12 +139,12 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
 Status code: **201 Created**
 
 Description: The user has been successfully registered. The response includes a
-success message and the client_id of the newly created client.
+success message and the clientId of the newly created client.
 
 ```
 {
   "message": "User registered successfully",
-  "client_id": 1
+  "clientId": 1
 }
 ```
 
@@ -162,7 +180,7 @@ from processing the request.
 }
 ```
 
-#### 2. Logs a user into the system
+#### 3. Logs a user into the system
 
 Endpoint
 
@@ -206,13 +224,13 @@ server responds with a JSON object containing a JWT token and user information.
 {
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
     client:{
-        "client_id": 1
-        "first_name": "Alex",
-        "last_name": "Fox",
-        "phone_number": "1234567890",
+        "clientId": 1
+        "firstName": "Alex",
+        "lastName": "Fox",
+        "phoneNumber": "1234567890",
         "email": "alex@example.com",
         "password": "some123password",
-        "registration_date": “2024-01-02 10:00:00”
+        "registrationDate": “2024-01-02 10:00:00”
     }
 }
 ```
@@ -250,7 +268,20 @@ from processing the request.
 
 ### Doctor Management
 
-#### 1. Retrieves a list of all doctors and their schedules
+#### 1. Doctor data model
+
+Information about doctors.
+
+| Key  | Column Name      | Data Type     | Description                                                             |
+| :--- | :--------------- | :------------ | :---------------------------------------------------------------------- |
+| PK   | doctorId         | int           | Primary key for the Doctor record                                       |
+|      | firstName        | varchar(50)   | First name of the doctor                                                |
+|      | lastName         | varchar(50)   | Last name of the doctor                                                 |
+|      | specialization   | enum          | Specialization field for the doctor, limited to specific medical fields |
+
+Predefined list of medical specializations: 'CARDIOLOGY', 'NEUROLOGY', 'ONCOLOGY', 'PEDIATRICS', 'DERMATOLOGY'.
+
+#### 2. Retrieves a list of all doctors and their schedules
 
 Endpoint
 
@@ -280,17 +311,17 @@ schedules.
 {
   "doctors": [
     {
-      "doctor_id": 1,
-      "first_name": "Jonh",
-      "last_name": "Smith",
+      "doctorId": 1,
+      "firstName": "Jonh",
+      "lastName": "Smith",
       "specialization": "CARDIOLOGY",
       "schedules": [
-        { "schedule_day": "TUESDAY",
-          "start_time": "09:00 AM",
-          "end_time": "05:00 PM" },
-        { "schedule_day": "FRIDAY",
-          "start_time": "09:00 AM",
-          "end_time": "12:00 PM" }
+        { "scheduleDay": "TUESDAY",
+          "startTime": "09:00 AM",
+          "endTime": "05:00 PM" },
+        { "scheduleDay": "FRIDAY",
+          "startTime": "09:00 AM",
+          "endTime": "12:00 PM" }
       ]
     }
   ]
@@ -307,24 +338,35 @@ Description: The server cannot find any doctors in the database.
 }
 ```
 
-### Specialization Management
+### Schedule Management
 
-#### 1. Retrieves a list of all specializations
+#### 1. Schedule data model
+
+Information about schedules.
+
+| Key  | Column Name      | Data Type  | Description                                               |
+| :--- | :--------------- | :--------- | :-------------------------------------------------------- |
+| PK   | scheduleId       | int        | Primary key for the Schedule record                       |
+| FK   | doctorId         | int        | Foreign key referencing the doctorId in the Doctor table  |
+|      | scheduleDay      | enum       | Day of the week for the schedule                          |
+|      | startTime        | time       | Start time of the doctor's availability                   |
+|      | endTime          | time       | End time of the doctor's availability                     |
+
+Predefined list of days of the week for the doctor's schedule: 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'.
+
+#### 2. Retrieves a list of all schedules
 
 Endpoint
 
-- URL Path: **_/api/v1/specializations_**
-- Description: This endpoint retrieves a list of all specializations available
-  in the system. Client sends a GET request to the server to retrieve a list of
-  specializations. Server processes the request by querying the database for all
-  specializations.
+- URL Path: **_/api/v1/schedules_**
+- Description: This endpoint retrieves a list of all schedules available in the system. The client sends a GET request to the server to retrieve the list. The server processes the request by querying the database for all schedules.
 - Authentication: No authentication required for this endpoint.
 
 **Example Request**
 
 ```
 
-curl -X GET http://localhost:8080/api/v1/specializations \
+curl -X GET http://localhost:8080/api/v1/schedules \
 
 ```
 
@@ -332,21 +374,29 @@ curl -X GET http://localhost:8080/api/v1/specializations \
 
 Status code: **200 OK**
 
-Description: The server successfully retrieves the list of specializations.
+Description: The server successfully retrieves the list of schedules.
 
 ```
 {
-    "medical_specializations": ["CARDIOLOGY", "NEUROLOGY", "ONCOLOGY", "PEDIATRICS", "DERMATOLOGY"]
+    "schedules": [
+        {
+            "scheduleId": 1,
+            "doctorId": 101,
+            "scheduleDay": "MONDAY",
+            "startTime": "09:00:00",
+            "endTime": "17:00:00"
+        }
+    ]
 }
 ```
 
 Status Code: **404 Not Found**
 
-Description: The server cannot find any specializations in the database.
+Description: The server cannot find any schedules in the database.
 
 ```
 {
-   "error": "No specializations found"
+   "error": "No schedules found"
 }
 ```
 
@@ -380,7 +430,21 @@ application/json for requests that include a body.
 
 ### Appointment Management
 
-#### 1. Creates a new appointment for a client with a doctor of the specified specialization
+#### 1. Appointment data model
+
+Information about appointments.
+
+| Key  | Column Name        | Data Type  | Description                                                    |
+| :--- | :----------------- | :--------- | :------------------------------------------------------------- |
+| PK   | appointmentId      | int        | Primary key for the Appointment record                         |
+| FK   | clientId           | int        | Foreign key referencing the clientId in the Appointment table  |
+| FK   | doctorId           | int        | Foreign key referencing the doctorId in the Appointment table  |
+|      | appointmentTime    | datetime   | Status of the appointment                                      |
+|      | appointmentStatus  | enum       | Day of the week for the schedule                               |
+
+Predefined list of statuses for the appointment: 'SCHEDULED', 'COMPLETED', 'CANCELED'.
+
+#### 2. Creates a new appointment for a client with a doctor of the specified specialization
 
 Endpoint
 
@@ -393,10 +457,10 @@ Endpoint
 
 The request body should contain the following parameters:
 
-- client_id: The ID of the client scheduling the appointment.
-- doctor_id: The ID of the doctor with whom the appointment is scheduled.
+- clientId: The ID of the client scheduling the appointment.
+- doctorId: The ID of the doctor with whom the appointment is scheduled.
 - specialization: The specialization to which the doctor belongs.
-- appointment_time: The date and time of the appointment.
+- appointmentTime: The date and time of the appointment.
 
 **Example Request**
 
@@ -411,7 +475,7 @@ appointment time.
 curl -X POST http://localhost:8080/api/v1/appointments \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{ "client_id": 1, "doctor_id": 1, "specialization": "CARDIOLOGY", "appointment_time": “2024-06-10 09:00:00” }'
+-d '{ "clientId": 1, "doctorId": 1, "specialization": "CARDIOLOGY", "appointmentTime": “2024-06-10 09:00:00” }'
 
 ```
 
@@ -424,11 +488,11 @@ Description: The appointment is successfully created.
 ```
 {
   "message": "Appointment created successfully",
-  "appointment_id": 1,
-  "client_id": 1,
-  "doctor_id": 1,
-  "appointment_time" : "2024-06-10 09:00:00",
-  "appointment_status": "SCHEDULED"
+  "appointmentId": 1,
+  "clientId": 1,
+  "doctorId": 1,
+  "appointmentTime" : "2024-06-10 09:00:00",
+  "appointmentStatus": "SCHEDULED"
 }
 ```
 
@@ -454,11 +518,11 @@ Description: The server cannot find the specialization.
 }
 ```
 
-#### 2. Retrieves all appointments for a specific user
+#### 3. Retrieves all appointments for a specific user
 
 Endpoint
 
-- URL Path: **_/api/v1/clients/:client_id/appointments_**
+- URL Path: **_/api/v1/clients/:clientId/appointments_**
 - Description: This endpoint retrieves all appointments for a specific client.
 - Authentication: Authentication is required for this endpoint.
 
@@ -490,8 +554,8 @@ specified client and provided the list of appointments in the response body.
 
 ```
 {
-  "client_id": 1,
-  "appointments": [ { "appointment_id": 1, "doctor_id": 1, "specialization": "CARDIOLOGY", "appointment_time" : "2024-06-10 09:00:00", "appointment_status": "SCHEDULED"} ]
+  "clientId": 1,
+  "appointments": [ { "appointmentId": 1, "doctorId": 1, "specialization": "CARDIOLOGY", "appointmentTime" : "2024-06-10 09:00:00", "appointmentStatus": "SCHEDULED"} ]
 }
 ```
 
@@ -507,11 +571,11 @@ Ensure that the correct authentication token is provided in the request header.
 }
 ```
 
-#### 3. Changes the specialization and/or date of an existing appointment
+#### 4. Changes the specialization and/or date of an existing appointment
 
 Endpoint
 
-- URL Path: **_api/v1/client/:client_id/appointment/:appointmentId_**
+- URL Path: **_api/v1/client/:clientId/appointment/:appointmentId_**
 - Description: This endpoint allows authenticated clients to change the
   specialization and/or date of an existing appointment.
 - Authentication: Authentication is required for this endpoint.
@@ -521,10 +585,10 @@ Endpoint
 The request body should contain the following parameters:
 
 - client_id: The ID of the client for whom the appointment belongs;
-- appointment_id: The ID of the appointment to be updated;
+- appointmentId: The ID of the appointment to be updated;
 - specialization: additional parameters to specify the changes to the
   appointment;
-- appointment_time: additional parameters to specify the changes to the
+- appointmentTime: additional parameters to specify the changes to the
   appointment.
 
 **Example Request**
@@ -539,7 +603,7 @@ appointment time.
 curl -X PUT http://localhost:8080/api/v1/client/1/appointment/1 \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{ "specialization": "CARDIOLOGY", "appointment_time": "2024-06-15 10:00:00" }'
+-d '{ "specialization": "CARDIOLOGY", "appointmentTime": "2024-06-15 10:00:00" }'
 
 ```
 
@@ -553,9 +617,9 @@ changes.
 ```
 {
   "message": "Appointment updated successfully",
-  "client_id": 1,
-  "appointment_id":1,
-  "updated_fields": { "specialization": "NEUROLOGY", "appointment_time": "2024-06-15 14:00:00" }
+  "clientId": 1,
+  "appointmentId":1,
+  "updatedFields": { "specialization": "NEUROLOGY", "appointmentTime": "2024-06-15 14:00:00" }
 }
 ```
 
@@ -591,11 +655,11 @@ Ensure that the correct authentication token is provided in the request header.
 }
 ```
 
-#### 4. Deletes an appointment
+#### 5. Deletes an appointment
 
 Endpoint
 
-- URL Path: **_/api/v1/client/:client_id/appointment/:appointment_id_**
+- URL Path: **_/api/v1/client/:clientId/appointment/:appointmentId_**
 - Description: This endpoint allows authenticated clients to delete a specific
   appointment associated with a client.
 - Authentication: Authentication is required for this endpoint.
