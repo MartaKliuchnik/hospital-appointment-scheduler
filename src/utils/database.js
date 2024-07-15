@@ -14,11 +14,11 @@ const createDatabase = async () => {
 	try {
 		// Create the database if it doesn't exist
 		await promisePool.execute(
-			'CREATE DATABASE IF NOT EXISTS hospital_appointment_scheduler'
+			'CREATE DATABASE IF NOT EXISTS hospitalAppointmentScheduler'
 		);
 
 		// Use the created database
-		await promisePool.query('USE hospital_appointment_scheduler');
+		await promisePool.query('USE hospitalAppointmentScheduler');
 
 		// Read the SQL file
 		const dataSql = fs

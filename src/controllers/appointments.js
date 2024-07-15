@@ -29,7 +29,7 @@ exports.authenticateJWT = (req, res, next) => {
 		});
 	}
 
-	req.user = decodedPayload;
+	req.client = decodedPayload;
 	next();
 };
 
