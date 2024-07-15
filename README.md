@@ -21,7 +21,7 @@
    4.3 [Schedule Management](#schedule-management)
 
    - Schedule data model.
-   - Endpoint **/api/v1/specializations**
+   - Endpoint **/api/v1/schedules**
 
    4.4 [Authentication](#authentication)
 
