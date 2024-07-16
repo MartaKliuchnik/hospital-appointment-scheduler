@@ -69,7 +69,7 @@ module.exports = class Client {
 				this.password,
 			]);
 
-			return client.clientId;
+			return client.insertId;
 		} catch (error) {
 			console.error('Error registering client:', error);
 			throw new Error('Failed to register client');
@@ -106,13 +106,42 @@ module.exports = class Client {
 	}
 
 	/**
+	 * Find a client from the database by their clientId.
+	 * @param {string} clientId - The clientId of the client to find.
+	 * @returns {Promise<Client|null>} - A promise that resolves to a Client instance, or null if not found.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	static async findById(clientId) {
+		const query = 'SELECT * FROM client WHERE clientId = ?';
+
+		try {
+			const [rows] = await pool.execute(query, [clientId]);
+			if (rows.length === 0) return null;
+
+			const clientData = rows[0];
+
+			return new Client(
+				clientData.firstName,
+				clientData.lastName,
+				clientData.phoneNumber,
+				clientData.email,
+				clientData.password,
+				clientData.clientId
+			);
+		} catch (error) {
+			console.error('Error finding client by id:', error);
+			throw new Error('Failed to find client');
+		}
+	}
+
+	/**
 	 * Create an authentication token (JWT) for a given client.
 	 * @returns {string} - The created JWT token.
 	 * @throws {Error} - Throws an error if token creation fails.
 	 */
 	createAuthToken() {
 		const payload = {
-			sub: this.clientId,
+			clientId: this.clientId,
 			firstName: this.firstName,
 			lastName: this.lastName,
 			iat: Math.floor(Date.now() / 1000),

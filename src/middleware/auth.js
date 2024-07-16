@@ -19,7 +19,11 @@ exports.checkAuth = (req, res, next) => {
 			});
 		}
 
-		req.client = decodedPayload;
+		req.client = {
+			clientId: decodedPayload.clientId,
+			firstName: decodedPayload.firstName,
+			lastName: decodedPayload.lastName,
+		};
 		next();
 	} catch (error) {
 		console.error('Token verification error:', error);

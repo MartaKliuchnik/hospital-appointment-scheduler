@@ -18,6 +18,22 @@
 					<li class="main-header__item">
 						<a href="/api/v1/welcome-page">Logout</a>
 					</li>
+
+					<form
+						class="appointment-form"
+						action="/api/v1/appointments"
+						method="POST"
+					>
+						<div class="appointment-control">
+							<label for="doctorId">doctorId</label>
+							<input type="text" name="doctorId" id="doctorId" />
+						</div>
+						<div class="appointment-control">
+							<label for="appointmentTime">appointmentTime</label>
+							<input type="text" name="appointmentTime" id="appointmentTime" />
+						</div>
+						<button type="submit">Create Appointment</button>
+					</form>
 				</ul>
 			</nav>
 		</header>

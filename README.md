@@ -444,18 +444,17 @@ Information about appointments.
 | PK   | appointmentId      | int        | Primary key for the Appointment record                         |
 | FK   | clientId           | int        | Foreign key referencing the clientId in the Appointment table  |
 | FK   | doctorId           | int        | Foreign key referencing the doctorId in the Appointment table  |
-|      | appointmentTime    | datetime   | Status of the appointment                                      |
-|      | appointmentStatus  | enum       | Day of the week for the schedule                               |
+|      | appointmentTime    | datetime   | Date and time of the appointment                     |
+|      | appointmentStatus  | enum       | Status of the appointment                                      |
 
 Predefined list of statuses for the appointment: 'SCHEDULED', 'COMPLETED', 'CANCELED'.
 
-#### 2. Creates a new appointment for a client with a doctor of the specified specialization
+#### 2. Creates a new appointment for a client 
 
 Endpoint
 
-- URL Path: **_/api/v1/appointments_**
-- Description: This endpoint allows clients to schedule appointments with
-  doctors of a specified specialization.
+- URL Path: **_/api/v1/appointments/create_**
+- Description: This endpoint allows clients to schedule a new appointment.
 - Authentication: Authentication is required for this endpoint.
 
 **Request Body**
@@ -464,7 +463,6 @@ The request body should contain the following parameters:
 
 - clientId: The ID of the client scheduling the appointment.
 - doctorId: The ID of the doctor with whom the appointment is scheduled.
-- specialization: The specialization to which the doctor belongs.
 - appointmentTime: The date and time of the appointment.
 
 **Example Request**
@@ -472,15 +470,14 @@ The request body should contain the following parameters:
 Description: A 'POST' request to create a new appointment. It includes an
 Authorization header with a bearer token for authentication and specifies the
 content type as JSON. The request body contains the details of the appointment,
-including the client's ID, the doctor's ID, the doctor's specialization, and the
-appointment time.
+including the client's ID, the doctor's ID, and the appointment time.
 
 ```
 
-curl -X POST http://localhost:8080/api/v1/appointments \
+curl -X POST http://localhost:8080/api/v1/appointments/create \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{ "clientId": 1, "doctorId": 1, "specialization": "CARDIOLOGY", "appointmentTime": “2024-06-10 09:00:00” }'
+-d '{ "clientId": 1, "doctorId": 1, "appointmentTime": “2024-06-10 09:00:00” }'
 
 ```
 
@@ -493,17 +490,19 @@ Description: The appointment is successfully created.
 ```
 {
   "message": "Appointment created successfully",
-  "appointmentId": 1,
-  "clientId": 1,
-  "doctorId": 1,
-  "appointmentTime" : "2024-06-10 09:00:00",
-  "appointmentStatus": "SCHEDULED"
+    "appointment": {
+        "appointmentId": 8,
+        "clientId": 6,
+        "doctorId": 2,
+        "appointmentTime": "2024-06-10T07:00:00.000Z",
+        "appointmentStatus": "SCHEDULED"
+    }
 }
 ```
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials or the provided
+Description: The request lacks proper authentication credentials, or the provided
 token is invalid. Therefore, the server refuses to respond to the request.
 Ensure that the correct authentication token is provided in the request header.
 
@@ -513,13 +512,43 @@ Ensure that the correct authentication token is provided in the request header.
 }
 ```
 
-Status Code: **404 Not Found**
+Status Code: **400 Bad Request**
 
-Description: The server cannot find the specialization.
+Description: The request is invalid or missing required parameters.
 
 ```
 {
-  "error": "Specialization not found"
+  "error": "Invalid request: Missing required parameters. Please provide clientId, doctorId, and appointmentTime."
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The request contains invalid data.
+
+```
+{
+  "error": "Cannot schedule appointments in the past. Please choose a future date and time."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description:  The server cannot find the specified client.
+
+```
+{
+  "error": "Client not found."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: The server cannot find the specified doctor.
+
+```
+{
+  "error": "Doctor not found."
 }
 ```
 
