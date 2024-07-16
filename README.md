@@ -5,35 +5,36 @@
 1. [Description](#description)
 2. [Technical requirements](#technical-requirements)
 3. [Base URL](#base-url)
-4. [API Documentation](#api-documentation)
+4. [Entity Relationship Diagram](#entity-relationship-diagram)
+5. [API Documentation](#api-documentation)
 
-   4.1 [User Management](#patient-management)
+   5.1 [User Management](#patient-management)
    
    - Client data model.
    - Endpoint **/api/v1/auth/register**
    - Endpoint **/api/v1/auth/login**
 
-   4.2 [Doctor Management](#doctor-management)
+   5.2 [Doctor Management](#doctor-management)
 
    - Doctor data model.
    - Endpoint **/api/v1/doctors**
 
-   4.3 [Schedule Management](#schedule-management)
+   5.3 [Schedule Management](#schedule-management)
 
    - Schedule data model.
    - Endpoint **/api/v1/schedules**
 
-   4.4 [Authentication](#authentication)
+   5.4 [Authentication](#authentication)
 
-   4.5 [Appointment Management](#appointment-management)
+   5.5 [Appointment Management](#appointment-management)
 
    - Appointment data model.
    - Endpoint **/api/v1/appointments**
    - Endpoint **/api/v1/client/:clientId/appointments**
    - Endpoint **/api/v1/client/:clientId/appointment/:appointmentId**
 
-5. [Install](#install)
-6. [Running in Docker ContainerRun](#run)
+6. [Install](#install)
+7. [Running in Docker ContainerRun](#run)
 
 ## Description
 
@@ -73,6 +74,10 @@ the base URL provided above.
 endpoint path. For instance, to access the register page:
 
 `GET http://localhost:8080/api/v1/auth/register`
+
+## Entity Relationship Diagram
+
+![alt text](<Hospital Appointment Scheduler.drawio.png>)
 
 ## API Documentation
 
