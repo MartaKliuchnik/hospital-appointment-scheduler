@@ -63,4 +63,29 @@ module.exports = class Appointment {
 		const appointmentDate = new Date(this.appointmentTime.replace(' ', 'T'));
 		return appointmentDate > currentData;
 	}
+
+	/**
+	 * Retrieve all appointments for a client from the database.
+	 * @param {number} clientId - The ID of the client.
+	 * @returns {Promise<Array>} - A promise that resolves to an array of appointments.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	static async getAppointmentsByClientId(clientId) {
+		const querySelectClientAppointments =
+			'SELECT * FROM appointment WHERE clientId = ?';
+
+		try {
+			const [results] = await pool.execute(querySelectClientAppointments, [
+				clientId,
+			]);
+
+			return {
+				clientId: clientId,
+				appointments: results,
+			};
+		} catch (error) {
+			console.error('Error retrieving client appointments:', error);
+			throw new Error('Failed to retrieve client appointments');
+		}
+	}
 };

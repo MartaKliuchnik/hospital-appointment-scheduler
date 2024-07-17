@@ -7,7 +7,7 @@ require('dotenv').config();
 const rootDir = require('./utils/path');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments');
-const { createDatabase } = require('./utils/database');
+const { createDatabase, pool } = require('./utils/database');
 
 const app = express();
 const PORT = process.env.PORT || 8080;

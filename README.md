@@ -29,8 +29,8 @@
    5.5 [Appointment Management](#appointment-management)
 
    - Appointment data model.
-   - Endpoint **/api/v1/appointments**
-   - Endpoint **/api/v1/client/:clientId/appointments**
+   - Endpoint **/api/v1/appointments/create**
+   - Endpoint **/api/v1//appointments/client-appointments/:clientId**
    - Endpoint **/api/v1/client/:clientId/appointment/:appointmentId**
 
 6. [Install](#install)
@@ -556,7 +556,7 @@ Description: The server cannot find the specified doctor.
 
 Endpoint
 
-- URL Path: **_/api/v1/clients/:clientId/appointments_**
+- URL Path: **_/api/v1/appointments/client-appointments/:clientId_**
 - Description: This endpoint retrieves all appointments for a specific client.
 - Authentication: Authentication is required for this endpoint.
 
@@ -564,7 +564,7 @@ Endpoint
 
 The request body should contain the following parameter:
 
-- client_id: The ID of the client for whom appointments are to be retrieved.
+- clientId: The ID of the client for whom appointments are to be retrieved.
 
 **Example Request**
 
@@ -574,7 +574,7 @@ authentication.
 
 ```
 
-curl -X GET http://localhost:8080/api/v1/clients/1/appointments \
+curl -X GET http://localhost:8080/api/v1/appointments/client-appointments/:clientId_number \
 -H "Authorization: token" \
 
 ```
@@ -584,24 +584,59 @@ curl -X GET http://localhost:8080/api/v1/clients/1/appointments \
 Status code: **200 OK**
 
 Description: The server successfully retrieved all appointments for the
-specified client and provided the list of appointments in the response body.
+specified client and provided the list with all client appointments in the response body.
 
-```
 {
-  "clientId": 1,
-  "appointments": [ { "appointmentId": 1, "doctorId": 1, "specialization": "CARDIOLOGY", "appointmentTime" : "2024-06-10 09:00:00", "appointmentStatus": "SCHEDULED"} ]
+  "clientId": number,
+  "appointments": [
+    {
+      "appointmentId": number,
+      "doctorId": number,
+      "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS"),
+      "appointmentStatus": string
+    },
+    ...
+  ]
 }
 ```
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials or the provided
-token is invalid. Therefore, the server refuses to respond to the request.
-Ensure that the correct authentication token is provided in the request header.
+Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
 
 ```
 {
-  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
+  "error": "Authentication failed: Token not provided."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: The server cannot find the specified appointments for this client.
+
+```
+{
+  "message": "No appointments found for this client."
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The request is invalid or missing required client ID parameter.
+
+```
+{
+  "error": "Invalid client ID."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "Failed to retrieve client appointments."
 }
 ```
 
