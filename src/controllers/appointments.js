@@ -104,6 +104,6 @@ exports.getClientAppointments = async (req, res) => {
 		res.status(200).json(response);
 	} catch (error) {
 		console.error('Error processing client appointments:', error);
-		res.status(500).json({ error: 'Failed to retrieve client appointments' });
+		res.status(500).json({ error: 'Failed to retrieve client appointments.' });
 	}
 };
