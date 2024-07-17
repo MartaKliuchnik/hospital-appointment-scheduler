@@ -1,5 +1,13 @@
 const { verifyJWT } = require('../utils/jwt');
 
+/**
+ * Middleware to check the authentication of a request.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ * @param {function} next - The next middleware function in the stack.
+ * @returns {void} - This middleware does not return a value.
+ * @throws {Error} - If there is an error during token verification or if the token is missing/invalid.
+ */
 exports.checkAuth = (req, res, next) => {
 	try {
 		const token = req.headers.authorization?.split(' ')[1];

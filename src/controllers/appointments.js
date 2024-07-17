@@ -4,10 +4,23 @@ const Appointment = require('../models/appointment');
 const Client = require('../models/client');
 const formatResponse = require('../utils/formatResponse');
 
+/**
+ * Serve the schedule page.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ * @returns {undefined} - This function does not return a value.
+ */
 exports.listAppointments = (req, res) => {
 	res.sendFile(path.join(rootDir, '../views', 'schedule-page.html'));
 };
 
+/**
+ * Create a new appointment.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the appointment creation process.
+ */
 exports.createAppointment = async (req, res) => {
 	// Check authentication
 	if (!req.client || !req.client.clientId) {
@@ -70,6 +83,13 @@ exports.createAppointment = async (req, res) => {
 	}
 };
 
+/**
+ * Retrieve appointments for a specific client.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the appointment retrieval process.
+ */
 exports.getClientAppointments = async (req, res) => {
 	const clientId = parseInt(req.params.clientId);
 
@@ -98,6 +118,13 @@ exports.getClientAppointments = async (req, res) => {
 	}
 };
 
+/**
+ * Delete an appointment for a specific ID.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the appointment deletion process.
+ */
 exports.deleteAppointment = async (req, res) => {
 	const appointmentId = parseInt(req.params.appointmentId);
 	const clientId = req.client.clientId;
@@ -132,20 +159,25 @@ exports.deleteAppointment = async (req, res) => {
 	}
 };
 
+/**
+ * Update an appointment for a specific ID.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the appointment updating process.
+ */
 exports.updateAppointment = async (req, res) => {
-	const appointmentId = req.params.appointmentId;
+	const appointmentId = parseInt(req.params.appointmentId);
 	const { appointmentTime } = req.body;
 	const clientId = req.client.clientId;
 
 	// Check if the appointmentId is provided and is a valid number
-	if (!appointmentId || isNaN(parseInt(appointmentId))) {
+	if (isNaN(appointmentId)) {
 		return res.status(400).json({ error: 'Invalid appointment ID.' });
 	}
 
 	try {
-		const appointment = await Appointment.getAppointmentById(
-			parseInt(appointmentId)
-		);
+		const appointment = await Appointment.getAppointmentById(appointmentId);
 
 		// Check if the appointment exists
 		if (!appointment) {
@@ -167,13 +199,10 @@ exports.updateAppointment = async (req, res) => {
 			});
 		}
 
-		await Appointment.changeAppointmentById(
-			appointmentTime,
-			parseInt(appointmentId)
-		);
+		await Appointment.changeAppointmentById(appointmentTime, appointmentId);
 
 		const updatedAppointment = await Appointment.getAppointmentById(
-			parseInt(appointmentId)
+			appointmentId
 		);
 
 		res.status(200).json({

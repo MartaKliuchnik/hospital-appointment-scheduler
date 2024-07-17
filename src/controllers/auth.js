@@ -18,6 +18,7 @@ exports.getLogin = (req, res) => {
  * @param {object} req - The request object, containing the email and password in the body.
  * @param {object} res - The response object.
  * @returns {Promise<void>} - Sends a JSON response with a token and sanitized client data if successful, or an error message if not.
+ * @throws {Error} - If there is an error during the loggin process.
  */
 exports.postLogin = async (req, res) => {
 	const { email, password } = req.body;
@@ -69,6 +70,7 @@ exports.getRegister = (req, res) => {
  * @param {object} req - The request object, containing the client's details in the body.
  * @param {object} res - The response object.
  * @returns {Promise<void>} - Sends a JSON response with a success message and client ID if successful, or an error message if not.
+ * @throws {Error} - If there is an error during the registration process.
  */
 exports.postRegister = async (req, res) => {
 	const { firstName, lastName, phoneNumber, email, password } = req.body;
