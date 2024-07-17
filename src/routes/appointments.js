@@ -13,10 +13,16 @@ router.get('/', appointmentsController.getAppointments);
 // Create a new appointment (route: /appointments/create)
 router.post('/create', appointmentsController.createAppointment);
 
-// retrieve all appointments for the specified client (route: /appointments/client-appointments/:clientId)
+// Retrieve all appointments for the specified client (route: /appointments/client-appointments/:clientId)
 router.get(
 	'/client-appointments/:clientId',
 	appointmentsController.getClientAppointments
+);
+
+// Delete the specified appointment for the specified client (route: /appointments/client-appointment/:appointmentId)
+router.delete(
+	'/client-appointment/:appointmentId',
+	appointmentsController.deleteClientAppointment
 );
 
 module.exports = router;

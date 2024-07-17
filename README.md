@@ -30,8 +30,8 @@
 
    - Appointment data model.
    - Endpoint **/api/v1/appointments/create**
-   - Endpoint **/api/v1//appointments/client-appointments/:clientId**
-   - Endpoint **/api/v1/client/:clientId/appointment/:appointmentId**
+   - Endpoint **/api/v1/appointments/client-appointments/:clientId**
+   - Endpoint **/api/v1/client/appointments/client-appointment/:appointmentId**
 
 6. [Install](#install)
 7. [Running in Docker ContainerRun](#run)
@@ -444,7 +444,7 @@ Information about appointments.
 | PK   | appointmentId      | int        | Primary key for the Appointment record                         |
 | FK   | clientId           | int        | Foreign key referencing the clientId in the Appointment table  |
 | FK   | doctorId           | int        | Foreign key referencing the doctorId in the Appointment table  |
-|      | appointmentTime    | datetime   | Date and time of the appointment                     |
+|      | appointmentTime    | datetime   | Date and time of the appointment                               |
 |      | appointmentStatus  | enum       | Status of the appointment                                      |
 
 Predefined list of statuses for the appointment: 'SCHEDULED', 'COMPLETED', 'CANCELED'.
@@ -477,7 +477,7 @@ including the client's ID, the doctor's ID, and the appointment time.
 curl -X POST http://localhost:8080/api/v1/appointments/create \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{ "clientId": 1, "doctorId": 1, "appointmentTime": “2024-06-10 09:00:00” }'
+-d '{ "clientId": number, "doctorId": number, "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS") }'
 
 ```
 
@@ -489,13 +489,13 @@ Description: The appointment is successfully created.
 
 ```
 {
-  "message": "Appointment created successfully",
-    "appointment": {
-        "appointmentId": 8,
-        "clientId": 6,
-        "doctorId": 2,
-        "appointmentTime": "2024-06-10T07:00:00.000Z",
-        "appointmentStatus": "SCHEDULED"
+  "message": "Appointment created successfully.",
+  "appointment": {
+        "appointmentId": number,
+        "clientId": number,
+        "doctorId": number,
+        "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS"),
+        "appointmentStatus": string
     }
 }
 ```
@@ -574,7 +574,7 @@ authentication.
 
 ```
 
-curl -X GET http://localhost:8080/api/v1/appointments/client-appointments/:clientId_number \
+curl -X GET http://localhost:8080/api/v1/appointments/client-appointments/:clientId \
 -H "Authorization: token" \
 
 ```
@@ -586,15 +586,16 @@ Status code: **200 OK**
 Description: The server successfully retrieved all appointments for the
 specified client and provided the list with all client appointments in the response body.
 
+```
 {
   "clientId": number,
   "appointments": [
-    {
+    { 
       "appointmentId": number,
       "doctorId": number,
       "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS"),
       "appointmentStatus": string
-    },
+    }, 
     ...
   ]
 }
@@ -728,7 +729,7 @@ Ensure that the correct authentication token is provided in the request header.
 
 Endpoint
 
-- URL Path: **_/api/v1/client/:clientId/appointment/:appointmentId_**
+- URL Path: **_/api/v1/client/appointments/client-appointment/:appointmentId_**
 - Description: This endpoint allows authenticated clients to delete a specific
   appointment associated with a client.
 - Authentication: Authentication is required for this endpoint.
@@ -741,7 +742,7 @@ authorization.
 
 ```
 
-curl -X DELETE http://localhost:8080/api/v1/client/1/appointment/2 \
+curl -X DELETE http://localhost:8080/api/v1/appointments/client-appointment/:appointmentId \
 -H "Authorization: token" \
 
 ```
@@ -752,29 +753,57 @@ Description: The server successfully deleted the appointment.
 
 ```
 {
-  "message": "Appointment deleted successfully"
-}
-```
-
-Status Code: **404 Not Found**
-
-Description: The server cannot find the specified user or appointment.
-
-```
-{
-  "error": "User or appointment not found"
+  "message": "Appointment deleted successfully."
 }
 ```
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials or the provided
-token is invalid. Therefore, the server refuses to respond to the request.
-Ensure that the correct authentication token is provided in the request header.
+Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
 
 ```
 {
-  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
+  "error": "Authentication failed: Token not provided."
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The request is invalid or missing required appointment ID parameter.
+
+```
+{
+  "error": "Invalid appointment ID."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: The server cannot find the specified appointment for this client.
+
+```
+{
+  "error": "Appointment doesn't exist."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The request is understood by the server, but authorization is refused because the user lacks sufficient rights to access the resource.
+
+```
+{
+  "error": "You do not have permission to delete this appointment."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "Failed to delete appointment."
 }
 ```
 

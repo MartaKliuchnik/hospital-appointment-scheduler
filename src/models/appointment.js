@@ -28,29 +28,29 @@ module.exports = class Appointment {
 			return result.insertId;
 		} catch (error) {
 			console.error('Error inserting appointment:', error);
-			throw new Error('Failed to insert appointment');
+			throw new Error('Failed to insert appointment.');
 		}
 	}
 
 	/**
 	 * Retrieve an appointment from the database by ID.
 	 * @param {number} appointmentId - The ID of the appointment to retrieve.
-	 * @returns {Promise<Object>} - A promise that resolves to the retrieved appointment.
+	 * @returns {Promise<Object|null>} - A promise that resolves to the retrieved appointment, or null if not found.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
-	async getAppointmentById(appointmentId) {
+	static async getAppointmentById(appointmentId) {
 		const querySelectAppointment =
 			'SELECT * FROM appointment WHERE appointmentId = ?';
 
 		try {
-			const [result] = await pool.execute(querySelectAppointment, [
+			const [results] = await pool.execute(querySelectAppointment, [
 				appointmentId,
 			]);
 
-			return result[0];
+			return results.length > 0 ? results[0] : null;
 		} catch (error) {
 			console.error('Error retrieving appointment:', error);
-			throw new Error('Failed to retrieve appointment');
+			throw new Error('Failed to retrieve appointment.');
 		}
 	}
 
@@ -85,7 +85,31 @@ module.exports = class Appointment {
 			};
 		} catch (error) {
 			console.error('Error retrieving client appointments:', error);
-			throw new Error('Failed to retrieve client appointments');
+			throw new Error('Failed to retrieve client appointments.');
+		}
+	}
+
+	/**
+	 * Delete an appointment from the database by ID.
+	 * @param {number} appointmentId - The ID of the appointment.
+	 * @returns {Promise<undefined>}
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	static async deleteAppointmentById(appointmentId) {
+		const queryDeleteAppointment =
+			'DELETE FROM appointment WHERE appointmentId = ?';
+
+		try {
+			const [result] = await pool.execute(queryDeleteAppointment, [
+				appointmentId,
+			]);
+
+			if ((result.affectedRows = 0)) {
+				throw new Eror('Appointment not found.');
+			}
+		} catch (error) {
+			console.error('Error deleting client appointments:', error);
+			throw new Error('Failed to delete appointment.');
 		}
 	}
 };
