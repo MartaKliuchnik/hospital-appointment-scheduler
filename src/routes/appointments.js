@@ -7,22 +7,24 @@ const router = Router();
 // Apply the authentication middleware to all routes defined in this router.
 router.use(authMiddleware.checkAuth);
 
-// Render a page with an appointment form. (route: /appointments)
-router.get('/', appointmentsController.getAppointments);
+// GET /api/v1/appointments
+// Retrieve all appointments
+router.get('/', appointmentsController.listAppointments);
 
-// Create a new appointment (route: /appointments/create)
-router.post('/create', appointmentsController.createAppointment);
+// POST /api/v1/appointments
+// Create a new appointment
+router.post('/', appointmentsController.createAppointment);
 
-// Retrieve all appointments for the specified client (route: /appointments/client-appointments/:clientId)
-router.get(
-	'/client-appointments/:clientId',
-	appointmentsController.getClientAppointments
-);
+// GET /api/v1/appointments/clients/:clientId
+// Retrieve all appointments for the specified client
+router.get('/clients/:clientId', appointmentsController.getClientAppointments);
 
-// Delete the specified appointment for the specified client (route: /appointments/client-appointment/:appointmentId)
-router.delete(
-	'/client-appointment/:appointmentId',
-	appointmentsController.deleteClientAppointment
-);
+// DELETE /api/v1/appointments/:appointmentId
+// Delete the specified appointment
+router.delete('/:appointmentId', appointmentsController.deleteAppointment);
+
+// PUT /api/v1/appointments/:appointmentId
+// Update the specified appointment
+router.put('/:appointmentId', appointmentsController.updateAppointment);
 
 module.exports = router;

@@ -29,9 +29,9 @@
    5.5 [Appointment Management](#appointment-management)
 
    - Appointment data model.
-   - Endpoint **/api/v1/appointments/create**
-   - Endpoint **/api/v1/appointments/client-appointments/:clientId**
-   - Endpoint **/api/v1/client/appointments/client-appointment/:appointmentId**
+   - Endpoint **/api/v1/appointments**
+   - Endpoint **/api/v1/appointments/clients/:clientId**
+   - Endpoint **/api/v1/appointments/:appointmentId**
 
 6. [Install](#install)
 7. [Running in Docker ContainerRun](#run)
@@ -453,7 +453,7 @@ Predefined list of statuses for the appointment: 'SCHEDULED', 'COMPLETED', 'CANC
 
 Endpoint
 
-- URL Path: **_/api/v1/appointments/create_**
+- URL Path: **_/api/v1/appointments_**
 - Description: This endpoint allows clients to schedule a new appointment.
 - Authentication: Authentication is required for this endpoint.
 
@@ -474,7 +474,7 @@ including the client's ID, the doctor's ID, and the appointment time.
 
 ```
 
-curl -X POST http://localhost:8080/api/v1/appointments/create \
+curl -X POST http://localhost:8080/api/v1/appointments \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
 -d '{ "clientId": number, "doctorId": number, "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS") }'
@@ -532,6 +532,16 @@ Description: The request contains invalid data.
 }
 ```
 
+Status Code: **400 Bad Request**
+
+Description: The request is invalid because it contains incorrect information. Ensure the date is correctly formatted.
+
+```
+{
+  "error": "Invalid appointment time. Please choose a future date and time."
+}
+```
+
 Status Code: **404 Not Found**
 
 Description:  The server cannot find the specified client.
@@ -556,7 +566,7 @@ Description: The server cannot find the specified doctor.
 
 Endpoint
 
-- URL Path: **_/api/v1/appointments/client-appointments/:clientId_**
+- URL Path: **_/api/v1/appointments/clients/:clientId_**
 - Description: This endpoint retrieves all appointments for a specific client.
 - Authentication: Authentication is required for this endpoint.
 
@@ -574,7 +584,7 @@ authentication.
 
 ```
 
-curl -X GET http://localhost:8080/api/v1/appointments/client-appointments/:clientId \
+curl -X GET http://localhost:8080/api/v1/appointments/clients/:clientId \
 -H "Authorization: token" \
 
 ```
@@ -641,39 +651,30 @@ Description: An unexpected error occurred on the server while processing the req
 }
 ```
 
-#### 4. Changes the specialization and/or date of an existing appointment
+#### 4. Changes the date of an existing appointment
 
 Endpoint
 
-- URL Path: **_api/v1/client/:clientId/appointment/:appointmentId_**
-- Description: This endpoint allows authenticated clients to change the
-  specialization and/or date of an existing appointment.
+- URL Path: **_api/v1/client/appointments/:appointmentId_**
+- Description: This endpoint allows authenticated clients to change the date of an existing appointment.
 - Authentication: Authentication is required for this endpoint.
 
 **Request Body**
 
-The request body should contain the following parameters:
+The request body should contain the following parameter:
 
-- client_id: The ID of the client for whom the appointment belongs;
-- appointmentId: The ID of the appointment to be updated;
-- specialization: additional parameters to specify the changes to the
-  appointment;
-- appointmentTime: additional parameters to specify the changes to the
-  appointment.
+- appointmentTime: parameters to specify the changes to the appointment.
 
 **Example Request**
 
-Description: A 'PUT' request to update the appointment with ID 1 for the client
-with ID 1. It includes the necessary authentication token and specifies the
-updated details of the appointment, such as the new specialization ID and
-appointment time.
+Description: A 'PUT' request to update the appointment for the specified client. It includes the necessary authentication token and specifies the updated detail of the appointment, such as the new appointment time.
 
 ```
 
-curl -X PUT http://localhost:8080/api/v1/client/1/appointment/1 \
+curl -X PUT http://localhost:8080/api/v1/appointments/:appointmentId \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{ "specialization": "CARDIOLOGY", "appointmentTime": "2024-06-15 10:00:00" }'
+-d '{ "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS") }'
 
 ```
 
@@ -686,42 +687,74 @@ changes.
 
 ```
 {
-  "message": "Appointment updated successfully",
-  "clientId": 1,
-  "appointmentId":1,
-  "updatedFields": { "specialization": "NEUROLOGY", "appointmentTime": "2024-06-15 14:00:00" }
-}
-```
-
-Status Code: **404 Not Found**
-
-Description: The server cannot find the specified user or appointment.
-
-```
-{
-  "error": "User or appointment not found"
-}
-```
-
-Status Code: **400 Bad Request**
-
-Description: The request is invalid or missing required parameters.
-
-```
-{
-  "error": "Invalid request: Missing required parameters"
+  "message": "Appointment updated successfully.",
+  "appointment": {
+        "appointmentId": number,
+        "clientId": number,
+        "doctorId": number,
+        "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS"),
+        "appointmentStatus": string
+    }
 }
 ```
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials or the provided
-token is invalid. Therefore, the server refuses to respond to the request.
-Ensure that the correct authentication token is provided in the request header.
+Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
 
 ```
 {
-  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
+  "error": "Authentication failed: Token not provided."
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The request is invalid or missing required appointment ID parameter.
+
+```
+{
+  "error": "Invalid appointment ID."
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The request is invalid because it contains incorrect information. Ensure the date is correctly formatted.
+
+```
+{
+  "error": "Invalid appointment time. Please choose a future date and time."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: The server cannot find the specified appointment for this client.
+
+```
+{
+  "error": "Appointment doesn't exist."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The request is understood by the server, but authorization is refused because the user lacks sufficient rights to access the resource.
+
+```
+{
+  "error": "You do not have permission to update this appointment."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "Failed to update appointment."
 }
 ```
 
@@ -736,8 +769,7 @@ Endpoint
 
 **Example Request**
 
-Description: A 'DELETE' request to delete the appointment with ID 2 for the
-client with ID 1. It includes authentication token in the request header for
+Description: A 'DELETE' request to delete a specific appointment associated with a client. It includes authentication token in the request header for
 authorization.
 
 ```
@@ -747,7 +779,7 @@ curl -X DELETE http://localhost:8080/api/v1/appointments/client-appointment/:app
 
 ```
 
-Status Code: **204 No Content**
+Status Code: **200 OK**
 
 Description: The server successfully deleted the appointment.
 

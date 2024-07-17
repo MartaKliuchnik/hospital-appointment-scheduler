@@ -58,10 +58,25 @@ module.exports = class Appointment {
 	 * Validate the appointment time.
 	 * @returns {boolean} - Returns true if the appointment time is in the future; false otherwise.
 	 */
-	isValidAppointmentTime() {
+	static isValidAppointmentTime(appointmentTime) {
 		const currentData = new Date();
-		const appointmentDate = new Date(this.appointmentTime.replace(' ', 'T'));
+		const appointmentDate = new Date(appointmentTime.replace(' ', 'T'));
 		return appointmentDate > currentData;
+	}
+
+	/**
+	 * Format the appointment response.
+	 * @param {Object} appointment - The appointment object to format.
+	 * @returns {Object} - The formatted appointment object.
+	 */
+	static formatAppointmentResponse(appointment) {
+		return {
+			...appointment,
+			appointmentTime: appointment.appointmentTime
+				.toISOString()
+				.replace('T', ' ')
+				.substring(0, 19),
+		};
 	}
 
 	/**
@@ -107,9 +122,36 @@ module.exports = class Appointment {
 			if ((result.affectedRows = 0)) {
 				throw new Eror('Appointment not found.');
 			}
+
+			console.log(result);
 		} catch (error) {
-			console.error('Error deleting client appointments:', error);
+			console.error('Error deleting client appointment:', error);
 			throw new Error('Failed to delete appointment.');
+		}
+	}
+
+	/**
+	 * Change an appointment.
+	 * @param {number} appointmentId - The ID of the appointment.
+	 * @returns {Promise<Object>} - A promise that resolves to the updated appointment.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	static async changeAppointmentById(newAppointmentTime, appointmentId) {
+		const queryChangeAppointment =
+			'UPDATE appointment SET appointmentTime = ? WHERE appointmentId = ?';
+
+		try {
+			const [result] = await pool.execute(queryChangeAppointment, [
+				newAppointmentTime,
+				appointmentId,
+			]);
+
+			if ((result.changedRows = 0)) {
+				throw new Eror('Appointment not found.');
+			}
+		} catch (error) {
+			console.error('Error changing client appointment:', error);
+			throw new Error('Failed to change appointment.');
 		}
 	}
 };
