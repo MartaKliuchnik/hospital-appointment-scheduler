@@ -122,8 +122,6 @@ module.exports = class Appointment {
 			if ((result.affectedRows = 0)) {
 				throw new Eror('Appointment not found.');
 			}
-
-			console.log(result);
 		} catch (error) {
 			console.error('Error deleting client appointment:', error);
 			throw new Error('Failed to delete appointment.');

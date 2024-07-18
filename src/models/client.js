@@ -9,6 +9,7 @@ module.exports = class Client {
 	 * @param {string} phoneNumber - The phone number of the client.
 	 * @param {string} email - The email address of the client.
 	 * @param {string} hashedPassword - The hashed password of the client.
+	 * @param {clientId|null} clientId - The ID of the client.
 	 */
 	constructor(
 		firstName,

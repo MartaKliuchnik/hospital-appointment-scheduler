@@ -7,7 +7,8 @@ require('dotenv').config();
 const rootDir = require('./utils/path');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments');
-const { createDatabase, pool } = require('./utils/database');
+const doctorRoutes = require('./routes/doctors');
+const { createDatabase } = require('./utils/database');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -28,6 +29,7 @@ app.use(
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/appointments', appointmentRoutes);
+app.use('/api/v1/doctors', doctorRoutes);
 
 app.get('/api/v1/welcome-page', (req, res) => {
 	res.sendFile(path.join(rootDir, '../views', 'home-page.html'));
