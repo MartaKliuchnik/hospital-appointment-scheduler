@@ -83,12 +83,60 @@ exports.deleteDoctor = async (req, res) => {
 	} catch (error) {
 		console.error('Error deleting doctor:', error);
 
-		if (
+		if (error.message === 'Doctor not found.') {
+			return res.status(404).json({ error: 'Doctor not found.' });
+		} else if (
 			error.message === 'This doctor has appointments. Deletion is forbidden.'
 		) {
 			return res.status(403).json({ error: error.message });
 		}
 
 		res.status(500).json({ error: 'Failed to delete doctor.' });
+	}
+};
+
+/**
+ * Update a doctor's information for a specific ID.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the doctor updating process.
+ */
+exports.updateDoctor = async (req, res) => {
+	const doctorId = parseInt(req.params.doctorId);
+
+	// Check if the doctorId is provided and is a valid number
+	if (isNaN(doctorId)) {
+		return res.status(400).json({ error: 'Invalid doctor ID.' });
+	}
+
+	const updateData = {
+		firstName: req.body.firstName,
+		lastName: req.body.lastName,
+		specialization: req.body.specialization,
+	};
+
+	// Remove undefined fields
+	Object.keys(updateData).forEach(
+		(key) => updateData[key] === undefined && delete updateData[key]
+	);
+
+	if (Object.keys(updateData).length === 0) {
+		return res.status(400).json({ error: 'No valid update data provided.' });
+	}
+
+	try {
+		const updatedDoctor = await Doctor.updateById(doctorId, updateData);
+		res.status(200).json(updatedDoctor);
+	} catch (error) {
+		console.error('Error updating doctor:', error);
+
+		if (error.message === 'Doctor not found.') {
+			return res.status(404).json({ error: 'Doctor not found.' });
+		} else if (error.message === 'No valid fields to update.') {
+			return res.status(400).json({ error: error.message });
+		}
+
+		res.status(500).json({ error: 'Failed to update doctor.' });
 	}
 };

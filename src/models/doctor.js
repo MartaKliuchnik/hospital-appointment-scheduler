@@ -96,7 +96,50 @@ module.exports = class Doctor {
 				throw new Error('This doctor has appointments. Deletion is forbidden.');
 			}
 
-			throw new Error('Failed to delete doctor.');
+			throw error;
+		}
+	}
+
+	/**
+	 * Update a doctor's information in the database.
+	 * @param {number} doctorId - The ID of the doctor to update.
+	 * @param {Object} updateData - An object containing the fields to update.
+	 * @returns {Promise<Object>} - A promise that resolves to the updated doctor object.
+	 * @throws {Error} - If there's an error during the database operation or if no valid fields are provided.
+	 */
+	static async updateById(doctorId, updateData) {
+		const allowedFields = ['firstName', 'lastName', 'specialization'];
+		const updates = [];
+		const values = [];
+
+		for (const [key, value] of Object.entries(updateData)) {
+			if (allowedFields.includes(key)) {
+				updates.push(`${key} = ?`);
+				values.push(value);
+			}
+		}
+
+		// Check if the updated data exists
+		if (updates.length === 0) {
+			throw new Error('No valid fields to update.');
+		}
+
+		const queryUpdateDoctor = `UPDATE doctor SET ${updates.join(
+			', '
+		)} WHERE doctorId = ?`;
+		values.push(doctorId);
+
+		try {
+			const [result] = await pool.execute(queryUpdateDoctor, values);
+
+			if (result.changedRows === 0) {
+				throw new Error('Doctor not found.');
+			}
+
+			return this.getById(doctorId);
+		} catch (error) {
+			console.error('Error updating doctor:', error);
+			throw error;
 		}
 	}
 };

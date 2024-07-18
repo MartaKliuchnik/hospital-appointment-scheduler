@@ -15,4 +15,8 @@ router.get('/:doctorId', doctortsController.getDoctor);
 // Delete the specified doctor
 router.delete('/:doctorId', doctortsController.deleteDoctor);
 
+// PUT /api/v1/doctors/:doctorId
+// Update the specified doctor
+router.put('/:doctorId', doctortsController.updateDoctor);
+
 module.exports = router;
