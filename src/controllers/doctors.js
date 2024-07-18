@@ -15,7 +15,7 @@ exports.listDoctors = async (req, res) => {
 		if (!doctors || doctors.length === 0) {
 			return res
 				.status(404)
-				.json({ message: 'No doctors found in the database.' });
+				.json({ error: 'No doctors found in the database.' });
 		}
 
 		res.status(200).json({ doctors });
@@ -135,8 +135,14 @@ exports.updateDoctor = async (req, res) => {
 			return res.status(404).json({ error: 'Doctor not found.' });
 		} else if (error.message === 'No valid fields to update.') {
 			return res.status(400).json({ error: error.message });
+		} else if (error.code === 'ER_DATA_TOO_LONG' || error.errno === 1265) {
+			return res
+				.status(400)
+				.json({
+					error:
+						'Invalid specialization. Please provide a valid specialization from the allowed list.',
+				});
 		}
-
-		res.status(500).json({ error: 'Failed to update doctor.' });
+			res.status(500).json({ error: 'Failed to update doctor.' });
 	}
 };

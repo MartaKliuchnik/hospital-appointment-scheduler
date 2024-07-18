@@ -18,6 +18,7 @@
 
    - Doctor data model.
    - Endpoint **/api/v1/doctors**
+   - Endpoint **/api/v1/doctors/:doctorId**
 
    5.3 [Schedule Management](#schedule-management)
 
@@ -286,7 +287,7 @@ Information about doctors.
 
 Predefined list of medical specializations: 'CARDIOLOGY', 'NEUROLOGY', 'ONCOLOGY', 'PEDIATRICS', 'DERMATOLOGY'.
 
-#### 2. Retrieves a list of all doctors and their schedules
+#### 2. Retrieves a list of all doctors
 
 Endpoint
 
@@ -294,10 +295,12 @@ Endpoint
 - Description: This endpoint retrieves a list of all doctors along with their
   schedules. Client sends a GET request to the server to retrieve a list of
   doctors. Server processes the request by querying the database for all doctors
-  and their schedules.
+  and their personal information.
 - Authentication: No authentication required for this endpoint.
 
 **Example Request**
+
+Description: A `GET` request to retrieve a list of all doctors.
 
 ```
 
@@ -305,30 +308,22 @@ curl -X GET http://localhost:8080/api/v1/doctors \
 
 ```
 
-**Responses**
+**Example Responses**
 
 Status code: **200 OK**
 
-Description: The server successfully retrieves the list of doctors and their
-schedules.
+Description: The server successfully retrieves the list of doctors.
 
 ```
 {
   "doctors": [
     {
-      "doctorId": 1,
-      "firstName": "Jonh",
-      "lastName": "Smith",
-      "specialization": "CARDIOLOGY",
-      "schedules": [
-        { "scheduleDay": "TUESDAY",
-          "startTime": "09:00 AM",
-          "endTime": "05:00 PM" },
-        { "scheduleDay": "FRIDAY",
-          "startTime": "09:00 AM",
-          "endTime": "12:00 PM" }
-      ]
-    }
+      "doctorId": 123,
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "specialization": "NEUROLOGY"
+    },
+    ...
   ]
 }
 ```
@@ -339,7 +334,248 @@ Description: The server cannot find any doctors in the database.
 
 ```
 {
-   "error": "No doctors found"
+   "error": "No doctors found in the database."
+}
+```
+
+#### 3. Retrieve a specific doctor by ID
+
+Endpoint
+
+- URL Path: /api/v1/doctors/:doctorId
+- Description: This endpoint retrieves information about a specific doctor based on their ID. The client sends a GET request to the server with the doctor's ID as a path parameter. The server processes the request by querying the database for the doctor with the specified ID.
+- Authentication: No authentication required for this endpoint.
+
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- doctorId: The unique identifier of the doctor to retrieve.
+
+**Example Request**
+
+Description: A `GET` request to retrieve a specific doctor associated with a doctorId.
+
+```
+
+curl -X GET http://localhost:8080/api/v1/doctors/123
+
+```
+
+**Example Responses**
+
+Status code: **200 OK**
+
+Description: The server successfully retrieves the doctor's information.
+
+```
+{
+  {
+    "doctorId": 123,
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "specialization": "NEUROLOGY"
+  }
+}
+```
+
+Status code: **400 Bad Request**
+
+Description: The provided doctor ID is invalid (not a number).
+
+```
+{
+  "error": "Invalid doctor ID."
+}
+```
+
+Status code: **404 Not Found**
+
+Description: No doctor with the specified ID exists in the database.
+
+
+```
+{
+  "error": "Doctor not found."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "Failed to retrieve doctor."
+}
+```
+
+#### 4. Delete a specific doctor
+
+Endpoint
+
+- URL Path: **_/api/v1/doctors/:doctorId_**
+- Description: This endpoint deletes a specific doctor based on their ID. The client sends a DELETE request to the server with the doctor's ID as a path parameter. The server processes the request by removing the specified doctor from the database.
+- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to delete doctor records.
+
+**Example Request**
+
+Description: A 'DELETE' request to remove a specific doctor associated with a doctorId. This request must include an authorization token for an admin user.
+
+```
+
+curl -X DELETE http://localhost:8080/api/v1/doctors/123 \
+-H "Authorization: Bearer <admin_token>"
+
+```
+
+**Example Responses**
+
+Status Code: **200 OK**
+
+Description: The server successfully deletes the doctor.
+
+```
+{
+  "message": "Doctor deleted successfully."
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The provided doctor ID is invalid (not a number).
+
+```
+{
+  "error": "Invalid doctor ID."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: No doctor with the specified ID exists in the database.
+
+```
+{
+  "error": "Doctor not found."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The doctor cannot be deleted due to existing appointments or other constraints.
+
+```
+{
+  "error": "This doctor has appointments. Deletion is forbidden."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The user does not have admin privileges required to perform this operation.
+
+```
+{
+  "error": "Access denied. Admin privileges required."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "Failed to delete doctor."
+}
+```
+
+#### 5. Update a doctor's information
+
+Endpoint
+
+- URL Path: **_/api/v1/doctors/:doctorId_**
+- Description: This endpoint updates a specific doctor's information based on their ID. The client sends a PUT request to the server with the doctor's ID as a path parameter and the updated information in the request body. The server processes the request by updating the specified doctor's details in the database.
+- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to update doctor records.
+
+**Example Request**
+
+Description: A `PUT` request to update a specific doctor's information associated with a doctorId. This request must include an authorization token for an admin user.
+
+```
+
+curl -X PUT http://localhost:8080/api/v1/doctors/123 \
+-H "Authorization: Bearer <admin_token>" \
+-H "Content-Type: application/json" \
+-d '{ "firstName": "John", "lastName": "Doe", "specialization": "CARDIOLOGY" }'
+
+```
+
+**Example Responses**
+
+Status Code: **200 OK**
+
+Description: The server successfully updates the doctor's information.
+
+```
+[
+    {
+        "doctorId": 123,
+        "firstName": "John",
+        "lastName": "Doe",
+        "specialization": "CARDIOLOGY"
+    }
+]
+```
+
+Status Code: **400 Bad Request**
+
+Description: The provided doctor ID is invalid (not a number).
+
+```
+{
+  "error": "Invalid doctor ID."
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: No valid update data is provided.
+
+```
+{
+  "error": "No valid update data provided."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: No doctor with the specified ID exists in the database.
+
+```
+{
+  "error": "Doctor not found."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description:  The user does not have admin privileges required to perform this operation.
+
+```
+{
+  "error": "Access denied. Admin privileges required."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "Failed to update doctor."
 }
 ```
 
@@ -477,11 +713,11 @@ including the client's ID, the doctor's ID, and the appointment time.
 curl -X POST http://localhost:8080/api/v1/appointments \
 -H "Authorization: token" \
 -H "Content-Type: application/json" \
--d '{ "clientId": number, "doctorId": number, "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS") }'
+-d '{ "clientId": 123, "doctorId": 456, "appointmentTime": "2024-08-15 10:00:00" }'
 
 ```
 
-**Responses**
+**Example Responses**
 
 Status code: **201 Created**
 
@@ -491,11 +727,11 @@ Description: The appointment is successfully created.
 {
   "message": "Appointment created successfully.",
   "appointment": {
-        "appointmentId": number,
-        "clientId": number,
-        "doctorId": number,
-        "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS"),
-        "appointmentStatus": string
+        "appointmentId": 78,
+        "clientId": 123,
+        "doctorId": 456,
+        "appointmentTime": "appointmentTime": "2024-08-15 10:00:00",
+        "appointmentStatus": "SCHEDULED"
     }
 }
 ```
@@ -584,12 +820,12 @@ authentication.
 
 ```
 
-curl -X GET http://localhost:8080/api/v1/appointments/clients/:clientId \
+curl -X GET http://localhost:8080/api/v1/appointments/clients/2 \
 -H "Authorization: token" \
 
 ```
 
-**Responses**
+**Example Responses**
 
 Status code: **200 OK**
 
@@ -598,13 +834,13 @@ specified client and provided the list with all client appointments in the respo
 
 ```
 {
-  "clientId": number,
+  "clientId": 2,
   "appointments": [
     { 
-      "appointmentId": number,
-      "doctorId": number,
-      "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS"),
-      "appointmentStatus": string
+      "appointmentId": 4,
+      "doctorId": 3,
+      "appointmentTime": "2024-08-15 14:30:00",
+      "appointmentStatus": "SCHEDULED"
     }, 
     ...
   ]
@@ -671,14 +907,15 @@ Description: A 'PUT' request to update the appointment for the specified client.
 
 ```
 
-curl -X PUT http://localhost:8080/api/v1/appointments/:appointmentId \
--H "Authorization: token" \
--H "Content-Type: application/json" \
--d '{ "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS") }'
+curl -X PUT http://localhost:8080/api/v1/appointments/456 \
+-H "Authorization: Bearer <auth_token>" \
+-d '{
+  "appointmentTime": "2024-08-15 14:30:00"
+}'
 
 ```
 
-**Responses**
+**Example Responses**
 
 Status code: **200 OK**
 
@@ -689,11 +926,11 @@ changes.
 {
   "message": "Appointment updated successfully.",
   "appointment": {
-        "appointmentId": number,
-        "clientId": number,
-        "doctorId": number,
-        "appointmentTime": string (format: "YYYY-MM-DD HH:MM:SS"),
-        "appointmentStatus": string
+        "appointmentId": 456,
+        "clientId": 1,
+        "doctorId": 2,
+        "appointmentTime": "2024-08-15 14:30:00",
+        "appointmentStatus": "SCHEDULED"
     }
 }
 ```
@@ -769,15 +1006,16 @@ Endpoint
 
 **Example Request**
 
-Description: A 'DELETE' request to delete a specific appointment associated with a client. It includes authentication token in the request header for
-authorization.
+Description: A 'DELETE' request to delete a specific appointment associated with a client. It includes authentication token in the request header for authorization.
 
 ```
 
-curl -X DELETE http://localhost:8080/api/v1/appointments/client-appointment/:appointmentId \
+curl -X DELETE http://localhost:8080/api/v1/appointments/client-appointment/12 \
 -H "Authorization: token" \
 
 ```
+
+**Example Responses**
 
 Status Code: **200 OK**
 
