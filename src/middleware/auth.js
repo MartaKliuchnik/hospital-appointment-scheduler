@@ -31,6 +31,7 @@ exports.checkAuth = (req, res, next) => {
 			clientId: decodedPayload.clientId,
 			firstName: decodedPayload.firstName,
 			lastName: decodedPayload.lastName,
+			role: decodedPayload.role,
 		};
 		next();
 	} catch (error) {

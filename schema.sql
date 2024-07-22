@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS client (
     password VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(15) NOT NULL UNIQUE,
     registrationDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    role ENUM('patient', 'admin') NOT NULL DEFAULT 'anonymous',
     CHECK (phoneNumber REGEXP '^[0-9+() -]*$')
 );
 

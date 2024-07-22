@@ -9,6 +9,7 @@ module.exports = class Client {
 	 * @param {string} phoneNumber - The phone number of the client.
 	 * @param {string} email - The email address of the client.
 	 * @param {string} hashedPassword - The hashed password of the client.
+	 * @param {string} lastName - The last name of the client.
 	 * @param {clientId|null} clientId - The ID of the client.
 	 */
 	constructor(
@@ -17,6 +18,7 @@ module.exports = class Client {
 		phoneNumber,
 		email,
 		hashedPassword,
+		role = 'patient',
 		clientId = null
 	) {
 		this.firstName = firstName;
@@ -24,6 +26,7 @@ module.exports = class Client {
 		this.phoneNumber = phoneNumber;
 		this.email = email;
 		this.password = hashedPassword;
+		this.role = role;
 		this.clientId = clientId;
 	}
 
@@ -59,7 +62,7 @@ module.exports = class Client {
 	 */
 	async register() {
 		const queryAddClient =
-			'INSERT INTO client (firstName, lastName, phoneNumber, email, password) VALUES (?, ?, ?, ?, ?)';
+			'INSERT INTO client (firstName, lastName, phoneNumber, email, password, role) VALUES (?, ?, ?, ?, ?, ?)';
 
 		try {
 			const [client] = await pool.execute(queryAddClient, [
@@ -68,9 +71,11 @@ module.exports = class Client {
 				this.phoneNumber,
 				this.email,
 				this.password,
+				this.role,
 			]);
 
-			return client.insertId;
+			this.clientId = result.insertId;
+			return this.clientId;
 		} catch (error) {
 			console.error('Error registering client:', error);
 			throw new Error('Failed to register client');
@@ -91,6 +96,7 @@ module.exports = class Client {
 			if (rows.length === 0) return null;
 
 			const clientData = rows[0];
+			console.log(clientData);
 
 			return new Client(
 				clientData.firstName,
@@ -98,6 +104,7 @@ module.exports = class Client {
 				clientData.phoneNumber,
 				clientData.email,
 				clientData.password,
+				clientData.role,
 				clientData.clientId
 			);
 		} catch (error) {
@@ -145,6 +152,7 @@ module.exports = class Client {
 			clientId: this.clientId,
 			firstName: this.firstName,
 			lastName: this.lastName,
+			role: this.role,
 			iat: Math.floor(Date.now() / 1000),
 		};
 
@@ -172,6 +180,7 @@ module.exports = class Client {
 			phoneNumber: this.phoneNumber,
 			email: this.email,
 			registrationData: this.registrationData,
+			role: this.role,
 		};
 	}
 };
