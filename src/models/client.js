@@ -10,6 +10,7 @@ module.exports = class Client {
 	 * @param {string} email - The email address of the client.
 	 * @param {string} hashedPassword - The hashed password of the client.
 	 * @param {string} lastName - The last name of the client.
+	 * @param {role} role - The role of the client.
 	 * @param {clientId|null} clientId - The ID of the client.
 	 */
 	constructor(
@@ -18,7 +19,7 @@ module.exports = class Client {
 		phoneNumber,
 		email,
 		hashedPassword,
-		role = 'patient',
+		role,
 		clientId = null
 	) {
 		this.firstName = firstName;
@@ -96,7 +97,6 @@ module.exports = class Client {
 			if (rows.length === 0) return null;
 
 			const clientData = rows[0];
-			console.log(clientData);
 
 			return new Client(
 				clientData.firstName,
@@ -134,6 +134,7 @@ module.exports = class Client {
 				clientData.phoneNumber,
 				clientData.email,
 				clientData.password,
+				clientData.role,
 				clientData.clientId
 			);
 		} catch (error) {
@@ -182,5 +183,36 @@ module.exports = class Client {
 			registrationData: this.registrationData,
 			role: this.role,
 		};
+	}
+
+	/**
+	 * Update the role of a specified user.
+	 * @param {string} newRole - The new role to assign to the client.
+	 * @returns {Promise<boolean>} - A promise that resolves to true if the role was successfully updated, false otherwise.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	async updateUserRole(newRole) {
+		// First, check if the new role is different from the current role
+		if (this.role === newRole) {
+			console.error('Role is already set to the new value');
+			return false;
+		}
+
+		const query = 'UPDATE client SET role = ? WHERE clientId = ?';
+
+		try {
+			const [result] = await pool.execute(query, [newRole, this.clientId]);
+
+			// Check if the update was successful
+			if (result.affectedRows > 0) {
+				this.role = newRole;
+				return true;
+			}
+
+			return false;
+		} catch (error) {
+			console.error('Error updating user role:', error);
+			throw new Error('Failed to update user role');
+		}
 	}
 };

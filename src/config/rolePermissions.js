@@ -17,14 +17,13 @@ class RolePermissions {
 	initializeRolePermissions() {
 		this.rolePermissions.set(Role.ANONYMOUS, [Permission.READ_DOCTOR]);
 		this.rolePermissions.set(Role.ADMIN, Object.values(Permission));
-		this.rolePermissions.set(Role.PATIENT),
-			[
-				Permission.READ_DOCTOR,
-				Permission.CREATE_APPOINTMENT,
-				Permission.READ_APPOINTMENT,
-				Permission.UPDATE_APPOINTMENT,
-				Permission.DELETE_APPOINTMENT,
-			];
+		this.rolePermissions.set(Role.PATIENT, [
+			Permission.READ_DOCTOR,
+			Permission.CREATE_APPOINTMENT,
+			Permission.READ_APPOINTMENT,
+			Permission.UPDATE_APPOINTMENT,
+			Permission.DELETE_APPOINTMENT,
+		]);
 	}
 
 	/**

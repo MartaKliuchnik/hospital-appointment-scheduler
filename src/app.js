@@ -8,6 +8,7 @@ const rootDir = require('./utils/path');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments');
 const doctorRoutes = require('./routes/doctors');
+const adminRoutes = require('./routes/admin');
 const { createDatabase } = require('./utils/database');
 
 const app = express();
@@ -30,6 +31,7 @@ app.use(
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/appointments', appointmentRoutes);
 app.use('/api/v1/doctors', doctorRoutes);
+app.use('/api/v1/clients', adminRoutes);
 
 app.get('/api/v1/welcome-page', (req, res) => {
 	res.sendFile(path.join(rootDir, '../views', 'home-page.html'));
