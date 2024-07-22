@@ -2,43 +2,65 @@ const { Router } = require('express');
 const doctortsController = require('../controllers/doctors');
 const authMiddleware = require('../middleware/auth');
 const checkPermission = require('../middleware/permission');
+const Permission = require('../enums/Permission');
 
 const router = Router();
 
-// Public routes (no authentication required)
-// GET /api/v1/doctors - retrieve all doctors
-router.get('/', checkPermission('read_doctor'), doctortsController.listDoctors);
+/**
+ * @route GET /api/v1/doctors
+ * @description Retrieve all doctors
+ * @access Public
+ */
+router.get(
+	'/',
+	checkPermission(Permission.READ_DOCTOR),
+	doctortsController.listDoctors
+);
 
-// GET /api/v1/doctors/:doctorId - retrieve a specified doctor by id
+/**
+ * @route GET /api/v1/doctors/:doctorId
+ * @description Retrieve a specified doctor by id
+ * @access Public
+ */
 router.get(
 	'/:doctorId',
-	checkPermission('read_doctor'),
+	checkPermission(Permission.READ_DOCTOR),
 	doctortsController.getDoctor
 );
 
 // Apply authentication middleware for protected routes
 router.use(authMiddleware.checkAuth);
 
-// Protected routes (authentication required)
-
-// POST /api/v1/doctors - reate a new doctor
+/**
+ * @route POST /api/v1/doctors
+ * @description Create a new doctor
+ * @access Private
+ */
 // router.post(
 // 	'/',
 // 	checkPermission('create_doctor'),
 // 	doctortsController.createDoctor
 // );
 
-// DELETE /api/v1/doctors/:doctorId - delete the specified doctor
+/**
+ * @route DELETE /api/v1/doctors/:doctorId
+ * @description Delete the specified doctor
+ * @access Private
+ */
 router.delete(
 	'/:doctorId',
-	checkPermission('delete_doctor'),
+	checkPermission(Permission.DELETE_DOCTOR),
 	doctortsController.deleteDoctor
 );
 
-// PUT /api/v1/doctors/:doctorId - update the specified doctor
+/**
+ * @route PUT /api/v1/doctors/:doctorId
+ * @description Update the specified doctor
+ * @access Private
+ */
 router.put(
 	'/:doctorId',
-	checkPermission('update_doctor'),
+	checkPermission(Permission.UPDATE_DOCTOR),
 	doctortsController.updateDoctor
 );
 

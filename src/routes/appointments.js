@@ -2,49 +2,65 @@ const { Router } = require('express');
 const appointmentsController = require('../controllers/appointments');
 const authMiddleware = require('../middleware/auth');
 const checkPermission = require('../middleware/permission');
+const Permission = require('../enums/Permission');
 
 const router = Router();
 
-// Apply the authentication middleware to all routes defined in this router.
+// Apply the authentication middleware to all routes defined below this line.
 router.use(authMiddleware.checkAuth);
 
-// GET /api/v1/appointments
-// Retrieve all appointments
+/**
+ * @route GET /api/v1/appointments
+ * @description Retrieve all appointments
+ * @access Private
+ */
 router.get(
 	'/',
-	checkPermission('read_appointment'),
+	checkPermission(Permission.READ_APPOINTMENT),
 	appointmentsController.listAppointments
 );
 
-// POST /api/v1/appointments
-// Create a new appointment
+/**
+ * @route POST /api/v1/appointments
+ * @description Create a new appointment
+ * @access Private
+ */
 router.post(
 	'/',
-	checkPermission('create_appointment'),
+	checkPermission(Permission.CREATE_APPOINTMENT),
 	appointmentsController.createAppointment
 );
 
-// GET /api/v1/appointments/clients/:clientId
-// Retrieve all appointments for the specified client
+/**
+ * @route GET /api/v1/appointments/clients/:clientId
+ * @description Retrieve all appointments for the specified client
+ * @access Private
+ */
 router.get(
 	'/clients/:clientId',
-	checkPermission('read_appointment'),
+	checkPermission(Permission.READ_APPOINTMENT),
 	appointmentsController.getClientAppointments
 );
 
-// DELETE /api/v1/appointments/:appointmentId
-// Delete the specified appointment
+/**
+ * @route DELETE /api/v1/appointments/:appointmentId
+ * @description Delete the specified appointment
+ * @access Private
+ */
 router.delete(
 	'/:appointmentId',
-	checkPermission('delete_appointment'),
+	checkPermission(Permission.DELETE_APPOINTMENT),
 	appointmentsController.deleteAppointment
 );
 
-// PUT /api/v1/appointments/:appointmentId
-// Update the specified appointment
+/**
+ * @route PUT /api/v1/appointments/:appointmentId
+ * @description Update the specified appointment
+ * @access Private
+ */
 router.put(
 	'/:appointmentId',
-	checkPermission('update_appointment'),
+	checkPermission(Permission.UPDATE_APPOINTMENT),
 	appointmentsController.updateAppointment
 );
 

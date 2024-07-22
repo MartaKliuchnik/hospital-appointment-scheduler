@@ -1,4 +1,7 @@
-const roles = require('../config/roles');
+const Role = require('../enums/Role');
+const RolePermissions = require('../config/rolePermissions');
+
+const rolePermissions = new RolePermissions();
 
 /**
  * Creates a middleware function to check if a client has the required permission.
@@ -14,17 +17,11 @@ const checkPermission = (requiredPermission) => {
 	 * @returns {void} - This middleware does not return a value.
 	 */
 	return (req, res, next) => {
-		// Default to 'anonymous' if no client or role is set
-		let clientRole = 'anonymous';
-
-		// Check if the role exists
-		if (!roles[clientRole]) {
-			console.error(`Unknown role: ${clientRole}`);
-			return res.status(403).json({ error: 'Access denied' });
-		}
+		// Get the client's role, defaulting to ANONYMOUS if not set
+		const clientRole = req.client?.role || Role.ANONYMOUS;
 
 		// Check if the role includes the required permission
-		if (roles[clientRole].includes(requiredPermission)) {
+		if (rolePermissions.hasPermissions(clientRole, requiredPermission)) {
 			next();
 		} else {
 			res.status(403).json({ error: 'Access denied' });
