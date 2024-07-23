@@ -17,7 +17,7 @@ router.use(authMiddleware.checkAuth);
  */
 router.put(
 	'/:clientId/role',
-	// checkPermission(Permission.UPDATE_USER_ROLE),
+	checkPermission(Permission.UPDATE_USER_ROLE),
 	clietnsController.updateUserRole
 );
 

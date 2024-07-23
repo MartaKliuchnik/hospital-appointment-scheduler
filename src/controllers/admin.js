@@ -1,4 +1,3 @@
-const RolePermissions = require('../config/rolePermissions');
 const Role = require('../enums/Role');
 const Client = require('../models/client');
 
