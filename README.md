@@ -20,12 +20,10 @@
    - Endpoint **/api/v1/doctors**
    - Endpoint **/api/v1/doctors/:doctorId**
 
-   5.3 [Schedule Management](#schedule-management)
+   5.3 [Authentication](#authentication)
 
-   - Schedule data model.
-   - Endpoint **/api/v1/schedules**
-
-   5.4 [Authentication](#authentication)
+   5.4 [Change Client Role](#change-client-role)
+   - Endpoint **/api/v1/clients/:clientId/role**
 
    5.5 [Appointment Management](#appointment-management)
 
@@ -33,6 +31,12 @@
    - Endpoint **/api/v1/appointments**
    - Endpoint **/api/v1/appointments/clients/:clientId**
    - Endpoint **/api/v1/appointments/:appointmentId**
+
+   5.6 [Schedule Management](#schedule-management)
+
+   - Schedule data model.
+   - Endpoint **/api/v1/schedules**
+
 
 6. [Install](#install)
 7. [Running in Docker ContainerRun](#run)
@@ -122,7 +126,7 @@ The request body must be in JSON format and include the following fields:
 
 **Example Request**
 
-Description: A 'POST' request to the client registration endpoint. It includes a
+Description: A `POST` request to the client registration endpoint. It includes a
 JSON payload in the request body with the user's first name, last name, phone
 number, email, and password for registration.
 
@@ -154,16 +158,6 @@ success message and the clientId of the newly created client.
 }
 ```
 
-Status code: **409 Conflict**
-
-Description: The provided email address is already registered with another user.
-
-```
-{
-   "error": "Email or phone number already in use"
-}
-```
-
 Status code: **400 Bad Request**
 
 Description: The provided first name, last name, phone number, email address or
@@ -172,6 +166,16 @@ password is not in a valid format.
 ```
 {
    "error": "Invalid input: all fields are required and must be in a valid format."
+}
+```
+
+Status code: **409 Conflict**
+
+Description: The provided email address is already registered with another user.
+
+```
+{
+   "error": "Email or phone number already in use"
 }
 ```
 
@@ -205,7 +209,7 @@ The request body should be in JSON format and include the following fields:
 
 **Example Request**
 
-Description: A 'POST' request to the login endpoint for user authentication. It
+Description: A `POST` request to the login endpoint for user authentication. It
 includes a JSON payload in the request body with the user's email and password.
 
 ```
@@ -393,7 +397,6 @@ Status code: **404 Not Found**
 
 Description: No doctor with the specified ID exists in the database.
 
-
 ```
 {
   "error": "Doctor not found."
@@ -420,7 +423,7 @@ Endpoint
 
 **Example Request**
 
-Description: A 'DELETE' request to remove a specific doctor associated with a doctorId. This request must include an authorization token for an admin user.
+Description: A `DELETE` request to remove a specific doctor associated with a doctorId. This request must include an authorization token for an admin user.
 
 ```
 
@@ -470,8 +473,6 @@ Description: The doctor cannot be deleted due to existing appointments or other 
   "error": "This doctor has appointments. Deletion is forbidden."
 }
 ```
-
-Status Code: **403 Forbidden**
 
 Description: The user does not have admin privileges required to perform this operation.
 
@@ -539,8 +540,6 @@ Description: The provided doctor ID is invalid (not a number).
 }
 ```
 
-Status Code: **400 Bad Request**
-
 Description: No valid update data is provided.
 
 ```
@@ -600,7 +599,7 @@ Predefined list of days of the week for the doctor's schedule: 'MONDAY', 'TUESDA
 Endpoint
 
 - URL Path: **_/api/v1/schedules_**
-- Description: This endpoint retrieves a list of all schedules available in the system. The client sends a GET request to the server to retrieve the list. The server processes the request by querying the database for all schedules.
+- Description: This endpoint retrieves a list of all schedules available in the system. The client sends a `GET` request to the server to retrieve the list. The server processes the request by querying the database for all schedules.
 - Authentication: No authentication required for this endpoint.
 
 **Example Request**
@@ -669,6 +668,130 @@ application/json for requests that include a body.
 
 ```
 
+### Change Client Role
+
+The process of changing a client's role is restricted to admin clients only.
+
+Endpoint
+
+- URL Path: **_/api/v1/clients/:clientId/role_**
+- Description: This endpoint allows an admin to update the role of a specified client.
+- Authentication: Required (Admin only)
+- Authorization: Requires UPDATE_USER_ROLE permission
+
+**Request Body**
+
+The request body should contain the following parameter:
+
+- clientId: The ID of the client whose role is to be updated.
+
+**Example Request**
+
+Description: A `PUT` request to update the role of a client. It includes an Authorization header with a bearer token for authentication and specifies the content type as JSON. The request targets a specific client using their ID in the URL path. The request body contains the new role to be assigned to the client.
+
+```
+
+curl -X PUT http://localhost:8080/api/v1/clients/123/role \
+-H "Authorization: Bearer <your-jwt-token>" \
+-H "Content-Type: application/json" \
+-d '{ "newRole": "PATIENT" }'
+```
+
+**Example Responses**
+
+Status code: **200 OK**
+
+Description: The client's role was successfully updated.
+
+```
+{
+  "message": "User role updated successfully.",
+  "newRole": "PATIENT"
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The request is invalid or missing required client ID parameter.
+
+```
+{
+  "error": "Invalid client ID."
+}
+```
+
+Description: The request is invalid or missing required parameters.
+
+```
+{
+  "error": "Invalid role provided."
+}
+```
+
+Description: The client already has the specified role.
+
+```
+{ 
+  error: 'Client already has this role.' 
+}
+```
+
+Description: The attempt to update the user's role in the database failed.
+
+```
+{ 
+  "error": "User role update failed."
+}
+```
+
+Status Code: **401 Unauthorized**
+
+Description: The request lacks proper authentication credentials, or the provided
+token is invalid. Therefore, the server refuses to respond to the request.
+Ensure that the correct authentication token is provided in the request header.
+
+```
+{
+  error: 'Authentication failed.'
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The authenticated user does not have the required permissions to perform this action.
+
+```
+{
+  "error": "Access denied."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description:  The server cannot find the specified client.
+
+```
+{
+  "error": "Client not found."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "An error occurred while updating the role."
+}
+```
+
+```
+{
+  "error": "An error occurred while checking permissions."
+}
+```
+
 ### Appointment Management
 
 #### 1. Appointment data model
@@ -703,7 +826,7 @@ The request body should contain the following parameters:
 
 **Example Request**
 
-Description: A 'POST' request to create a new appointment. It includes an
+Description: A `POST` request to create a new appointment. It includes an
 Authorization header with a bearer token for authentication and specifies the
 content type as JSON. The request body contains the details of the appointment,
 including the client's ID, the doctor's ID, and the appointment time.
@@ -736,6 +859,32 @@ Description: The appointment is successfully created.
 }
 ```
 
+Status Code: **400 Bad Request**
+
+Description: The request is invalid or missing required parameters.
+
+```
+{
+  "error": "Invalid request: Missing required parameters. Please provide clientId, doctorId, and appointmentTime."
+}
+```
+
+Description: The request contains invalid data.
+
+```
+{
+  "error": "Cannot schedule appointments in the past. Please choose a future date and time."
+}
+```
+
+Description: The request is invalid because it contains incorrect information. Ensure the date is correctly formatted.
+
+```
+{
+  "error": "Invalid appointment time. Please choose a future date and time."
+}
+```
+
 Status Code: **401 Unauthorized**
 
 Description: The request lacks proper authentication credentials, or the provided
@@ -748,36 +897,6 @@ Ensure that the correct authentication token is provided in the request header.
 }
 ```
 
-Status Code: **400 Bad Request**
-
-Description: The request is invalid or missing required parameters.
-
-```
-{
-  "error": "Invalid request: Missing required parameters. Please provide clientId, doctorId, and appointmentTime."
-}
-```
-
-Status Code: **400 Bad Request**
-
-Description: The request contains invalid data.
-
-```
-{
-  "error": "Cannot schedule appointments in the past. Please choose a future date and time."
-}
-```
-
-Status Code: **400 Bad Request**
-
-Description: The request is invalid because it contains incorrect information. Ensure the date is correctly formatted.
-
-```
-{
-  "error": "Invalid appointment time. Please choose a future date and time."
-}
-```
-
 Status Code: **404 Not Found**
 
 Description:  The server cannot find the specified client.
@@ -787,8 +906,6 @@ Description:  The server cannot find the specified client.
   "error": "Client not found."
 }
 ```
-
-Status Code: **404 Not Found**
 
 Description: The server cannot find the specified doctor.
 
@@ -814,7 +931,7 @@ The request body should contain the following parameter:
 
 **Example Request**
 
-Description: A 'GET' request to retrieve all appointments for the client with
+Description: A `GET` request to retrieve all appointments for the client with
 ID 1. It includes an Authorization header with a bearer token for
 authentication.
 
@@ -847,6 +964,16 @@ specified client and provided the list with all client appointments in the respo
 }
 ```
 
+Status Code: **400 Bad Request**
+
+Description: The request is invalid or missing required client ID parameter.
+
+```
+{
+  "error": "Invalid client ID."
+}
+```
+
 Status Code: **401 Unauthorized**
 
 Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
@@ -864,16 +991,6 @@ Description: The server cannot find the specified appointments for this client.
 ```
 {
   "message": "No appointments found for this client."
-}
-```
-
-Status Code: **400 Bad Request**
-
-Description: The request is invalid or missing required client ID parameter.
-
-```
-{
-  "error": "Invalid client ID."
 }
 ```
 
@@ -903,7 +1020,7 @@ The request body should contain the following parameter:
 
 **Example Request**
 
-Description: A 'PUT' request to update the appointment for the specified client. It includes the necessary authentication token and specifies the updated detail of the appointment, such as the new appointment time.
+Description: A `PUT` request to update the appointment for the specified client. It includes the necessary authentication token and specifies the updated detail of the appointment, such as the new appointment time.
 
 ```
 
@@ -935,16 +1052,6 @@ changes.
 }
 ```
 
-Status Code: **401 Unauthorized**
-
-Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
-
-```
-{
-  "error": "Authentication failed: Token not provided."
-}
-```
-
 Status Code: **400 Bad Request**
 
 Description: The request is invalid or missing required appointment ID parameter.
@@ -955,8 +1062,6 @@ Description: The request is invalid or missing required appointment ID parameter
 }
 ```
 
-Status Code: **400 Bad Request**
-
 Description: The request is invalid because it contains incorrect information. Ensure the date is correctly formatted.
 
 ```
@@ -965,13 +1070,13 @@ Description: The request is invalid because it contains incorrect information. E
 }
 ```
 
-Status Code: **404 Not Found**
+Status Code: **401 Unauthorized**
 
-Description: The server cannot find the specified appointment for this client.
+Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
 
 ```
 {
-  "error": "Appointment doesn't exist."
+  "error": "Authentication failed: Token not provided."
 }
 ```
 
@@ -982,6 +1087,16 @@ Description: The request is understood by the server, but authorization is refus
 ```
 {
   "error": "You do not have permission to update this appointment."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: The server cannot find the specified appointment for this client.
+
+```
+{
+  "error": "Appointment doesn't exist."
 }
 ```
 
@@ -1006,7 +1121,7 @@ Endpoint
 
 **Example Request**
 
-Description: A 'DELETE' request to delete a specific appointment associated with a client. It includes authentication token in the request header for authorization.
+Description: A `DELETE` request to delete a specific appointment associated with a client. It includes authentication token in the request header for authorization.
 
 ```
 
@@ -1027,16 +1142,6 @@ Description: The server successfully deleted the appointment.
 }
 ```
 
-Status Code: **401 Unauthorized**
-
-Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
-
-```
-{
-  "error": "Authentication failed: Token not provided."
-}
-```
-
 Status Code: **400 Bad Request**
 
 Description: The request is invalid or missing required appointment ID parameter.
@@ -1047,13 +1152,13 @@ Description: The request is invalid or missing required appointment ID parameter
 }
 ```
 
-Status Code: **404 Not Found**
+Status Code: **401 Unauthorized**
 
-Description: The server cannot find the specified appointment for this client.
+Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
 
 ```
 {
-  "error": "Appointment doesn't exist."
+  "error": "Authentication failed: Token not provided."
 }
 ```
 
@@ -1064,6 +1169,16 @@ Description: The request is understood by the server, but authorization is refus
 ```
 {
   "error": "You do not have permission to delete this appointment."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: The server cannot find the specified appointment for this client.
+
+```
+{
+  "error": "Appointment doesn't exist."
 }
 ```
 

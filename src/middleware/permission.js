@@ -22,13 +22,13 @@ const checkPermission = (requiredPermission) => {
 			// Get the client's ID from the authenticated request
 			const clientId = req.client?.clientId;
 			if (!clientId) {
-				return res.status(401).json({ error: 'User not found' });
+				return res.status(401).json({ error: 'Authentication failed.' });
 			}
 
 			// Fetch the latest client information from the database
 			const client = await Client.findById(clientId);
 			if (!client) {
-				return res.status(404).json({ error: 'Client not found' });
+				return res.status(404).json({ error: 'Client not found.' });
 			}
 
 			// Get the latest client's role from the database, defaulting to ANONYMOUS if not set
@@ -38,13 +38,13 @@ const checkPermission = (requiredPermission) => {
 			if (rolePermissions.hasPermissions(clientRole, requiredPermission)) {
 				next();
 			} else {
-				res.status(403).json({ error: 'Access denied' });
+				res.status(403).json({ error: 'Access denied.' });
 			}
 		} catch (error) {
 			console.error('Error checking permission:', error);
 			res
 				.status(500)
-				.json({ error: 'An error occurred while checking permissions' });
+				.json({ error: 'An error occurred while checking permissions.' });
 		}
 	};
 };

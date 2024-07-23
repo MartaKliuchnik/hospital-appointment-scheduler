@@ -32,16 +32,16 @@ exports.updateUserRole = async (req, res) => {
 
 		// Check if the new role is different from the current role
 		if (client.role === newRole) {
-			return res.status(200).json({ message: 'Client already has this role.' });
+			return res.status(400).json({ error: 'Client already has this role.' });
 		}
 		const isUpdatedRole = await client.updateUserRole(newRole);
 
 		if (isUpdatedRole) {
 			res
 				.status(200)
-				.json({ message: 'User role updated successfully', newRole });
+				.json({ message: 'User role updated successfully.', newRole });
 		} else {
-			res.status(400).json({ error: 'User role update failed' });
+			res.status(400).json({ error: 'User role update failed.' });
 		}
 	} catch (error) {
 		console.error('Error updating role:', error);
