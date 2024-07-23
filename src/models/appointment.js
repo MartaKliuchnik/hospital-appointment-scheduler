@@ -1,6 +1,11 @@
 const { pool } = require('../utils/database');
 
 module.exports = class Appointment {
+	/**
+	 * @param {number} clientId - The ID of the client.
+	 * @param {number} doctorId - The ID of the doctor.
+	 * @param {string} appointmentTime - The time for appointment.
+	 */
 	constructor(clientId, doctorId, appointmentTime) {
 		this.clientId = clientId;
 		this.doctorId = doctorId;
@@ -25,7 +30,8 @@ module.exports = class Appointment {
 				this.appointmentStatus,
 			]);
 
-			return result.insertId;
+			this.appointmentId = result.insertId;
+			return this.appointmentId;
 		} catch (error) {
 			console.error('Error inserting appointment:', error);
 			throw new Error('Failed to insert appointment.');

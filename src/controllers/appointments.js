@@ -2,7 +2,7 @@ const path = require('path');
 const rootDir = require('../utils/path');
 const Appointment = require('../models/appointment');
 const Client = require('../models/client');
-const formatResponse = require('../utils/formatResponse');
+const { formatClientAppointmentsResponse } = require('../utils/formatResponse');
 
 /**
  * Serve the schedule page.
@@ -99,9 +99,7 @@ exports.getClientAppointments = async (req, res) => {
 	}
 
 	try {
-		const result = await Appointment.getAppointmentsByClientId(
-			parseInt(clientId)
-		);
+		const result = await Appointment.getAppointmentsByClientId(clientId);
 
 		// Check if the appointments exist for this client
 		if (!result.appointments || result.appointments.length === 0) {
@@ -110,7 +108,7 @@ exports.getClientAppointments = async (req, res) => {
 				.json({ message: 'No appointments found for this client.' });
 		}
 
-		const response = formatResponse(result);
+		const response = formatClientAppointmentsResponse(result);
 		res.status(200).json(response);
 	} catch (error) {
 		console.error('Error processing client appointments:', error);

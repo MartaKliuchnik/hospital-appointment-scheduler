@@ -15,7 +15,10 @@ class RolePermissions {
 	 * @returns {void} - The method does not return a value.
 	 */
 	initializeRolePermissions() {
-		this.rolePermissions.set(Role.ANONYMOUS, [Permission.READ_DOCTOR]);
+		this.rolePermissions.set(Role.ANONYMOUS, [
+			Permission.READ_DOCTOR,
+			Permission.READ_SCHEDULE,
+		]);
 		this.rolePermissions.set(Role.ADMIN, Object.values(Permission));
 		this.rolePermissions.set(Role.PATIENT, [
 			Permission.READ_DOCTOR,
@@ -23,6 +26,7 @@ class RolePermissions {
 			Permission.READ_APPOINTMENT,
 			Permission.UPDATE_APPOINTMENT,
 			Permission.DELETE_APPOINTMENT,
+			Permission.READ_SCHEDULE,
 		]);
 	}
 

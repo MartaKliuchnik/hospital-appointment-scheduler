@@ -22,6 +22,10 @@ const Permission = Object.freeze({
 	DELETE_APPOINTMENT: 'DELETE_APPOINTMENT',
 	/** Permission to update the role of a specified user */
 	UPDATE_USER_ROLE: 'UPDATE_USER_ROLE',
+	/** Permission to read doctor schedule */
+	READ_SCHEDULE: 'READ_SCHEDULE',
+	/** Permission to create new schedule */
+	CREATE_SCHEDULE: 'CREATE_SCHEDULE',
 });
 
 module.exports = Permission;
