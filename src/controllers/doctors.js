@@ -104,7 +104,6 @@ exports.deleteDoctor = async (req, res) => {
  */
 exports.updateDoctor = async (req, res) => {
 	const doctorId = parseInt(req.params.doctorId);
-
 	// Check if the doctorId is provided and is a valid number
 	if (isNaN(doctorId)) {
 		return res.status(400).json({ error: 'Invalid doctor ID.' });
@@ -143,6 +142,7 @@ exports.updateDoctor = async (req, res) => {
 						'Invalid specialization. Please provide a valid specialization from the allowed list.',
 				});
 		}
-			res.status(500).json({ error: 'Failed to update doctor.' });
+		
+		res.status(500).json({ error: 'Failed to update doctor.' });
 	}
 };

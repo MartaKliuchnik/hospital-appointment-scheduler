@@ -134,7 +134,7 @@ exports.deleteAppointment = async (req, res) => {
 
 	try {
 		const appointment = await Appointment.getAppointmentById(
-			parseInt(appointmentId)
+			appointmentId
 		);
 
 		// Check if the appointment exists

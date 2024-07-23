@@ -41,4 +41,26 @@ router.post(
 	schedulesController.createSchedule
 );
 
+/**
+ * @route DELETE /api/v1/schedules/:scheduleId
+ * @description Delete the specified schedule
+ * @access Private
+ */
+router.delete(
+	'/:scheduleId',
+	// checkPermission(Permission.DELETE_SCHEDULE),
+	schedulesController.deleteSchedule
+);
+
+/**
+ * @route PUT /api/v1/schedules/:scheduleId
+ * @description Update the specified schedule
+ * @access Private
+ */
+router.put(
+	'/:scheduleId',
+	// checkPermission(Permission.UPDATE_APPOINTMENT),
+	schedulesController.updateSchedule
+);
+
 module.exports = router;

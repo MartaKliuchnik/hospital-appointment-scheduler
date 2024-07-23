@@ -102,5 +102,68 @@ module.exports = class Schedule {
 			row.endTime,
 			row.scheduleId
 		);
-	}
+    }
+    
+    /**
+	 * Delete a schedule from the database by ID.
+	 * @param {number} scheduleId - The ID of the schedule.
+	 * @returns {Promise<undefined>}
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+    static async deleteById(scheduleId) { 
+        const queryDeleteSchedule =
+			'DELETE FROM schedule WHERE scheduleId = ?';
+
+        try {
+            const [result] = await pool.execute(queryDeleteSchedule, [scheduleId]);
+            if ((result.affectedRows = 0)) {
+				throw new Eror('Schedule not found.');
+			}
+        } catch (error) {
+			console.error('Error deleting schedule:', error);
+			throw new Error('Failed to delete schedule.');
+		}
+    }
+
+    /**
+	 * Update a schedule in the database.
+	 * @param {number} scheduleId - The ID of the schedule to update.
+	 * @param {Object} updateData - An object containing the fields to update.
+	 * @returns {Promise<Object>} - A promise that resolves to the updated schedule object.
+	 * @throws {Error} - If there's an error during the database operation or if no valid fields are provided.
+	 */
+    static async updateById(scheduleId, updateData) {
+        const allowedFields = ['scheduleDay', 'startTime', 'endTime'];
+        const updates = [];
+        const values = [];
+        
+        for (const [key, value] of Object.entries(updateData)) {
+            if (allowedFields.includes(key)) {
+                updates.push(`${key} = ?`);
+                values.push(value);
+            }
+        }
+
+        // Check if the updated data exists
+		if (updates.length === 0) {
+			throw new Error('No valid fields to update.');
+        }
+        
+        const queryUpdateSchedule = `UPDATE schedule SET ${updates.join(', ')} WHERE scheduleId = ?`;
+        values.push(scheduleId);
+
+        try {
+            const [result] = await pool.execute(queryUpdateSchedule, values);
+
+            if (result.changedRows === 0) {
+				throw new Error('Doctor not found.');
+			}
+
+			return this.getById(scheduleId);
+        } catch (error) {
+			console.error('Error updating schedule:', error);
+			throw error;
+		}
+
+    }
 };
