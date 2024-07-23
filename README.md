@@ -35,8 +35,9 @@
    5.6 [Schedule Management](#schedule-management)
 
    - Schedule data model.
-   - Endpoint **/api/v1/schedules**
-
+   - Endpoint **/api/v1/schedules/:scheduleId**
+   - Endpoint **/api/v1/schedules/doctor-schedule**
+   - Endpoint **/api/v1/schedules/doctor-schedule/:doctorId**
 
 6. [Install](#install)
 7. [Running in Docker ContainerRun](#run)
@@ -575,68 +576,6 @@ Description: An unexpected error occurred on the server while processing the req
 ```
 {
   "error": "Failed to update doctor."
-}
-```
-
-### Schedule Management
-
-#### 1. Schedule data model
-
-Information about schedules.
-
-| Key  | Column Name      | Data Type  | Description                                               |
-| :--- | :--------------- | :--------- | :-------------------------------------------------------- |
-| PK   | scheduleId       | int        | Primary key for the Schedule record                       |
-| FK   | doctorId         | int        | Foreign key referencing the doctorId in the Doctor table  |
-|      | scheduleDay      | enum       | Day of the week for the schedule                          |
-|      | startTime        | time       | Start time of the doctor's availability                   |
-|      | endTime          | time       | End time of the doctor's availability                     |
-
-Predefined list of days of the week for the doctor's schedule: 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'.
-
-#### 2. Retrieves a list of all schedules
-
-Endpoint
-
-- URL Path: **_/api/v1/schedules_**
-- Description: This endpoint retrieves a list of all schedules available in the system. The client sends a `GET` request to the server to retrieve the list. The server processes the request by querying the database for all schedules.
-- Authentication: No authentication required for this endpoint.
-
-**Example Request**
-
-```
-
-curl -X GET http://localhost:8080/api/v1/schedules \
-
-```
-
-**Responses**
-
-Status code: **200 OK**
-
-Description: The server successfully retrieves the list of schedules.
-
-```
-{
-    "schedules": [
-        {
-            "scheduleId": 1,
-            "doctorId": 101,
-            "scheduleDay": "MONDAY",
-            "startTime": "09:00:00",
-            "endTime": "17:00:00"
-        }
-    ]
-}
-```
-
-Status Code: **404 Not Found**
-
-Description: The server cannot find any schedules in the database.
-
-```
-{
-   "error": "No schedules found"
 }
 ```
 
@@ -1189,6 +1128,277 @@ Description: An unexpected error occurred on the server while processing the req
 ```
 {
   "error": "Failed to delete appointment."
+}
+```
+
+### Schedule Management
+
+#### 1. Schedule data model
+
+Information about schedules.
+
+| Key  | Column Name      | Data Type  | Description                                               |
+| :--- | :--------------- | :--------- | :-------------------------------------------------------- |
+| PK   | scheduleId       | int        | Primary key for the Schedule record                       |
+| FK   | doctorId         | int        | Foreign key referencing the doctorId in the Doctor table  |
+|      | scheduleDay      | enum       | Day of the week for the schedule                          |
+|      | startTime        | time       | Start time of the doctor's availability                   |
+|      | endTime          | time       | End time of the doctor's availability                     |
+
+Predefined list of days of the week for the doctor's schedule: 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'.
+
+#### 3. Retrieve schedules for a specific doctor
+
+Endpoint
+
+- URL Path: **_/api/v1/schedules/doctor-schedule/:doctorId_**
+- Description: This endpoint retrieves all schedules for a specific doctor.
+- Authentication: No authentication required for this endpoint.
+
+**Example Request**
+
+Description: A `GET` request to retrieve all schedules for a specific doctor. No authentication is required for this endpoint. The doctor's ID is included in the URL path.
+
+```
+
+curl -X GET http://localhost:8080/api/v1/schedules/doctor-schedule/123 \
+
+```
+
+**Example Responses**
+
+Status code: **200 OK**
+
+Description: The schedules are successfully retrieved.
+
+```
+{
+    "doctorId": 123,
+    "schedules": [
+        {
+            "scheduleDay": "MONDAY",
+            "startTime": "14:00:00",
+            "endTime": "17:00:00",
+            "scheduleId": 3
+        }, 
+        ...
+    ]
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The request is invalid or missing required parameters.
+
+```
+{
+	error: 'Invalid request: Missing required parameters. Please provide doctorId, scheduleDay, startTime, and endTime.',
+}
+```
+
+Description: The doctor ID provided is invalid.
+
+```
+{
+	error: 'Invalid doctor ID.'
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: No schedules found for the specified doctor.
+
+```
+{
+   "error": "No schedules found for this doctor."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "An error occurred while retrieving the schedule."
+}
+```
+
+```
+{
+  "error": "Failed to retrieve schedule."
+}
+```
+
+#### 4. Retrieve a schedule by ID
+
+Endpoint
+
+- URL Path: **_/api/v1/schedules/:scheduleId_**
+- Description: This endpoint retrieves a specific schedule by its ID.
+- Authentication: Authentication is required for this endpoint.
+
+**Example Request**
+
+Description: A `GET` request to retrieve a specific schedule by its ID. It includes an Authorization header with a bearer token for authentication.
+
+```
+
+curl -X POST http://localhost:8080/api/v1/schedules/123 \
+-H "Authorization: token" \
+
+```
+
+**Example Responses**
+
+Status code: **200 OK**
+
+Description: The schedule is successfully retrieved.
+
+```
+{
+    "doctorId": 1,
+    "scheduleDay": "MONDAY",
+    "startTime": "09:00:00",
+    "endTime": "13:00:00",
+    "scheduleId": 123
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The request is invalid or missing required parameters.
+
+```
+{
+	error: 'Invalid request: Missing required parameters. Please provide doctorId, scheduleDay, startTime, and endTime.',
+}
+```
+
+Description: The schedule ID provided is invalid.
+
+```
+{
+	error: 'Invalid schedule ID.'
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: The server cannot find the specified schedule.
+
+```
+{
+   "error": "Schedule doesn't exist."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "An error occurred while retrieving the schedule."
+}
+```
+
+```
+{
+  "error": "Failed to retrieve schedule."
+}
+```
+
+#### 5. Create a new schedule for a doctor
+
+Endpoint
+
+- URL Path: **_/api/v1/schedules/doctor-schedule_**
+- Description: This endpoint allows the creation of a new schedule for a doctor.
+- Authentication: Authentication is required for this endpoint.
+
+**Request Body**
+
+The request body should contain the following parameters:
+
+- doctorId: The ID of the doctor for whom the schedule is being created.
+- scheduleDay: The day of the week for the schedule.
+- startTime: The start time of the schedule.
+- endTime: The end time of the schedule.
+
+**Example Request**
+
+Description: A `POST` request to create a new schedule for a doctor. It includes an Authorization header with a bearer token for authentication and specifies the content type as JSON. The request body contains the details of the schedule, including the doctor's ID, schedule day, start time, and end time.
+
+```
+
+curl -X POST http://localhost:8080/api/v1/schedules/doctor-schedule \
+-H "Authorization: token" \
+-H "Content-Type: application/json" \
+-d '{ "doctorId": 123, "scheduleDay": "MONDAY", "startTime": "09:00:00", "endTime": "17:00:00" }'
+
+```
+
+**Example Responses**
+
+Status code: **201 Created**
+
+Description: The schedule is successfully created.
+
+```
+{
+    "message": "Schedule created successfully.",
+    "scheduleDetails": {
+        "doctorId": 123,
+        "scheduleDay": "MONDAY",
+        "startTime": "09:00:00", 
+        "endTime": "17:00:00"
+        "scheduleId": 3
+    }
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The request is invalid or missing required parameters.
+
+```
+{
+	error: 'Invalid request: Missing required parameters. Please provide doctorId, scheduleDay, startTime, and endTime.',
+}
+```
+
+Description: The provided doctor ID is invalid (not a number).
+
+```
+{
+	error: 'Invalid doctor ID.'
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: The server cannot find the specified doctor.
+
+```
+{
+   "error": "Doctor not found."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "An error occurred while creating the schedule."
+}
+```
+
+```
+{
+  "error": "Failed to insert schedule."
 }
 ```
 

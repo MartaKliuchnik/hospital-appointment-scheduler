@@ -3,9 +3,9 @@ const { pool } = require('../utils/database');
 module.exports = class Schedule {
 	/**
 	 * @param {number} doctorId - The ID of the doctor.
-	 * @param {string} scheduleDay - The day of week.
-	 * @param {string} startTime - The first available slot for schedule.
-	 * @param {string} endTime - The last available slot for schedule.
+	 * @param {string} scheduleDay - The day of the week for the schedule.
+	 * @param {string} startTime - The start time of the doctor's availability.
+	 * @param {string} endTime - The end time of the doctor's availability. 
 	 * @param {number|null} scheduleId - The ID of the schedule.
 	 */
 	constructor(doctorId, scheduleDay, startTime, endTime, scheduleId = null) {

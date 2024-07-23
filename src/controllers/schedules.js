@@ -28,7 +28,7 @@ exports.getSchedule = async (req, res) => {
 		res.status(200).json(schedule);
 	} catch (error) {
 		console.error('Error retrieving schedule:', error);
-		res.status(500).json({ error: 'Failed to retrieve schedule.' });
+		res.status(500).json({ error: 'An error occurred while retrieving the schedule.' });
 	}
 };
 
@@ -114,6 +114,6 @@ exports.getDoctorSchedule = async (req, res) => {
 		res.status(200).json(response);
 	} catch (error) {
 		console.error('Error Error retrieving schedules:', error);
-		res.status(500).json({ error: 'Failed to retrieve doctor schedules.' });
+		res.status(500).json({ error: 'An error occurred while retrieving the schedule.' });
 	}
 };
