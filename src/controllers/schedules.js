@@ -136,7 +136,7 @@ exports.deleteSchedule = async (req, res) => {
         const schedule = await Schedule.getById(scheduleId);
         // Check if the schedule exists
         if (!schedule) {
-            return res.status(404).json({ error: "Schedule doesn't exist." });
+            return res.status(404).json({ error: "Schedule not found." });
         }
         
         await Schedule.deleteById(scheduleId);
@@ -172,14 +172,14 @@ exports.updateSchedule = async (req, res) => {
 		(key) => updateData[key] === undefined && delete updateData[key]
     );
     if (Object.keys(updateData).length === 0) {
-		return res.status(400).json({ error: 'No valid update data provided.' });
+		return res.status(400).json({ error: 'No changes applied to the schedule.' });
 	}
     
     try {
         const schedule = await Schedule.getById(scheduleId);
         // Check if the schedule exists
 		if (!schedule) {
-			return res.status(404).json({ error: "Schedule doesn't exist." });
+			return res.status(404).json({ error: "Schedule not found" });
         }
         
         const updatedSchedule = await Schedule.updateById(scheduleId, updateData);
@@ -192,9 +192,11 @@ exports.updateSchedule = async (req, res) => {
         console.error('Error updating schedule:', error);
 
         if (error.message === 'Schedule not found.') {
-			return res.status(404).json({ error: 'Schedule not found.' });
-		} else if (error.message === 'No valid fields to update.') {
-			return res.status(400).json({ error: error.message });
+            res.status(404).json({ error: 'Schedule not found' });
+        } else if (error.message === 'No changes applied to the schedule.') {
+            res.status(400).json({ error: 'No changes applied to the schedule' });
+        } else if (error.message === 'No valid fields to update.') {
+            res.status(400).json({ error: 'No valid fields to update' });
 		} else if (error.code === 'ER_DATA_TOO_LONG' || error.errno === 1265) {
 			return res
 				.status(400)

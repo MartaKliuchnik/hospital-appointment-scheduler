@@ -1402,6 +1402,191 @@ Description: An unexpected error occurred on the server while processing the req
 }
 ```
 
+#### 6. Delete a specific schedule
+
+Endpoint
+
+- URL Path: **_/api/v1/schedules/:scheduleId_**
+- Description: This endpoint deletes a specific schedule based on its ID. The client sends a DELETE request to the server with the schedule's ID as a path parameter. The server processes the request by removing the specified schedule from the database.
+- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to delete schedule records.
+
+**Example Request**
+
+Description: A `DELETE` request to remove a specific schedule associated with a scheduleId. This request must include an authorization token for an admin user.
+
+```
+
+curl -X DELETE http://localhost:8080/api/v1/schedules/123 \
+-H "Authorization: Bearer <admin_token>"
+
+```
+
+**Example Responses**
+
+Status Code: **200 OK**
+
+Description: The server successfully deletes the schedule.
+
+```
+{
+  "message": "Schedule deleted successfully."
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The provided schedule ID is invalid.
+
+```
+{
+  "error": "Invalid schedule ID."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: No schedule with the specified ID exists in the database.
+
+```
+{
+  "error": "Schedule not found."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The user does not have admin privileges required to perform this operation.
+
+```
+{
+  "error": "Access denied. Admin privileges required."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "An error occurred while deleting the schedule."
+}
+```
+
+```
+{
+  "error": "Failed to delete schedule."
+}
+```
+
+#### 7. Update a specific schedule
+
+Endpoint
+
+- URL Path: **_/api/v1/schedules/:scheduleId_**
+- Description: This endpoint updates a specific schedule based on its ID. The client sends a PUT request to the server with the schedule's ID as a path parameter and the updated schedule information in the request body. The server processes the request by updating the specified schedule in the database.
+- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to update schedule records.
+
+**Example Request**
+
+Description: A `PUT` request to update a specific schedule associated with a scheduleId. This request must include an authorization token for an admin user and the updated schedule information in the request body.
+
+```
+
+curl -X PUT http://localhost:8080/api/v1/schedules/123 \
+-H "Authorization: Bearer <admin_token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "scheduleDay": "FRIDAY",
+  "startTime": "13:00:00",
+  "endTime": "17:00:00",
+}'
+
+```
+
+**Example Responses**
+
+Status Code: **200 OK**
+
+Description: The server successfully updates the schedule.
+
+```
+{
+    "message": "Schedule updated successfully.",
+    "schedule": {
+        "doctorId": 1,
+        "scheduleDay": "FRIDAY",
+        "startTime": "13:00:00",
+        "endTime": "17:00:00",
+        "scheduleId": 123
+    }
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The provided schedule ID is invalid.
+
+```
+{
+  "error": "Invalid schedule ID."
+}
+```
+
+Description: No valid update data is provided.
+
+```
+{
+  "error": "No valid fields to update."
+}
+```
+
+Description: No changes applied.
+
+```
+{
+  "error": "No changes applied to the schedule."
+}
+```
+
+Description: The request body contains invalid scheduleDay data.
+
+```
+{
+  "error": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: No schedule with the specified ID exists in the database.
+
+```
+{
+  "error": "Schedule not found."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The user does not have admin privileges required to perform this operation.
+
+```
+{
+  "error": "Access denied. Admin privileges required."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "Failed to update schedule."
+}
+```
+
 ## Install
 
 1. Clone current repository into a your directory:

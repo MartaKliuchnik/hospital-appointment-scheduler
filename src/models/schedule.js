@@ -156,7 +156,7 @@ module.exports = class Schedule {
             const [result] = await pool.execute(queryUpdateSchedule, values);
 
             if (result.changedRows === 0) {
-				throw new Error('Doctor not found.');
+				throw new Error('No changes applied to the schedule.');
 			}
 
 			return this.getById(scheduleId);
