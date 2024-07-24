@@ -1,6 +1,5 @@
 const { Router } = require('express');
 const doctortsController = require('../controllers/doctors');
-const authMiddleware = require('../middleware/auth');
 const checkPermission = require('../middleware/permission');
 const Permission = require('../enums/Permission');
 
@@ -13,7 +12,7 @@ const router = Router();
  */
 router.get(
 	'/',
-	checkPermission(Permission.READ_DOCTOR),
+	checkPermission(Permission.READ_DOCTOR, true),
 	doctortsController.listDoctors
 );
 
@@ -24,12 +23,9 @@ router.get(
  */
 router.get(
 	'/:doctorId',
-	checkPermission(Permission.READ_DOCTOR),
+	checkPermission(Permission.READ_DOCTOR, true),
 	doctortsController.getDoctor
 );
-
-// Apply authentication middleware for protected routes
-router.use(authMiddleware.checkAuth);
 
 /**
  * @route POST /api/v1/doctors

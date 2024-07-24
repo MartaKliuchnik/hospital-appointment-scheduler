@@ -1,13 +1,9 @@
 const { Router } = require('express');
 const appointmentsController = require('../controllers/appointments');
-const authMiddleware = require('../middleware/auth');
 const checkPermission = require('../middleware/permission');
 const Permission = require('../enums/Permission');
 
 const router = Router();
-
-// Apply the authentication middleware to all routes defined below this line.
-router.use(authMiddleware.checkAuth);
 
 /**
  * @route GET /api/v1/appointments

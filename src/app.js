@@ -4,6 +4,8 @@ const session = require('express-session');
 const crypto = require('crypto');
 require('dotenv').config();
 
+const authMiddleware = require('./middleware/auth');
+
 const rootDir = require('./utils/path');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments');
@@ -27,6 +29,9 @@ app.use(
 		saveUninitialized: false,
 	})
 );
+
+// Apply the authentication middleware to all routes defined below this line.
+app.use(authMiddleware.checkAuth);
 
 // Routes
 app.use('/api/v1/auth', authRoutes);

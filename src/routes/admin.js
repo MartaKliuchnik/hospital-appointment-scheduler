@@ -1,14 +1,9 @@
 const { Router } = require('express');
-
-const router = Router();
-
 const clietnsController = require('../controllers/admin');
-const authMiddleware = require('../middleware/auth');
 const checkPermission = require('../middleware/permission');
 const Permission = require('../enums/Permission');
 
-// Apply authentication middleware for protected route
-router.use(authMiddleware.checkAuth);
+const router = Router();
 
 /**
  * @route PUT /api/v1/clients/:clientId/role

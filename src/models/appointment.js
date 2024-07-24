@@ -66,19 +66,19 @@ module.exports = class Appointment {
 	 */
 	static isValidAppointmentTime(appointmentTime) {
 		const currentData = new Date();
-		const appointmentDate = new Date(appointmentTime.replace(' ', 'T'));
+		const appointmentDate = new Date(appointmentTime.replace(' ', 'T') + 'Z');
 		return appointmentDate > currentData;
 	}
 
 	/**
 	 * Format the appointment response.
 	 * @param {Object} appointment - The appointment object to format.
-	 * @returns {Object} - The formatted appointment object.
+	 * @returns {Object} - The formatteds appointment object.
 	 */
 	static formatAppointmentResponse(appointment) {
 		return {
 			...appointment,
-			appointmentTime: appointment.appointmentTime
+			appointmentTime: new Date(appointment.appointmentTime + 'Z')
 				.toISOString()
 				.replace('T', ' ')
 				.substring(0, 19),
@@ -141,11 +141,15 @@ module.exports = class Appointment {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async changeAppointmentById(newAppointmentTime, appointmentId) {
-		const queryChangeAppointment =
-			'UPDATE appointment SET appointmentTime = ? WHERE appointmentId = ?';
+		const connection = await pool.getConnection();
 
 		try {
-			const [result] = await pool.execute(queryChangeAppointment, [
+			await connection.beginTransaction();
+
+			const queryChangeAppointment =
+				'UPDATE appointment SET appointmentTime = ? WHERE appointmentId = ?';
+
+			const [result] = await connection.execute(queryChangeAppointment, [
 				newAppointmentTime,
 				appointmentId,
 			]);
@@ -153,9 +157,14 @@ module.exports = class Appointment {
 			if ((result.changedRows = 0)) {
 				throw new Eror('Appointment not found.');
 			}
+
+			await connection.commit();
 		} catch (error) {
+			await connection.rollback();
 			console.error('Error changing client appointment:', error);
-			throw new Error('Failed to change appointment.');
+			throw new Error('Failed to update appointment.');
+		} finally {
+			connection.release();
 		}
 	}
 };

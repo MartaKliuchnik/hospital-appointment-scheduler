@@ -26,6 +26,10 @@ const Permission = Object.freeze({
 	READ_SCHEDULE: 'READ_SCHEDULE',
 	/** Permission to create new schedule */
 	CREATE_SCHEDULE: 'CREATE_SCHEDULE',
+	/** Permission to update the specified schedule */
+	UPDATE_SCHEDULE: 'UPDATE_SCHEDULE',
+	/** Permission to delete specified schedule */
+	DELETE_SCHEDULE: 'DELETE_SCHEDULE',
 });
 
 module.exports = Permission;

@@ -1,3 +1,4 @@
+const Role = require('../enums/Role');
 const { comparePassword } = require('../utils/auth');
 const { pool } = require('../utils/database');
 const { createJWT } = require('../utils/jwt');
@@ -19,7 +20,7 @@ module.exports = class Client {
 		phoneNumber,
 		email,
 		hashedPassword,
-		role,
+		role = Role.PATIENT,
 		clientId = null
 	) {
 		this.firstName = firstName;
@@ -75,7 +76,7 @@ module.exports = class Client {
 				this.role,
 			]);
 
-			this.clientId = result.insertId;
+			this.clientId = client.insertId;
 			return this.clientId;
 		} catch (error) {
 			console.error('Error registering client:', error);

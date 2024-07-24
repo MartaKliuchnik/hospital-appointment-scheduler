@@ -12,7 +12,7 @@ const router = Router();
  */
 router.get(
 	'/:scheduleId',
-	// checkPermission(Permission.READ_SCHEDULE),
+	checkPermission(Permission.READ_SCHEDULE, true),
 	schedulesController.getSchedule
 );
 
@@ -23,12 +23,9 @@ router.get(
  */
 router.get(
 	'/doctor-schedule/:doctorId',
-	// checkPermission(Permission.READ_SCHEDULE),
+	checkPermission(Permission.READ_SCHEDULE, true),
 	schedulesController.getDoctorSchedule
 );
-
-// Apply the authentication middleware to all routes defined below this line.
-// router.use(authMiddleware.checkAuth);
 
 /**
  * @route POST /api/v1/schedules/doctor-schedule
@@ -37,7 +34,7 @@ router.get(
  */
 router.post(
 	'/doctor-schedule',
-	// checkPermission(Permission.CREATE_SCHEDULE),
+	checkPermission(Permission.CREATE_SCHEDULE),
 	schedulesController.createSchedule
 );
 
@@ -48,7 +45,7 @@ router.post(
  */
 router.delete(
 	'/:scheduleId',
-	// checkPermission(Permission.DELETE_SCHEDULE),
+	checkPermission(Permission.DELETE_SCHEDULE),
 	schedulesController.deleteSchedule
 );
 
@@ -59,7 +56,7 @@ router.delete(
  */
 router.put(
 	'/:scheduleId',
-	// checkPermission(Permission.UPDATE_APPOINTMENT),
+	checkPermission(Permission.UPDATE_SCHEDULE),
 	schedulesController.updateSchedule
 );
 

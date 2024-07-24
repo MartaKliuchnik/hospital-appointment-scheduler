@@ -429,7 +429,7 @@ Description: A `DELETE` request to remove a specific doctor associated with a do
 ```
 
 curl -X DELETE http://localhost:8080/api/v1/doctors/123 \
--H "Authorization: Bearer <admin_token>"
+-H "Authorization: Bearer <your-jwt-token>" \
 
 ```
 
@@ -508,7 +508,7 @@ Description: A `PUT` request to update a specific doctor's information associate
 ```
 
 curl -X PUT http://localhost:8080/api/v1/doctors/123 \
--H "Authorization: Bearer <admin_token>" \
+-H "Authorization: Bearer <your-jwt-token>" \
 -H "Content-Type: application/json" \
 -d '{ "firstName": "John", "lastName": "Doe", "specialization": "CARDIOLOGY" }'
 
@@ -773,7 +773,7 @@ including the client's ID, the doctor's ID, and the appointment time.
 ```
 
 curl -X POST http://localhost:8080/api/v1/appointments \
--H "Authorization: token" \
+-H "Authorization: Bearer <your-jwt-token>" \
 -H "Content-Type: application/json" \
 -d '{ "clientId": 123, "doctorId": 456, "appointmentTime": "2024-08-15 10:00:00" }'
 
@@ -792,7 +792,7 @@ Description: The appointment is successfully created.
         "appointmentId": 78,
         "clientId": 123,
         "doctorId": 456,
-        "appointmentTime": "appointmentTime": "2024-08-15 10:00:00",
+        "appointmentTime": "2024-08-15 10:00:00",
         "appointmentStatus": "SCHEDULED"
     }
 }
@@ -804,7 +804,7 @@ Description: The request is invalid or missing required parameters.
 
 ```
 {
-  "error": "Invalid request: Missing required parameters. Please provide clientId, doctorId, and appointmentTime."
+  "error": "Invalid request: doctorId, and appointmentTime are required parameters."
 }
 ```
 
@@ -832,7 +832,7 @@ Ensure that the correct authentication token is provided in the request header.
 
 ```
 {
-  "error": "Authentication failed: Ensure that the correct authentication token is provided in the request header."
+  "error": "Authentication failed: Missing client ID."
 }
 ```
 
@@ -851,6 +851,22 @@ Description: The server cannot find the specified doctor.
 ```
 {
   "error": "Doctor not found."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+  "error": "An error occurred while creating the appointment."
+}
+```
+
+```
+{
+  "error": "Failed to insert appointment."
 }
 ```
 
@@ -877,7 +893,7 @@ authentication.
 ```
 
 curl -X GET http://localhost:8080/api/v1/appointments/clients/2 \
--H "Authorization: token" \
+-H "Authorization: Bearer <your-jwt-token>" \
 
 ```
 
@@ -923,6 +939,16 @@ Description: The request lacks proper authentication credentials or the provided
 }
 ```
 
+Status Code: **403 Forbidden**
+
+Description: The request is understood by the server, but authorization is refused because the user lacks sufficient rights to access the resource.
+
+```
+{
+  "error": "You have permission to view only your own appointments."
+}
+```
+
 Status Code: **404 Not Found**
 
 Description: The server cannot find the specified appointments for this client.
@@ -940,6 +966,12 @@ Description: An unexpected error occurred on the server while processing the req
 ```
 {
   "error": "Failed to retrieve client appointments."
+}
+```
+
+```
+{
+  "error": "An error occurred while retrieving the client's appointment."
 }
 ```
 
@@ -964,10 +996,8 @@ Description: A `PUT` request to update the appointment for the specified client.
 ```
 
 curl -X PUT http://localhost:8080/api/v1/appointments/456 \
--H "Authorization: Bearer <auth_token>" \
--d '{
-  "appointmentTime": "2024-08-15 14:30:00"
-}'
+-H "Authorization: Bearer <your-jwt-token>" \
+-d '{ "appointmentTime": "2024-08-15 14:30:00" }'
 
 ```
 
@@ -1015,7 +1045,7 @@ Description: The request lacks proper authentication credentials or the provided
 
 ```
 {
-  "error": "Authentication failed: Token not provided."
+  "error": "Authentication failed: Missing client ID."
 }
 ```
 
@@ -1049,6 +1079,12 @@ Description: An unexpected error occurred on the server while processing the req
 }
 ```
 
+```
+{
+  "error": "An error occurred while updating the client's appointment."
+}
+```
+
 #### 5. Deletes an appointment
 
 Endpoint
@@ -1065,7 +1101,7 @@ Description: A `DELETE` request to delete a specific appointment associated with
 ```
 
 curl -X DELETE http://localhost:8080/api/v1/appointments/client-appointment/12 \
--H "Authorization: token" \
+-H "Authorization: Bearer <your-jwt-token>" \
 
 ```
 
@@ -1097,7 +1133,7 @@ Description: The request lacks proper authentication credentials or the provided
 
 ```
 {
-  "error": "Authentication failed: Token not provided."
+  "error": "Authentication failed: Missing client ID."
 }
 ```
 
@@ -1117,7 +1153,7 @@ Description: The server cannot find the specified appointment for this client.
 
 ```
 {
-  "error": "Appointment doesn't exist."
+  "error": "Appointment not found."
 }
 ```
 
@@ -1128,6 +1164,12 @@ Description: An unexpected error occurred on the server while processing the req
 ```
 {
   "error": "Failed to delete appointment."
+}
+```
+
+```
+{
+  "error": "An error occurred while deleting the client's appointment."
 }
 ```
 
@@ -1236,16 +1278,15 @@ Endpoint
 
 - URL Path: **_/api/v1/schedules/:scheduleId_**
 - Description: This endpoint retrieves a specific schedule by its ID.
-- Authentication: Authentication is required for this endpoint.
+- Authentication: Authentication: No authentication required for this endpoint.
 
 **Example Request**
 
-Description: A `GET` request to retrieve a specific schedule by its ID. It includes an Authorization header with a bearer token for authentication.
+Description: A `GET` request to retrieve a specific schedule by its ID. No authentication is required for this endpoint. The schedule's ID is included in the URL path.
 
 ```
 
 curl -X POST http://localhost:8080/api/v1/schedules/123 \
--H "Authorization: token" \
 
 ```
 
@@ -1315,7 +1356,7 @@ Endpoint
 
 - URL Path: **_/api/v1/schedules/doctor-schedule_**
 - Description: This endpoint allows the creation of a new schedule for a doctor.
-- Authentication: Authentication is required for this endpoint.
+- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to create schedule records.
 
 **Request Body**
 
@@ -1333,7 +1374,7 @@ Description: A `POST` request to create a new schedule for a doctor. It includes
 ```
 
 curl -X POST http://localhost:8080/api/v1/schedules/doctor-schedule \
--H "Authorization: token" \
+-H "Authorization: Bearer <your-jwt-token>" \
 -H "Content-Type: application/json" \
 -d '{ "doctorId": 123, "scheduleDay": "MONDAY", "startTime": "09:00:00", "endTime": "17:00:00" }'
 
@@ -1417,7 +1458,7 @@ Description: A `DELETE` request to remove a specific schedule associated with a 
 ```
 
 curl -X DELETE http://localhost:8080/api/v1/schedules/123 \
--H "Authorization: Bearer <admin_token>"
+-H "Authorization: Bearer <your-jwt-token>" \
 
 ```
 
@@ -1494,7 +1535,7 @@ Description: A `PUT` request to update a specific schedule associated with a sch
 ```
 
 curl -X PUT http://localhost:8080/api/v1/schedules/123 \
--H "Authorization: Bearer <admin_token>" \
+-H "Authorization: Bearer <your-jwt-token>" \
 -H "Content-Type: application/json" \
 -d '{
   "scheduleDay": "FRIDAY",

@@ -2,6 +2,7 @@ const path = require('path');
 const rootDir = require('../utils/path');
 const Appointment = require('../models/appointment');
 const Client = require('../models/client');
+const Doctor = require('../models/doctor');
 const { formatClientAppointmentsResponse } = require('../utils/formatResponse');
 
 /**
@@ -22,22 +23,21 @@ exports.listAppointments = (req, res) => {
  * @throws {Error} - If there is an error during the appointment creation process.
  */
 exports.createAppointment = async (req, res) => {
+	const { doctorId, appointmentTime } = req.body;
+	const clientId = req.client?.clientId;
+
 	// Check authentication
-	if (!req.client || !req.client.clientId) {
+	if (!clientId) {
 		return res.status(401).json({
-			error:
-				'Authentication failed: Ensure that the correct authentication token is provided in the request header.',
+			error: 'Authentication failed: Missing client ID.',
 		});
 	}
 
-	const { doctorId, appointmentTime } = req.body;
-	const clientId = req.client.clientId;
-
 	// Check for missing parameters
-	if (!clientId || !doctorId || !appointmentTime) {
+	if (!doctorId || !appointmentTime) {
 		return res.status(400).json({
 			error:
-				'Invalid request: Missing required parameters. Please provide clientId, doctorId, and appointmentTime.',
+				'Invalid request: doctorId, and appointmentTime are required parameters.',
 		});
 	}
 
@@ -49,12 +49,10 @@ exports.createAppointment = async (req, res) => {
 		}
 
 		// Check if doctor exists
-		// const doctorExists = await Doctor.findById(doctorId);
-		// if (!doctorExists) {
-		// 	return res.status(404).json({ error: 'Doctor not found.' });
-		// }
-
-		const appointment = new Appointment(clientId, doctorId, appointmentTime);
+		const doctorExists = await Doctor.getById(doctorId);
+		if (!doctorExists) {
+			return res.status(404).json({ error: 'Doctor not found.' });
+		}
 
 		// Validate appointment time
 		if (!Appointment.isValidAppointmentTime(appointmentTime)) {
@@ -64,14 +62,20 @@ exports.createAppointment = async (req, res) => {
 			});
 		}
 
+		// Create and insert appointment
+		const appointment = new Appointment(clientId, doctorId, appointmentTime);
 		const appointmentId = await appointment.insertAppointment();
+
+		// Fetch and format appointment details
 		const appointmentDetails = await Appointment.getAppointmentById(
 			appointmentId
 		);
+		const formattedAppointment =
+			Appointment.formatAppointmentResponse(appointmentDetails);
 
 		const response = {
 			message: 'Appointment created successfully.',
-			appointment: Appointment.formatAppointmentResponse(appointmentDetails),
+			appointment: formattedAppointment,
 		};
 
 		res.status(201).json(response);
@@ -92,6 +96,14 @@ exports.createAppointment = async (req, res) => {
  */
 exports.getClientAppointments = async (req, res) => {
 	const clientId = parseInt(req.params.clientId);
+	const currentClient = req.client.clientId;
+
+	// Check if the appointment belongs to the client
+	if (currentClient !== clientId && req.client.role !== 'ADMIN') {
+		return res.status(403).json({
+			error: 'You have permission to view only your own appointments.',
+		});
+	}
 
 	// Check if the clientId is provided and is a valid number
 	if (isNaN(clientId)) {
@@ -112,7 +124,7 @@ exports.getClientAppointments = async (req, res) => {
 		res.status(200).json(response);
 	} catch (error) {
 		console.error('Error processing client appointments:', error);
-		res.status(500).json({ error: 'Failed to retrieve client appointments.' });
+		res.status(500).json({ error: "An error occurred while retrieving the client's appointment." });
 	}
 };
 
@@ -127,23 +139,28 @@ exports.deleteAppointment = async (req, res) => {
 	const appointmentId = parseInt(req.params.appointmentId);
 	const clientId = req.client.clientId;
 
+	// Check authentication
+	if (!clientId) {
+		return res.status(401).json({
+			error: 'Authentication failed: Missing client ID.',
+		});
+	}
+
 	// Check if the appointmentId is provided and is a valid number
 	if (isNaN(appointmentId)) {
 		return res.status(400).json({ error: 'Invalid appointment ID.' });
 	}
 
 	try {
-		const appointment = await Appointment.getAppointmentById(
-			appointmentId
-		);
+		const appointment = await Appointment.getAppointmentById(appointmentId);
 
 		// Check if the appointment exists
 		if (!appointment) {
-			return res.status(404).json({ error: "Appointment doesn't exist." });
+			return res.status(404).json({ error: "Appointment not found." });
 		}
 
 		// Check if the appointment belongs to the client
-		if (appointment.clientId !== clientId) {
+		if (appointment.clientId !== clientId && req.client.role !== 'ADMIN') {
 			return res.status(403).json({
 				error: 'You do not have permission to delete this appointment.',
 			});
@@ -153,7 +170,7 @@ exports.deleteAppointment = async (req, res) => {
 		res.status(200).json({ message: 'Appointment deleted successfully.' });
 	} catch (error) {
 		console.error('Error deleting client appointments:', error);
-		res.status(500).json({ error: 'Failed to delete appointment.' });
+		res.status(500).json({ error: "An error occurred while deleting the client's appointment." });
 	}
 };
 
@@ -169,6 +186,13 @@ exports.updateAppointment = async (req, res) => {
 	const { appointmentTime } = req.body;
 	const clientId = req.client.clientId;
 
+	// Check authentication
+	if (!clientId) {
+		return res.status(401).json({
+			error: 'Authentication failed: Missing client ID.',
+		});
+	}
+
 	// Check if the appointmentId is provided and is a valid number
 	if (isNaN(appointmentId)) {
 		return res.status(400).json({ error: 'Invalid appointment ID.' });
@@ -183,7 +207,7 @@ exports.updateAppointment = async (req, res) => {
 		}
 
 		// Check if the appointment belongs to the client
-		if (appointment.clientId !== clientId) {
+		if (appointment.clientId !== clientId && req.client.role !== 'ADMIN') {
 			return res.status(403).json({
 				error: 'You do not have permission to update this appointment.',
 			});
@@ -209,6 +233,6 @@ exports.updateAppointment = async (req, res) => {
 		});
 	} catch (error) {
 		console.error('Error updating client appointment:', error);
-		res.status(500).json({ error: 'Failed to update appointment.' });
+		res.status(500).json({ error: "An error occurred while updating the client's appointment." });
 	}
 };
