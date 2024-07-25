@@ -10,6 +10,8 @@ const Role = Object.freeze({
 	ADMIN: 'ADMIN',
 	/** Registered patient user */
 	PATIENT: 'PATIENT',
+	/** Registered doctor user */
+	DOCTOR: 'DOCTOR',
 });
 
 module.exports = Role;

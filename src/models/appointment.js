@@ -136,26 +136,50 @@ module.exports = class Appointment {
 	}
 
 	/**
-	 * Delete an appointment from the database by ID.
+	 * Delete or cancel an appointment based on client role.
 	 * @param {number} appointmentId - The ID of the appointment.
+	 * @param {string} clientRole - The role of the client.
 	 * @returns {Promise<undefined>}
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
-	static async deleteAppointmentById(appointmentId) {
-		const queryDeleteAppointment =
-			'DELETE FROM appointment WHERE appointmentId = ?';
+	static async deleteAppointmentById(appointmentId, clientRole) {
+		const connection = await pool.getConnection();
 
 		try {
-			const [result] = await pool.execute(queryDeleteAppointment, [
-				appointmentId,
-			]);
+			await connection.beginTransaction();
 
-			if (result.affectedRows === 0) {
-				throw new Eror('Appointment not found.');
+			if (clientRole === 'ADMIN') {
+				const queryDeleteAppointment =
+					'DELETE FROM appointment WHERE appointmentId = ?';
+
+				const [result] = await connection.execute(queryDeleteAppointment, [
+					appointmentId,
+				]);
+
+				if (result.affectedRows === 0) {
+					throw new Error('Appointment not found.');
+				}
+			} else {
+				const queryCancelAppointment = `
+                UPDATE appointment 
+                SET appointmentStatus = 'CANCELED' 
+                WHERE appointmentId = ?`;
+
+				const [result] = await connection.execute(queryCancelAppointment, [
+					appointmentId,
+				]);
+
+				if (result.affectedRows === 0) {
+					throw new Error('Appointment not found.');
+				}
 			}
+			await connection.commit();
 		} catch (error) {
+			await connection.rollback();
 			console.error('Error deleting client appointment:', error);
-			throw new Error('Failed to delete appointment.');
+			throw error;
+		} finally {
+			connection.release();
 		}
 	}
 
@@ -171,6 +195,23 @@ module.exports = class Appointment {
 		try {
 			await connection.beginTransaction();
 
+			// Get the current appointment details
+			const currentAppointment = await this.getAppointmentById(appointmentId);
+			if (!currentAppointment) {
+				throw new Error('Appointment not found.');
+			}
+
+			// Check if the new time slot is available
+			const isAvailable = await this.isTimeSlotAvailable(
+				currentAppointment.doctorId,
+				new Date(newAppointmentTime + 'Z'),
+				connection
+			);
+
+			if (!isAvailable) {
+				throw new Error('The selected appointment time is not available.');
+			}
+
 			const queryChangeAppointment =
 				'UPDATE appointment SET appointmentTime = ? WHERE appointmentId = ?';
 
@@ -180,14 +221,15 @@ module.exports = class Appointment {
 			]);
 
 			if (result.changedRows === 0) {
-				throw new Eror('Appointment not found.');
+				throw new Eror('No changes were made to the appointment.');
 			}
 
 			await connection.commit();
+			return await this.getAppointmentById(appointmentId);
 		} catch (error) {
 			await connection.rollback();
 			console.error('Error changing client appointment:', error);
-			throw new Error('Failed to update appointment.');
+			throw error;
 		} finally {
 			connection.release();
 		}

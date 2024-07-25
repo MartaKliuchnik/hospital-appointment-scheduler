@@ -11,7 +11,7 @@ module.exports = class Client {
 	 * @param {string} email - The email address of the client.
 	 * @param {string} hashedPassword - The hashed password of the client.
 	 * @param {string} lastName - The last name of the client.
-	 * @param {role} role - The role of the client.
+	 * @param {Role} role - The role of the client.
 	 * @param {clientId|null} clientId - The ID of the client.
 	 */
 	constructor(

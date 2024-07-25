@@ -138,7 +138,7 @@ exports.getClientAppointments = async (req, res) => {
 };
 
 /**
- * Delete an appointment for a specific ID.
+ * Delete or cancel an appointment for a specific ID.
  * @param {object} req - The request object.
  * @param {object} res - The response object.
  * @returns {Promise<void>} - A promise that resolves when the operation is complete.
@@ -147,6 +147,7 @@ exports.getClientAppointments = async (req, res) => {
 exports.deleteAppointment = async (req, res) => {
 	const appointmentId = parseInt(req.params.appointmentId);
 	const clientId = req.client.clientId;
+	const clientRole = req.client.role;
 
 	// Check authentication
 	if (!clientId) {
@@ -169,16 +170,28 @@ exports.deleteAppointment = async (req, res) => {
 		}
 
 		// Check if the appointment belongs to the client
-		if (appointment.clientId !== clientId && req.client.role !== 'ADMIN') {
+		if (appointment.clientId !== clientId) {
 			return res.status(403).json({
 				error: 'You do not have permission to delete this appointment.',
 			});
 		}
 
-		await Appointment.deleteAppointmentById(appointmentId);
-		res.status(200).json({ message: 'Appointment deleted successfully.' });
+		await Appointment.deleteAppointmentById(appointmentId, clientRole);
+		res
+			.status(200)
+			.json({
+				message:
+					clientRole === 'ADMIN'
+						? 'Appointment deleted successfully.'
+						: 'Appointment canceled successfully.',
+			});
 	} catch (error) {
 		console.error('Error deleting client appointments:', error);
+
+		if (error.message === 'Appointment not found.') {
+			return res.status(404).json({ error: error.message });
+		}
+
 		res.status(500).json({
 			error: "An error occurred while deleting the client's appointment.",
 		});
@@ -232,13 +245,8 @@ exports.updateAppointment = async (req, res) => {
 			});
 		}
 
-		const utcAppointmentTime = new Date(appointmentTime)
-			.toISOString()
-			.slice(0, 19)
-			.replace('T', ' ');
-		await Appointment.changeAppointmentById(utcAppointmentTime, appointmentId);
-
-		const updatedAppointment = await Appointment.getAppointmentById(
+		const updatedAppointment = await Appointment.changeAppointmentById(
+			appointmentTime,
 			appointmentId
 		);
 
@@ -248,6 +256,11 @@ exports.updateAppointment = async (req, res) => {
 		});
 	} catch (error) {
 		console.error('Error updating client appointment:', error);
+
+		if (error.message === 'The selected appointment time is not available.') {
+			return res.status(400).json({ error: error.message });
+		}
+
 		res.status(500).json({
 			error: "An error occurred while updating the client's appointment.",
 		});
