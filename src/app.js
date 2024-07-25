@@ -49,10 +49,20 @@ app.use((req, res) => {
 	res.status(404).send('<h1>Page Not Found!</h1>');
 });
 
-// Run database creation script
-createDatabase().then((res) => {
-	// Server start
-	app.listen(PORT, () => {
-		console.log(`\n\nServer started on ${PORT} port...`);
-	});
-});
+const startServer = async () => {
+	try {
+		// Ensure the database is created
+		await createDatabase();
+
+		// Start the server
+		app.listen(PORT, () => {
+			console.log(`\n\nServer started on ${PORT} port...`);
+		});
+	} catch (err) {
+		console.error('Failed to start server:', err.message);
+		process.exit(1); // Exit the process if database setup fails
+	}
+};
+
+// Start the server
+startServer();

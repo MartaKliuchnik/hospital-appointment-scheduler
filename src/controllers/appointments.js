@@ -62,7 +62,6 @@ exports.createAppointment = async (req, res) => {
 			});
 		}
 
-		// Create and insert appointment
 		const appointment = new Appointment(clientId, doctorId, appointmentTime);
 		const appointmentId = await appointment.insertAppointment();
 
@@ -81,6 +80,14 @@ exports.createAppointment = async (req, res) => {
 		res.status(201).json(response);
 	} catch (error) {
 		console.error('Error creating appointment:', error);
+
+		// Check specific error messages to return detailed error response
+		if (
+			error.message.includes('The selected appointment time is not available.')
+		) {
+			return res.status(400).json({ error: error.message });
+		}
+
 		res
 			.status(500)
 			.json({ error: 'An error occurred while creating the appointment.' });
@@ -124,7 +131,9 @@ exports.getClientAppointments = async (req, res) => {
 		res.status(200).json(response);
 	} catch (error) {
 		console.error('Error processing client appointments:', error);
-		res.status(500).json({ error: "An error occurred while retrieving the client's appointment." });
+		res.status(500).json({
+			error: "An error occurred while retrieving the client's appointment.",
+		});
 	}
 };
 
@@ -156,7 +165,7 @@ exports.deleteAppointment = async (req, res) => {
 
 		// Check if the appointment exists
 		if (!appointment) {
-			return res.status(404).json({ error: "Appointment not found." });
+			return res.status(404).json({ error: 'Appointment not found.' });
 		}
 
 		// Check if the appointment belongs to the client
@@ -170,7 +179,9 @@ exports.deleteAppointment = async (req, res) => {
 		res.status(200).json({ message: 'Appointment deleted successfully.' });
 	} catch (error) {
 		console.error('Error deleting client appointments:', error);
-		res.status(500).json({ error: "An error occurred while deleting the client's appointment." });
+		res.status(500).json({
+			error: "An error occurred while deleting the client's appointment.",
+		});
 	}
 };
 
@@ -221,7 +232,11 @@ exports.updateAppointment = async (req, res) => {
 			});
 		}
 
-		await Appointment.changeAppointmentById(appointmentTime, appointmentId);
+		const utcAppointmentTime = new Date(appointmentTime)
+			.toISOString()
+			.slice(0, 19)
+			.replace('T', ' ');
+		await Appointment.changeAppointmentById(utcAppointmentTime, appointmentId);
 
 		const updatedAppointment = await Appointment.getAppointmentById(
 			appointmentId
@@ -233,6 +248,8 @@ exports.updateAppointment = async (req, res) => {
 		});
 	} catch (error) {
 		console.error('Error updating client appointment:', error);
-		res.status(500).json({ error: "An error occurred while updating the client's appointment." });
+		res.status(500).json({
+			error: "An error occurred while updating the client's appointment.",
+		});
 	}
 };

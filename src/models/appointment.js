@@ -1,4 +1,5 @@
 const { pool } = require('../utils/database');
+const Schedule = require('./schedule');
 
 module.exports = class Appointment {
 	/**
@@ -19,22 +20,46 @@ module.exports = class Appointment {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	async insertAppointment() {
-		const queryCreateAppointment =
-			'INSERT INTO appointment (clientId, doctorId, appointmentTime, appointmentStatus) VALUES (?, ?, ?, ?)';
+		const appointmentTime = new Date(this.appointmentTime + 'Z');
+
+		// Start a transaction
+		const connection = await pool.getConnection();
+		await connection.beginTransaction();
 
 		try {
-			const [result] = await pool.execute(queryCreateAppointment, [
+			// Check if the appointment time is available
+			const isAvailable = await Appointment.isTimeSlotAvailable(
+				this.doctorId,
+				appointmentTime,
+				connection
+			);
+
+			if (!isAvailable) {
+				throw new Error('The selected appointment time is not available.');
+			}
+
+			const queryCreateAppointment =
+				'INSERT INTO appointment (clientId, doctorId, appointmentTime, appointmentStatus) VALUES (?, ?, ?, ?)';
+
+			const [result] = await connection.execute(queryCreateAppointment, [
 				this.clientId,
 				this.doctorId,
-				this.appointmentTime,
+				appointmentTime,
 				this.appointmentStatus,
 			]);
 
 			this.appointmentId = result.insertId;
+
+			// Commit the transaction
+			await connection.commit();
 			return this.appointmentId;
 		} catch (error) {
+			// If there's an error, roll back the transaction
+			await connection.rollback();
 			console.error('Error inserting appointment:', error);
-			throw new Error('Failed to insert appointment.');
+			throw error;
+		} finally {
+			connection.release();
 		}
 	}
 
@@ -65,9 +90,9 @@ module.exports = class Appointment {
 	 * @returns {boolean} - Returns true if the appointment time is in the future; false otherwise.
 	 */
 	static isValidAppointmentTime(appointmentTime) {
-		const currentData = new Date();
-		const appointmentDate = new Date(appointmentTime.replace(' ', 'T') + 'Z');
-		return appointmentDate > currentData;
+		const currentDate = new Date();
+		const appointmentDate = new Date(appointmentTime);
+		return appointmentDate > currentDate;
 	}
 
 	/**
@@ -78,7 +103,7 @@ module.exports = class Appointment {
 	static formatAppointmentResponse(appointment) {
 		return {
 			...appointment,
-			appointmentTime: new Date(appointment.appointmentTime + 'Z')
+			appointmentTime: new Date(appointment.appointmentTime)
 				.toISOString()
 				.replace('T', ' ')
 				.substring(0, 19),
@@ -165,6 +190,65 @@ module.exports = class Appointment {
 			throw new Error('Failed to update appointment.');
 		} finally {
 			connection.release();
+		}
+	}
+
+	static async getAppointmentsByDoctorAndDate(doctorId, date) {
+		const queryGetAppointments =
+			'SELECT * FROM appointment WHERE doctorId = ? AND DATE(appointmentTime) = DATE(?)';
+
+		try {
+			const [results] = await pool.execute(queryGetAppointments, [
+				doctorId,
+				date,
+			]);
+
+			return results;
+		} catch (error) {
+			console.error('Error retrieving appointments:', error);
+			throw new Error('Failed to retrieve appointments.');
+		}
+	}
+
+	static async isTimeSlotAvailable(doctorId, appointmentTime) {
+		const date = appointmentTime.toISOString().split('T')[0];
+		const appointmentTimeString = appointmentTime
+			.toISOString()
+			.slice(0, 19)
+			.replace('T', ' ');
+
+		const queryCheckOverlap = `
+			SELECT COUNT(*) as count 
+			FROM appointment 
+			WHERE doctorId = ? 
+			AND DATE(appointmentTime) = DATE(?)
+			AND ABS(TIMESTAMPDIFF(MINUTE, appointmentTime, ?)) < 20
+			FOR UPDATE`;
+
+		try {
+			const [results] = await pool.execute(queryCheckOverlap, [
+				doctorId,
+				date,
+				appointmentTimeString,
+			]);
+
+			if (results[0].count > 0) {
+				return false; // Overlapping appointment found
+			}
+
+			// If no overlap, check if it's within the doctor's schedule
+			const availableSlots = await Schedule.getAvailableTimeSlots(
+				doctorId,
+				date,
+				Appointment.getAppointmentsByDoctorAndDate
+			);
+
+			return availableSlots.some(
+				(slot) => Math.abs(slot.getTime() - appointmentTime.getTime()) < 1000
+			);
+		} catch (error) {
+			console.error('Error checking time slot availability:', error);
+			throw new Error('Failed to check time slot availability.');
 		}
 	}
 };

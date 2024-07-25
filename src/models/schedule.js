@@ -5,12 +5,12 @@ module.exports = class Schedule {
 	 * @param {number} doctorId - The ID of the doctor.
 	 * @param {string} scheduleDay - The day of the week for the schedule.
 	 * @param {string} startTime - The start time of the doctor's availability.
-	 * @param {string} endTime - The end time of the doctor's availability. 
+	 * @param {string} endTime - The end time of the doctor's availability.
 	 * @param {number|null} scheduleId - The ID of the schedule.
 	 */
 	constructor(doctorId, scheduleDay, startTime, endTime, scheduleId = null) {
 		this.doctorId = doctorId;
-		this.scheduleDay = scheduleDay;
+		this.scheduleDay = scheduleDay.toUpperCase();
 		this.startTime = startTime;
 		this.endTime = endTime;
 		this.scheduleId = scheduleId;
@@ -102,68 +102,126 @@ module.exports = class Schedule {
 			row.endTime,
 			row.scheduleId
 		);
-    }
-    
-    /**
+	}
+
+	/**
 	 * Delete a schedule from the database by ID.
 	 * @param {number} scheduleId - The ID of the schedule.
 	 * @returns {Promise<undefined>}
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
-    static async deleteById(scheduleId) { 
-        const queryDeleteSchedule =
-			'DELETE FROM schedule WHERE scheduleId = ?';
+	static async deleteById(scheduleId) {
+		const queryDeleteSchedule = 'DELETE FROM schedule WHERE scheduleId = ?';
 
-        try {
-            const [result] = await pool.execute(queryDeleteSchedule, [scheduleId]);
-            if ((result.affectedRows = 0)) {
+		try {
+			const [result] = await pool.execute(queryDeleteSchedule, [scheduleId]);
+			if ((result.affectedRows = 0)) {
 				throw new Eror('Schedule not found.');
 			}
-        } catch (error) {
+		} catch (error) {
 			console.error('Error deleting schedule:', error);
 			throw new Error('Failed to delete schedule.');
 		}
-    }
+	}
 
-    /**
+	/**
 	 * Update a schedule in the database.
 	 * @param {number} scheduleId - The ID of the schedule to update.
 	 * @param {Object} updateData - An object containing the fields to update.
 	 * @returns {Promise<Object>} - A promise that resolves to the updated schedule object.
 	 * @throws {Error} - If there's an error during the database operation or if no valid fields are provided.
 	 */
-    static async updateById(scheduleId, updateData) {
-        const allowedFields = ['scheduleDay', 'startTime', 'endTime'];
-        const updates = [];
-        const values = [];
-        
-        for (const [key, value] of Object.entries(updateData)) {
-            if (allowedFields.includes(key)) {
-                updates.push(`${key} = ?`);
-                values.push(value);
-            }
-        }
+	static async updateById(scheduleId, updateData) {
+		const allowedFields = ['scheduleDay', 'startTime', 'endTime'];
+		const updates = [];
+		const values = [];
 
-        // Check if the updated data exists
+		for (const [key, value] of Object.entries(updateData)) {
+			if (allowedFields.includes(key)) {
+				updates.push(`${key} = ?`);
+				values.push(value);
+			}
+		}
+
+		// Check if the updated data exists
 		if (updates.length === 0) {
 			throw new Error('No valid fields to update.');
-        }
-        
-        const queryUpdateSchedule = `UPDATE schedule SET ${updates.join(', ')} WHERE scheduleId = ?`;
-        values.push(scheduleId);
+		}
 
-        try {
-            const [result] = await pool.execute(queryUpdateSchedule, values);
+		const queryUpdateSchedule = `UPDATE schedule SET ${updates.join(
+			', '
+		)} WHERE scheduleId = ?`;
+		values.push(scheduleId);
 
-            if (result.changedRows === 0) {
+		try {
+			const [result] = await pool.execute(queryUpdateSchedule, values);
+
+			if (result.changedRows === 0) {
 				throw new Error('No changes applied to the schedule.');
 			}
 
 			return this.getById(scheduleId);
-        } catch (error) {
+		} catch (error) {
 			console.error('Error updating schedule:', error);
 			throw error;
 		}
+	}
 
-    }
+	/**
+	 * Get available time slots for specific doctor's schedule in the database.
+	 * @param {number} doctorId - The ID of the doctor.
+	 * @param {string} data - format '2024-07-25'
+	 * @returns {Promise<Object>} - A promise that resolves to the updated schedule object.
+	 * @throws {Error} - If there's an error during the database operation or if no valid fields are provided.
+	 */
+	static async getAvailableTimeSlots(
+		doctorId,
+		date,
+		getAppointmentsByDoctorAndDate
+	) {
+		const dayOfWeek = new Date(date)
+			.toLocaleString('en-us', {
+				weekday: 'long',
+			})
+			.toUpperCase();
+
+		const schedule = await this.getByDoctorId(doctorId);
+		if (!schedule) {
+			throw new Error('No schedule found for this doctor.');
+		}
+
+		const doctorSchedule = schedule.find(
+			(s) => s.scheduleDay.toLowerCase() === dayOfWeek.toLowerCase()
+		);
+		if (!doctorSchedule) {
+			throw new Error('Doctor is not available on this day.');
+		}
+
+		const startTime = new Date(`${date}T${doctorSchedule.startTime}Z`);
+		const endTime = new Date(`${date}T${doctorSchedule.endTime}Z`);
+
+		const timeSlots = [];
+		let currentSlot = new Date(startTime);
+
+		while (currentSlot < endTime) {
+			timeSlots.push(new Date(currentSlot));
+			currentSlot.setUTCMinutes(currentSlot.getUTCMinutes() + 20);
+		}
+
+		// Get existing appointments for this doctor on this day
+		const existingAppointments = await getAppointmentsByDoctorAndDate(
+			doctorId,
+			date
+		);
+
+		// Filter out time slots that are already booked
+		const availableSlots = timeSlots.filter((slot) => {
+			return !existingAppointments.some((app) => {
+				const appTime = new Date(app.appointmentTime);
+				return Math.abs(appTime.getTime() - slot.getTime()) < 20 * 60 * 1000; // Less than 20 minutes difference
+			});
+		});
+
+		return availableSlots;
+	}
 };

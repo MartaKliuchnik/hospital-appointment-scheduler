@@ -6,6 +6,8 @@ const pool = mysql.createPool({
 	host: 'localhost',
 	user: 'root',
 	password: process.env.DATABASE_PASSWORD,
+	database: 'hospitalAppointmentScheduler',
+	timezone: 'Z',
 });
 
 const promisePool = pool.promise();
@@ -21,9 +23,10 @@ const createDatabase = async () => {
 		await promisePool.query('USE hospitalAppointmentScheduler');
 
 		// Read the SQL file
-		const dataSql = fs
-			.readFileSync(path.join(__dirname, '..', '../schema.sql'), 'utf8')
-			.toString();
+		const dataSql = fs.readFileSync(
+			path.join(__dirname, '..', '../schema.sql'),
+			'utf8'
+		);
 
 		// Split SQL commands by semicolon, trim whitespace, filter out empty strings, null, undefined
 		const sqlCommands = dataSql
@@ -46,6 +49,7 @@ const createDatabase = async () => {
 		console.log('Database and tables created successfully.');
 	} catch (err) {
 		console.error('Error creating database and tables:', err.message);
+		throw err; // Re-throw the error to ensure the server does not start if database setup fails
 	}
 };
 

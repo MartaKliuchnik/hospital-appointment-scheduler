@@ -28,7 +28,9 @@ exports.getSchedule = async (req, res) => {
 		res.status(200).json(schedule);
 	} catch (error) {
 		console.error('Error retrieving schedule:', error);
-		res.status(500).json({ error: 'An error occurred while retrieving the schedule.' });
+		res
+			.status(500)
+			.json({ error: 'An error occurred while retrieving the schedule.' });
 	}
 };
 
@@ -64,7 +66,7 @@ exports.createSchedule = async (req, res) => {
 
 		const schedule = new Schedule(
 			currentDoctorId,
-			scheduleDay,
+			scheduleDay.toUpperCase(),
 			startTime,
 			endTime
 		);
@@ -114,7 +116,9 @@ exports.getDoctorSchedule = async (req, res) => {
 		res.status(200).json(response);
 	} catch (error) {
 		console.error('Error Error retrieving schedules:', error);
-		res.status(500).json({ error: 'An error occurred while retrieving the schedule.' });
+		res
+			.status(500)
+			.json({ error: 'An error occurred while retrieving the schedule.' });
 	}
 };
 
@@ -126,25 +130,27 @@ exports.getDoctorSchedule = async (req, res) => {
  * @throws {Error} - If there is an error during the appointment deletion process.
  */
 exports.deleteSchedule = async (req, res) => {
-    const scheduleId = parseInt(req.params.scheduleId);
-    // Check if the scheduleId is provided and is a valid number
-    if (isNaN(scheduleId)) {
-        return res.status(400).json({ error: 'Invalid schedule ID.' });
-    }
-    
-    try {
-        const schedule = await Schedule.getById(scheduleId);
-        // Check if the schedule exists
-        if (!schedule) {
-            return res.status(404).json({ error: "Schedule not found." });
-        }
-        
-        await Schedule.deleteById(scheduleId);
-        res.status(200).json({ message: 'Schedule deleted successfully.' });
-    } catch (error) {
-        console.error('Error deleting schedule:', error);
-        res.status(500).json({ error: 'An error occurred while deleting the schedule.' });
-    }
+	const scheduleId = parseInt(req.params.scheduleId);
+	// Check if the scheduleId is provided and is a valid number
+	if (isNaN(scheduleId)) {
+		return res.status(400).json({ error: 'Invalid schedule ID.' });
+	}
+
+	try {
+		const schedule = await Schedule.getById(scheduleId);
+		// Check if the schedule exists
+		if (!schedule) {
+			return res.status(404).json({ error: 'Schedule not found.' });
+		}
+
+		await Schedule.deleteById(scheduleId);
+		res.status(200).json({ message: 'Schedule deleted successfully.' });
+	} catch (error) {
+		console.error('Error deleting schedule:', error);
+		res
+			.status(500)
+			.json({ error: 'An error occurred while deleting the schedule.' });
+	}
 };
 
 /**
@@ -154,60 +160,58 @@ exports.deleteSchedule = async (req, res) => {
  * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  * @throws {Error} - If there is an error during the schedule updating process.
  */
-exports.updateSchedule = async (req, res) => { 
-    const scheduleId = parseInt(req.params.scheduleId);
-    // Check if the scheduleId is provided and is a valid number
-    if (isNaN(scheduleId)) {
-        return res.status(400).json({ error: 'Invalid schedule ID.' });
-    }
+exports.updateSchedule = async (req, res) => {
+	const scheduleId = parseInt(req.params.scheduleId);
+	// Check if the scheduleId is provided and is a valid number
+	if (isNaN(scheduleId)) {
+		return res.status(400).json({ error: 'Invalid schedule ID.' });
+	}
 
-    const updateData = {
+	const updateData = {
 		scheduleDay: req.body.scheduleDay,
 		startTime: req.body.startTime,
 		endTime: req.body.endTime,
 	};
 
-    // Remove undefined fields
+	// Remove undefined fields
 	Object.keys(updateData).forEach(
 		(key) => updateData[key] === undefined && delete updateData[key]
-    );
-    if (Object.keys(updateData).length === 0) {
-		return res.status(400).json({ error: 'No changes applied to the schedule.' });
+	);
+	if (Object.keys(updateData).length === 0) {
+		return res
+			.status(400)
+			.json({ error: 'No changes applied to the schedule.' });
 	}
-    
-    try {
-        const schedule = await Schedule.getById(scheduleId);
-        // Check if the schedule exists
+
+	try {
+		const schedule = await Schedule.getById(scheduleId);
+		// Check if the schedule exists
 		if (!schedule) {
-			return res.status(404).json({ error: "Schedule not found" });
-        }
-        
-        const updatedSchedule = await Schedule.updateById(scheduleId, updateData);
+			return res.status(404).json({ error: 'Schedule not found' });
+		}
 
-        res.status(200).json({
-            message: 'Schedule updated successfully.',
-            schedule: updatedSchedule
-        })
-    } catch (error) {
-        console.error('Error updating schedule:', error);
+		const updatedSchedule = await Schedule.updateById(scheduleId, updateData);
 
-        if (error.message === 'Schedule not found.') {
-            res.status(404).json({ error: 'Schedule not found' });
-        } else if (error.message === 'No changes applied to the schedule.') {
-            res.status(400).json({ error: 'No changes applied to the schedule' });
-        } else if (error.message === 'No valid fields to update.') {
-            res.status(400).json({ error: 'No valid fields to update' });
+		res.status(200).json({
+			message: 'Schedule updated successfully.',
+			schedule: updatedSchedule,
+		});
+	} catch (error) {
+		console.error('Error updating schedule:', error);
+
+		if (error.message === 'Schedule not found.') {
+			res.status(404).json({ error: 'Schedule not found' });
+		} else if (error.message === 'No changes applied to the schedule.') {
+			res.status(400).json({ error: 'No changes applied to the schedule' });
+		} else if (error.message === 'No valid fields to update.') {
+			res.status(400).json({ error: 'No valid fields to update' });
 		} else if (error.code === 'ER_DATA_TOO_LONG' || error.errno === 1265) {
-			return res
-				.status(400)
-				.json({
-					error:
-						'Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list.',
-				});
+			return res.status(400).json({
+				error:
+					'Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list.',
+			});
 		}
 
 		res.status(500).json({ error: 'Failed to update schedule.' });
-    }
-}
-
-
+	}
+};
