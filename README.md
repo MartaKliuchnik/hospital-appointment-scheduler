@@ -9,7 +9,7 @@
 5. [API Documentation](#api-documentation)
 
    5.1 [User Management](#patient-management)
-   
+
    - Client data model.
    - Endpoint **/api/v1/auth/register**
    - Endpoint **/api/v1/auth/login**
@@ -23,6 +23,7 @@
    5.3 [Authentication](#authentication)
 
    5.4 [Change Client Role](#change-client-role)
+
    - Endpoint **/api/v1/clients/:clientId/role**
 
    5.5 [Appointment Management](#appointment-management)
@@ -93,15 +94,15 @@ endpoint path. For instance, to access the register page:
 
 Information about clients.
 
-| Key  | Column Name      | Data Type     | Description                                   |
-| :--- | :--------------- | :------------ | :-------------------------------------------- |
-| PK   | clientId         | int           | Primary key for the Client record             |
-|      | firstName        | varchar(50)   | First name of the client                      |
-|      | lastName         | varchar(50)   | Last name of the client                       |
-|      | phoneNumber      | varchar(15)   | Phone number of the client (must be unique)   |
-|      | email            | varchar(255)  | Email address of the client (must be unique)  |
-|      | password         | varchar(255)  | Password for the client's account             |
-|      | registrationDate | datetime      | Date and time when the client registered      |
+| Key | Column Name      | Data Type    | Description                                  |
+| :-- | :--------------- | :----------- | :------------------------------------------- |
+| PK  | clientId         | int          | Primary key for the Client record            |
+|     | firstName        | varchar(50)  | First name of the client                     |
+|     | lastName         | varchar(50)  | Last name of the client                      |
+|     | phoneNumber      | varchar(15)  | Phone number of the client (must be unique)  |
+|     | email            | varchar(255) | Email address of the client (must be unique) |
+|     | password         | varchar(255) | Password for the client's account            |
+|     | registrationDate | datetime     | Date and time when the client registered     |
 
 #### 2. Register a new user
 
@@ -283,14 +284,15 @@ from processing the request.
 
 Information about doctors.
 
-| Key  | Column Name      | Data Type     | Description                                                             |
-| :--- | :--------------- | :------------ | :---------------------------------------------------------------------- |
-| PK   | doctorId         | int           | Primary key for the Doctor record                                       |
-|      | firstName        | varchar(50)   | First name of the doctor                                                |
-|      | lastName         | varchar(50)   | Last name of the doctor                                                 |
-|      | specialization   | enum          | Specialization field for the doctor, limited to specific medical fields |
+| Key | Column Name    | Data Type   | Description                                                             |
+| :-- | :------------- | :---------- | :---------------------------------------------------------------------- |
+| PK  | doctorId       | int         | Primary key for the Doctor record                                       |
+|     | firstName      | varchar(50) | First name of the doctor                                                |
+|     | lastName       | varchar(50) | Last name of the doctor                                                 |
+|     | specialization | enum        | Specialization field for the doctor, limited to specific medical fields |
 
-Predefined list of medical specializations: 'CARDIOLOGY', 'NEUROLOGY', 'ONCOLOGY', 'PEDIATRICS', 'DERMATOLOGY'.
+Predefined list of medical specializations: 'CARDIOLOGY', 'NEUROLOGY',
+'ONCOLOGY', 'PEDIATRICS', 'DERMATOLOGY'.
 
 #### 2. Retrieves a list of all doctors
 
@@ -348,7 +350,10 @@ Description: The server cannot find any doctors in the database.
 Endpoint
 
 - URL Path: /api/v1/doctors/:doctorId
-- Description: This endpoint retrieves information about a specific doctor based on their ID. The client sends a GET request to the server with the doctor's ID as a path parameter. The server processes the request by querying the database for the doctor with the specified ID.
+- Description: This endpoint retrieves information about a specific doctor based
+  on their ID. The client sends a GET request to the server with the doctor's ID
+  as a path parameter. The server processes the request by querying the database
+  for the doctor with the specified ID.
 - Authentication: No authentication required for this endpoint.
 
 **Request Parameter**
@@ -359,7 +364,8 @@ The request should include the following path parameter:
 
 **Example Request**
 
-Description: A `GET` request to retrieve a specific doctor associated with a doctorId.
+Description: A `GET` request to retrieve a specific doctor associated with a
+doctorId.
 
 ```
 
@@ -406,7 +412,8 @@ Description: No doctor with the specified ID exists in the database.
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -419,12 +426,18 @@ Description: An unexpected error occurred on the server while processing the req
 Endpoint
 
 - URL Path: **_/api/v1/doctors/:doctorId_**
-- Description: This endpoint deletes a specific doctor based on their ID. The client sends a DELETE request to the server with the doctor's ID as a path parameter. The server processes the request by removing the specified doctor from the database.
-- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to delete doctor records.
+- Description: This endpoint deletes a specific doctor based on their ID. The
+  client sends a DELETE request to the server with the doctor's ID as a path
+  parameter. The server processes the request by removing the specified doctor
+  from the database.
+- Authentication and Authorization: This endpoint requires admin-level
+  authentication. Only users with admin privileges are allowed to delete doctor
+  records.
 
 **Example Request**
 
-Description: A `DELETE` request to remove a specific doctor associated with a doctorId. This request must include an authorization token for an admin user.
+Description: A `DELETE` request to remove a specific doctor associated with a
+doctorId. This request must include an authorization token for an admin user.
 
 ```
 
@@ -467,7 +480,8 @@ Description: No doctor with the specified ID exists in the database.
 
 Status Code: **403 Forbidden**
 
-Description: The doctor cannot be deleted due to existing appointments or other constraints.
+Description: The doctor cannot be deleted due to existing appointments or other
+constraints.
 
 ```
 {
@@ -475,7 +489,8 @@ Description: The doctor cannot be deleted due to existing appointments or other 
 }
 ```
 
-Description: The user does not have admin privileges required to perform this operation.
+Description: The user does not have admin privileges required to perform this
+operation.
 
 ```
 {
@@ -485,7 +500,8 @@ Description: The user does not have admin privileges required to perform this op
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -498,12 +514,20 @@ Description: An unexpected error occurred on the server while processing the req
 Endpoint
 
 - URL Path: **_/api/v1/doctors/:doctorId_**
-- Description: This endpoint updates a specific doctor's information based on their ID. The client sends a PUT request to the server with the doctor's ID as a path parameter and the updated information in the request body. The server processes the request by updating the specified doctor's details in the database.
-- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to update doctor records.
+- Description: This endpoint updates a specific doctor's information based on
+  their ID. The client sends a PUT request to the server with the doctor's ID as
+  a path parameter and the updated information in the request body. The server
+  processes the request by updating the specified doctor's details in the
+  database.
+- Authentication and Authorization: This endpoint requires admin-level
+  authentication. Only users with admin privileges are allowed to update doctor
+  records.
 
 **Example Request**
 
-Description: A `PUT` request to update a specific doctor's information associated with a doctorId. This request must include an authorization token for an admin user.
+Description: A `PUT` request to update a specific doctor's information
+associated with a doctorId. This request must include an authorization token for
+an admin user.
 
 ```
 
@@ -561,7 +585,8 @@ Description: No doctor with the specified ID exists in the database.
 
 Status Code: **403 Forbidden**
 
-Description:  The user does not have admin privileges required to perform this operation.
+Description: The user does not have admin privileges required to perform this
+operation.
 
 ```
 {
@@ -571,7 +596,8 @@ Description:  The user does not have admin privileges required to perform this o
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -614,7 +640,8 @@ The process of changing a client's role is restricted to admin clients only.
 Endpoint
 
 - URL Path: **_/api/v1/clients/:clientId/role_**
-- Description: This endpoint allows an admin to update the role of a specified client.
+- Description: This endpoint allows an admin to update the role of a specified
+  client.
 - Authentication: Required (Admin only)
 - Authorization: Requires UPDATE_USER_ROLE permission
 
@@ -626,7 +653,11 @@ The request body should contain the following parameter:
 
 **Example Request**
 
-Description: A `PUT` request to update the role of a client. It includes an Authorization header with a bearer token for authentication and specifies the content type as JSON. The request targets a specific client using their ID in the URL path. The request body contains the new role to be assigned to the client.
+Description: A `PUT` request to update the role of a client. It includes an
+Authorization header with a bearer token for authentication and specifies the
+content type as JSON. The request targets a specific client using their ID in
+the URL path. The request body contains the new role to be assigned to the
+client.
 
 ```
 
@@ -670,24 +701,25 @@ Description: The request is invalid or missing required parameters.
 Description: The client already has the specified role.
 
 ```
-{ 
-  error: 'Client already has this role.' 
+{
+  error: 'Client already has this role.'
 }
 ```
 
 Description: The attempt to update the user's role in the database failed.
 
 ```
-{ 
+{
   "error": "User role update failed."
 }
 ```
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials, or the provided
-token is invalid. Therefore, the server refuses to respond to the request.
-Ensure that the correct authentication token is provided in the request header.
+Description: The request lacks proper authentication credentials, or the
+provided token is invalid. Therefore, the server refuses to respond to the
+request. Ensure that the correct authentication token is provided in the request
+header.
 
 ```
 {
@@ -697,7 +729,8 @@ Ensure that the correct authentication token is provided in the request header.
 
 Status Code: **403 Forbidden**
 
-Description: The authenticated user does not have the required permissions to perform this action.
+Description: The authenticated user does not have the required permissions to
+perform this action.
 
 ```
 {
@@ -707,7 +740,7 @@ Description: The authenticated user does not have the required permissions to pe
 
 Status Code: **404 Not Found**
 
-Description:  The server cannot find the specified client.
+Description: The server cannot find the specified client.
 
 ```
 {
@@ -717,7 +750,8 @@ Description:  The server cannot find the specified client.
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -737,17 +771,18 @@ Description: An unexpected error occurred on the server while processing the req
 
 Information about appointments.
 
-| Key  | Column Name        | Data Type  | Description                                                    |
-| :--- | :----------------- | :--------- | :------------------------------------------------------------- |
-| PK   | appointmentId      | int        | Primary key for the Appointment record                         |
-| FK   | clientId           | int        | Foreign key referencing the clientId in the Appointment table  |
-| FK   | doctorId           | int        | Foreign key referencing the doctorId in the Appointment table  |
-|      | appointmentTime    | datetime   | Date and time of the appointment                               |
-|      | appointmentStatus  | enum       | Status of the appointment                                      |
+| Key | Column Name       | Data Type | Description                                                   |
+| :-- | :---------------- | :-------- | :------------------------------------------------------------ |
+| PK  | appointmentId     | int       | Primary key for the Appointment record                        |
+| FK  | clientId          | int       | Foreign key referencing the clientId in the Appointment table |
+| FK  | doctorId          | int       | Foreign key referencing the doctorId in the Appointment table |
+|     | appointmentTime   | datetime  | Date and time of the appointment                              |
+|     | appointmentStatus | enum      | Status of the appointment                                     |
 
-Predefined list of statuses for the appointment: 'SCHEDULED', 'COMPLETED', 'CANCELED'.
+Predefined list of statuses for the appointment: 'SCHEDULED', 'COMPLETED',
+'CANCELED'.
 
-#### 2. Creates a new appointment for a client 
+#### 2. Creates a new appointment for a client
 
 Endpoint
 
@@ -816,7 +851,17 @@ Description: The request contains invalid data.
 }
 ```
 
-Description: The request is invalid because it contains incorrect information. Ensure the date is correctly formatted.
+Description: The client is attempting to schedule an appointment at a time that
+is not available.
+
+```
+{
+  "error": "The selected appointment time is not available."
+}
+```
+
+Description: The request is invalid because it contains incorrect information.
+Ensure the date is correctly formatted.
 
 ```
 {
@@ -826,9 +871,10 @@ Description: The request is invalid because it contains incorrect information. E
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials, or the provided
-token is invalid. Therefore, the server refuses to respond to the request.
-Ensure that the correct authentication token is provided in the request header.
+Description: The request lacks proper authentication credentials, or the
+provided token is invalid. Therefore, the server refuses to respond to the
+request. Ensure that the correct authentication token is provided in the request
+header.
 
 ```
 {
@@ -838,7 +884,7 @@ Ensure that the correct authentication token is provided in the request header.
 
 Status Code: **404 Not Found**
 
-Description:  The server cannot find the specified client.
+Description: The server cannot find the specified client.
 
 ```
 {
@@ -856,7 +902,8 @@ Description: The server cannot find the specified doctor.
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -902,18 +949,19 @@ curl -X GET http://localhost:8080/api/v1/appointments/clients/2 \
 Status code: **200 OK**
 
 Description: The server successfully retrieved all appointments for the
-specified client and provided the list with all client appointments in the response body.
+specified client and provided the list with all client appointments in the
+response body.
 
 ```
 {
   "clientId": 2,
   "appointments": [
-    { 
+    {
       "appointmentId": 4,
       "doctorId": 3,
       "appointmentTime": "2024-08-15 14:30:00",
       "appointmentStatus": "SCHEDULED"
-    }, 
+    },
     ...
   ]
 }
@@ -931,7 +979,9 @@ Description: The request is invalid or missing required client ID parameter.
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
+Description: The request lacks proper authentication credentials or the provided
+token is invalid. Therefore, the server refuses to respond to the request.
+Ensure that the correct authentication token is provided in the request header.
 
 ```
 {
@@ -941,7 +991,8 @@ Description: The request lacks proper authentication credentials or the provided
 
 Status Code: **403 Forbidden**
 
-Description: The request is understood by the server, but authorization is refused because the user lacks sufficient rights to access the resource.
+Description: The request is understood by the server, but authorization is
+refused because the user lacks sufficient rights to access the resource.
 
 ```
 {
@@ -961,7 +1012,8 @@ Description: The server cannot find the specified appointments for this client.
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -980,7 +1032,8 @@ Description: An unexpected error occurred on the server while processing the req
 Endpoint
 
 - URL Path: **_api/v1/client/appointments/:appointmentId_**
-- Description: This endpoint allows authenticated clients to change the date of an existing appointment.
+- Description: This endpoint allows authenticated clients to change the date of
+  an existing appointment.
 - Authentication: Authentication is required for this endpoint.
 
 **Request Body**
@@ -991,7 +1044,9 @@ The request body should contain the following parameter:
 
 **Example Request**
 
-Description: A `PUT` request to update the appointment for the specified client. It includes the necessary authentication token and specifies the updated detail of the appointment, such as the new appointment time.
+Description: A `PUT` request to update the appointment for the specified client.
+It includes the necessary authentication token and specifies the updated detail
+of the appointment, such as the new appointment time.
 
 ```
 
@@ -1023,7 +1078,8 @@ changes.
 
 Status Code: **400 Bad Request**
 
-Description: The request is invalid or missing required appointment ID parameter.
+Description: The request is invalid or missing required appointment ID
+parameter.
 
 ```
 {
@@ -1031,7 +1087,8 @@ Description: The request is invalid or missing required appointment ID parameter
 }
 ```
 
-Description: The request is invalid because it contains incorrect information. Ensure the date is correctly formatted.
+Description: The request is invalid because it contains incorrect information.
+Ensure the date is correctly formatted.
 
 ```
 {
@@ -1041,7 +1098,9 @@ Description: The request is invalid because it contains incorrect information. E
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
+Description: The request lacks proper authentication credentials or the provided
+token is invalid. Therefore, the server refuses to respond to the request.
+Ensure that the correct authentication token is provided in the request header.
 
 ```
 {
@@ -1051,7 +1110,8 @@ Description: The request lacks proper authentication credentials or the provided
 
 Status Code: **403 Forbidden**
 
-Description: The request is understood by the server, but authorization is refused because the user lacks sufficient rights to access the resource.
+Description: The request is understood by the server, but authorization is
+refused because the user lacks sufficient rights to access the resource.
 
 ```
 {
@@ -1071,7 +1131,8 @@ Description: The server cannot find the specified appointment for this client.
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -1096,7 +1157,9 @@ Endpoint
 
 **Example Request**
 
-Description: A `DELETE` request to delete a specific appointment associated with a client. It includes authentication token in the request header for authorization.
+Description: A `DELETE` request to delete a specific appointment associated with
+a client. It includes authentication token in the request header for
+authorization.
 
 ```
 
@@ -1119,7 +1182,8 @@ Description: The server successfully deleted the appointment.
 
 Status Code: **400 Bad Request**
 
-Description: The request is invalid or missing required appointment ID parameter.
+Description: The request is invalid or missing required appointment ID
+parameter.
 
 ```
 {
@@ -1129,7 +1193,9 @@ Description: The request is invalid or missing required appointment ID parameter
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials or the provided token is invalid. Therefore, the server refuses to respond to the request. Ensure that the correct authentication token is provided in the request header.
+Description: The request lacks proper authentication credentials or the provided
+token is invalid. Therefore, the server refuses to respond to the request.
+Ensure that the correct authentication token is provided in the request header.
 
 ```
 {
@@ -1139,7 +1205,8 @@ Description: The request lacks proper authentication credentials or the provided
 
 Status Code: **403 Forbidden**
 
-Description: The request is understood by the server, but authorization is refused because the user lacks sufficient rights to access the resource.
+Description: The request is understood by the server, but authorization is
+refused because the user lacks sufficient rights to access the resource.
 
 ```
 {
@@ -1159,7 +1226,8 @@ Description: The server cannot find the specified appointment for this client.
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -1179,15 +1247,16 @@ Description: An unexpected error occurred on the server while processing the req
 
 Information about schedules.
 
-| Key  | Column Name      | Data Type  | Description                                               |
-| :--- | :--------------- | :--------- | :-------------------------------------------------------- |
-| PK   | scheduleId       | int        | Primary key for the Schedule record                       |
-| FK   | doctorId         | int        | Foreign key referencing the doctorId in the Doctor table  |
-|      | scheduleDay      | enum       | Day of the week for the schedule                          |
-|      | startTime        | time       | Start time of the doctor's availability                   |
-|      | endTime          | time       | End time of the doctor's availability                     |
+| Key | Column Name | Data Type | Description                                              |
+| :-- | :---------- | :-------- | :------------------------------------------------------- |
+| PK  | scheduleId  | int       | Primary key for the Schedule record                      |
+| FK  | doctorId    | int       | Foreign key referencing the doctorId in the Doctor table |
+|     | scheduleDay | enum      | Day of the week for the schedule                         |
+|     | startTime   | time      | Start time of the doctor's availability                  |
+|     | endTime     | time      | End time of the doctor's availability                    |
 
-Predefined list of days of the week for the doctor's schedule: 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'.
+Predefined list of days of the week for the doctor's schedule: 'MONDAY',
+'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'.
 
 #### 3. Retrieve schedules for a specific doctor
 
@@ -1199,7 +1268,9 @@ Endpoint
 
 **Example Request**
 
-Description: A `GET` request to retrieve all schedules for a specific doctor. No authentication is required for this endpoint. The doctor's ID is included in the URL path.
+Description: A `GET` request to retrieve all schedules for a specific doctor. No
+authentication is required for this endpoint. The doctor's ID is included in the
+URL path.
 
 ```
 
@@ -1222,7 +1293,7 @@ Description: The schedules are successfully retrieved.
             "startTime": "14:00:00",
             "endTime": "17:00:00",
             "scheduleId": 3
-        }, 
+        },
         ...
     ]
 }
@@ -1258,7 +1329,8 @@ Description: No schedules found for the specified doctor.
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -1282,7 +1354,9 @@ Endpoint
 
 **Example Request**
 
-Description: A `GET` request to retrieve a specific schedule by its ID. No authentication is required for this endpoint. The schedule's ID is included in the URL path.
+Description: A `GET` request to retrieve a specific schedule by its ID. No
+authentication is required for this endpoint. The schedule's ID is included in
+the URL path.
 
 ```
 
@@ -1336,7 +1410,8 @@ Description: The server cannot find the specified schedule.
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -1356,7 +1431,9 @@ Endpoint
 
 - URL Path: **_/api/v1/schedules/doctor-schedule_**
 - Description: This endpoint allows the creation of a new schedule for a doctor.
-- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to create schedule records.
+- Authentication and Authorization: This endpoint requires admin-level
+  authentication. Only users with admin privileges are allowed to create
+  schedule records.
 
 **Request Body**
 
@@ -1369,7 +1446,10 @@ The request body should contain the following parameters:
 
 **Example Request**
 
-Description: A `POST` request to create a new schedule for a doctor. It includes an Authorization header with a bearer token for authentication and specifies the content type as JSON. The request body contains the details of the schedule, including the doctor's ID, schedule day, start time, and end time.
+Description: A `POST` request to create a new schedule for a doctor. It includes
+an Authorization header with a bearer token for authentication and specifies the
+content type as JSON. The request body contains the details of the schedule,
+including the doctor's ID, schedule day, start time, and end time.
 
 ```
 
@@ -1392,7 +1472,7 @@ Description: The schedule is successfully created.
     "scheduleDetails": {
         "doctorId": 123,
         "scheduleDay": "MONDAY",
-        "startTime": "09:00:00", 
+        "startTime": "09:00:00",
         "endTime": "17:00:00"
         "scheduleId": 3
     }
@@ -1429,7 +1509,8 @@ Description: The server cannot find the specified doctor.
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -1448,12 +1529,18 @@ Description: An unexpected error occurred on the server while processing the req
 Endpoint
 
 - URL Path: **_/api/v1/schedules/:scheduleId_**
-- Description: This endpoint deletes a specific schedule based on its ID. The client sends a DELETE request to the server with the schedule's ID as a path parameter. The server processes the request by removing the specified schedule from the database.
-- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to delete schedule records.
+- Description: This endpoint deletes a specific schedule based on its ID. The
+  client sends a DELETE request to the server with the schedule's ID as a path
+  parameter. The server processes the request by removing the specified schedule
+  from the database.
+- Authentication and Authorization: This endpoint requires admin-level
+  authentication. Only users with admin privileges are allowed to delete
+  schedule records.
 
 **Example Request**
 
-Description: A `DELETE` request to remove a specific schedule associated with a scheduleId. This request must include an authorization token for an admin user.
+Description: A `DELETE` request to remove a specific schedule associated with a
+scheduleId. This request must include an authorization token for an admin user.
 
 ```
 
@@ -1496,7 +1583,8 @@ Description: No schedule with the specified ID exists in the database.
 
 Status Code: **403 Forbidden**
 
-Description: The user does not have admin privileges required to perform this operation.
+Description: The user does not have admin privileges required to perform this
+operation.
 
 ```
 {
@@ -1506,7 +1594,8 @@ Description: The user does not have admin privileges required to perform this op
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {
@@ -1525,12 +1614,19 @@ Description: An unexpected error occurred on the server while processing the req
 Endpoint
 
 - URL Path: **_/api/v1/schedules/:scheduleId_**
-- Description: This endpoint updates a specific schedule based on its ID. The client sends a PUT request to the server with the schedule's ID as a path parameter and the updated schedule information in the request body. The server processes the request by updating the specified schedule in the database.
-- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to update schedule records.
+- Description: This endpoint updates a specific schedule based on its ID. The
+  client sends a PUT request to the server with the schedule's ID as a path
+  parameter and the updated schedule information in the request body. The server
+  processes the request by updating the specified schedule in the database.
+- Authentication and Authorization: This endpoint requires admin-level
+  authentication. Only users with admin privileges are allowed to update
+  schedule records.
 
 **Example Request**
 
-Description: A `PUT` request to update a specific schedule associated with a scheduleId. This request must include an authorization token for an admin user and the updated schedule information in the request body.
+Description: A `PUT` request to update a specific schedule associated with a
+scheduleId. This request must include an authorization token for an admin user
+and the updated schedule information in the request body.
 
 ```
 
@@ -1610,7 +1706,8 @@ Description: No schedule with the specified ID exists in the database.
 
 Status Code: **403 Forbidden**
 
-Description: The user does not have admin privileges required to perform this operation.
+Description: The user does not have admin privileges required to perform this
+operation.
 
 ```
 {
@@ -1620,7 +1717,8 @@ Description: The user does not have admin privileges required to perform this op
 
 Status Code: **500 Internal Server Error**
 
-Description: An unexpected error occurred on the server while processing the request.
+Description: An unexpected error occurred on the server while processing the
+request.
 
 ```
 {

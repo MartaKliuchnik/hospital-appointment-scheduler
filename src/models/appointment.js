@@ -150,7 +150,7 @@ module.exports = class Appointment {
 				appointmentId,
 			]);
 
-			if ((result.affectedRows = 0)) {
+			if (result.affectedRows === 0) {
 				throw new Eror('Appointment not found.');
 			}
 		} catch (error) {
@@ -179,7 +179,7 @@ module.exports = class Appointment {
 				appointmentId,
 			]);
 
-			if ((result.changedRows = 0)) {
+			if (result.changedRows === 0) {
 				throw new Eror('Appointment not found.');
 			}
 
@@ -210,7 +210,7 @@ module.exports = class Appointment {
 		}
 	}
 
-	static async isTimeSlotAvailable(doctorId, appointmentTime) {
+	static async isTimeSlotAvailable(doctorId, appointmentTime, connection) {
 		const date = appointmentTime.toISOString().split('T')[0];
 		const appointmentTimeString = appointmentTime
 			.toISOString()
@@ -226,7 +226,7 @@ module.exports = class Appointment {
 			FOR UPDATE`;
 
 		try {
-			const [results] = await pool.execute(queryCheckOverlap, [
+			const [results] = await connection.execute(queryCheckOverlap, [
 				doctorId,
 				date,
 				appointmentTimeString,
