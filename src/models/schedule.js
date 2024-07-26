@@ -1,4 +1,9 @@
 const { pool } = require('../utils/database');
+const {
+	DatabaseError,
+	NotFoundError,
+	ValidationError,
+} = require('../utils/customErrors');
 
 module.exports = class Schedule {
 	/**
@@ -6,7 +11,7 @@ module.exports = class Schedule {
 	 * @param {string} scheduleDay - The day of the week for the schedule.
 	 * @param {string} startTime - The start time of the doctor's availability.
 	 * @param {string} endTime - The end time of the doctor's availability.
-	 * @param {number|null} scheduleId - The ID of the schedule.
+	 * @param {number|null} scheduleId - The ID of the schedule (default: null).
 	 */
 	constructor(doctorId, scheduleDay, startTime, endTime, scheduleId = null) {
 		this.doctorId = doctorId;
@@ -38,7 +43,7 @@ module.exports = class Schedule {
 			return this.scheduleId;
 		} catch (error) {
 			console.error('Error inserting schedule:', error);
-			throw new Error('Failed to insert schedule.');
+			throw new DatabaseError('Failed to insert schedule.', error);
 		}
 	}
 
@@ -65,7 +70,7 @@ module.exports = class Schedule {
 			);
 		} catch (error) {
 			console.error('Error retrieving schedule:', error);
-			throw new Error('Failed to retrieve schedule.');
+			throw new DatabaseError('Failed to retrieve schedule.', error);
 		}
 	}
 
@@ -84,8 +89,8 @@ module.exports = class Schedule {
 			if (schedules.length === 0) return null;
 			return schedules.map(Schedule.fromDatabaseResult);
 		} catch (error) {
-			console.error('Error retrieving schedule:', error);
-			throw new Error('Failed to retrieve schedule.');
+			console.error('Error retrieving schedules by doctor ID:', error);
+			throw new DatabaseError('Failed to retrieve schedules.', error);
 		}
 	}
 
@@ -107,7 +112,7 @@ module.exports = class Schedule {
 	/**
 	 * Delete a schedule from the database by ID.
 	 * @param {number} scheduleId - The ID of the schedule.
-	 * @returns {Promise<undefined>}
+	 * @returns {Promise<void>}
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async deleteById(scheduleId) {
@@ -116,11 +121,14 @@ module.exports = class Schedule {
 		try {
 			const [result] = await pool.execute(queryDeleteSchedule, [scheduleId]);
 			if ((result.affectedRows = 0)) {
-				throw new Eror('Schedule not found.');
+				throw new NotFoundError('Schedule not found.');
 			}
 		} catch (error) {
 			console.error('Error deleting schedule:', error);
-			throw new Error('Failed to delete schedule.');
+			if (error instanceof NotFoundError) {
+				throw error;
+			}
+			throw new DatabaseError('Failed to delete schedule.', error);
 		}
 	}
 
@@ -145,7 +153,7 @@ module.exports = class Schedule {
 
 		// Check if the updated data exists
 		if (updates.length === 0) {
-			throw new Error('No valid fields to update.');
+			throw new ValidationError('No valid fields to update.');
 		}
 
 		const queryUpdateSchedule = `UPDATE schedule SET ${updates.join(
@@ -157,22 +165,26 @@ module.exports = class Schedule {
 			const [result] = await pool.execute(queryUpdateSchedule, values);
 
 			if (result.changedRows === 0) {
-				throw new Error('No changes applied to the schedule.');
+				throw new NotFoundError('No changes applied to the schedule.');
 			}
 
 			return this.getById(scheduleId);
 		} catch (error) {
 			console.error('Error updating schedule:', error);
-			throw error;
+			if (error instanceof NotFoundError) {
+				throw error;
+			}
+			throw new DatabaseError('Failed to update schedule.', error);
 		}
 	}
 
 	/**
-	 * Get available time slots for specific doctor's schedule in the database.
+	 * Get available time slots for a specific doctor's schedule in the database.
 	 * @param {number} doctorId - The ID of the doctor.
-	 * @param {string} data - format '2024-07-25'
-	 * @returns {Promise<Object>} - A promise that resolves to the updated schedule object.
-	 * @throws {Error} - If there's an error during the database operation or if no valid fields are provided.
+	 * @param {string} date - The date to get available slots for, formatted as 'YYYY-MM-DD'.
+	 * @param {Function} getAppointmentsByDoctorAndDate - Function to fetch existing appointments.
+	 * @returns {Promise<Date[]>} - A promise that resolves to an array of available time slots.
+	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getAvailableTimeSlots(
 		doctorId,
@@ -187,14 +199,14 @@ module.exports = class Schedule {
 
 		const schedule = await this.getByDoctorId(doctorId);
 		if (!schedule) {
-			throw new Error('No schedule found for this doctor.');
+			throw new NotFoundError('No schedule found for this doctor.');
 		}
 
 		const doctorSchedule = schedule.find(
 			(s) => s.scheduleDay.toLowerCase() === dayOfWeek.toLowerCase()
 		);
 		if (!doctorSchedule) {
-			throw new Error('Doctor is not available on this day.');
+			throw new NotFoundError('Doctor is not available on this day.');
 		}
 
 		const startTime = new Date(`${date}T${doctorSchedule.startTime}Z`);

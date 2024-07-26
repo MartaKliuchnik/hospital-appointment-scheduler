@@ -1,52 +1,41 @@
-const Role = require('../enums/Role');
-const Client = require('../models/client');
+const { ValidationError, NotFoundError } = require('../utils/customErrors');
+const {
+	sendSuccessResponse,
+	sendErrorResponse,
+} = require('../utils/responseHandlers');
+const { validateUserRoleUpdate } = require('../utils/validations');
 
 /**
  * Update the role of a specified user
  * @param {object} req - The request object
  * @param {object} res - The response object
+ * @param {function} next - The next middleware function
  * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the role update process.
  */
-exports.updateUserRole = async (req, res) => {
+exports.updateUserRole = async (req, res, next) => {
 	const clientId = parseInt(req.params.clientId);
 	const { newRole } = req.body;
 
-	// Check if the clientId is provided and is a valid number
-	if (isNaN(clientId)) {
-		return res.status(400).json({ error: 'Invalid client ID.' });
-	}
-
-	// Check for missing parameters and valid role
-	if (!newRole || !Object.values(Role).includes(newRole)) {
-		return res.status(400).json({
-			error: 'Invalid role provided.',
-		});
-	}
-
 	try {
-		// Check if client exists
-		const client = await Client.findById(clientId);
-		if (!client) {
-			return res.status(404).json({ error: 'Client not found.' });
-		}
+		const client = await validateUserRoleUpdate(clientId, newRole);
 
-		// Check if the new role is different from the current role
-		if (client.role === newRole) {
-			return res.status(400).json({ error: 'Client already has this role.' });
-		}
 		const isUpdatedRole = await client.updateUserRole(newRole);
 
-		if (isUpdatedRole) {
-			res
-				.status(200)
-				.json({ message: 'User role updated successfully.', newRole });
-		} else {
-			res.status(400).json({ error: 'User role update failed.' });
+		if (!isUpdatedRole) {
+			throw new Error('User role update failed.');
 		}
+
+		sendSuccessResponse(res, 200, 'User role updated successfully.', {
+			newRole,
+		});
 	} catch (error) {
-		console.error('Error updating role:', error);
-		res
-			.status(500)
-			.json({ error: 'An error occurred while updating the role.' });
+		if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else {
+			next(error);
+		}
 	}
 };

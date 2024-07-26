@@ -1,11 +1,16 @@
 const { pool } = require('../utils/database');
+const {
+	DatabaseError,
+	NotFoundError,
+	ValidationError,
+} = require('../utils/customErrors');
 
 module.exports = class Doctor {
 	/**
 	 * @param {string} firstName - The first name of the doctor.
 	 * @param {string} lastName - The last name of the doctor.
 	 * @param {string} specialization - The specialization of the doctor.
-	 * @param {number|null} doctorId - The ID of the doctor.
+	 * @param {number|null} doctorId - The ID of the doctor (default: null).
 	 */
 	constructor(firstName, lastName, specialization, doctorId = null) {
 		this.firstName = firstName;
@@ -30,16 +35,17 @@ module.exports = class Doctor {
 				this.specialization,
 			]);
 
-			return result.insertId;
+			this.doctorId = result.insertId;
+			return this.doctorId;
 		} catch (error) {
 			console.error('Error inserting doctor:', error);
-			throw new Error('Failed to insert doctor.');
+			throw new DatabaseError('Failed to insert doctor.');
 		}
 	}
 
 	/**
-	 * Retrieve list with all doctor from the database.
-	 * @returns {Promise<Object|null>} - A promise that resolves to the list doctor, or null if database empty.
+	 * Retrieve a list of all doctors from the database.
+	 * @returns {Promise<Array<Object>|null>} - A promise that resolves to the list of doctors, or null if none found.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getAll() {
@@ -51,7 +57,7 @@ module.exports = class Doctor {
 			return results.length > 0 ? results : null;
 		} catch (error) {
 			console.error('Error retrieving doctors:', error);
-			throw new Error('Failed to retrieve doctors.');
+			throw new DatabaseError('Failed to retrieve doctors.');
 		}
 	}
 
@@ -70,14 +76,14 @@ module.exports = class Doctor {
 			return results.length > 0 ? results : null;
 		} catch (error) {
 			console.error('Error retrieving doctor:', error);
-			throw new Error('Failed to retrieve doctor.');
+			throw new DatabaseError('Failed to retrieve doctor.');
 		}
 	}
 
 	/**
 	 * Delete a doctor from the database by ID.
 	 * @param {number} doctorId - The ID of the doctor.
-	 * @returns {Promise<undefined>}
+	 * @returns {Promise<void>}
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async deleteById(doctorId) {
@@ -87,16 +93,17 @@ module.exports = class Doctor {
 			const [result] = await pool.execute(queryDeleteDoctor, [doctorId]);
 
 			if ((result.affectedRows = 0)) {
-				throw new Eror('Doctor not found.');
+				throw new NotFoundError('Doctor not found.');
 			}
 		} catch (error) {
 			console.error('Error deleting doctor:', error);
 
 			if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-				throw new Error('This doctor has appointments. Deletion is forbidden.');
+				throw new ValidationError(
+					'This doctor has appointments. Deletion is forbidden.'
+				);
 			}
-
-			throw error;
+			throw new DatabaseError('Failed to delete doctor.');
 		}
 	}
 
@@ -121,7 +128,7 @@ module.exports = class Doctor {
 
 		// Check if the updated data exists
 		if (updates.length === 0) {
-			throw new Error('No valid fields to update.');
+			throw new ValidationError('No valid fields to update.');
 		}
 
 		const queryUpdateDoctor = `UPDATE doctor SET ${updates.join(
@@ -133,13 +140,31 @@ module.exports = class Doctor {
 			const [result] = await pool.execute(queryUpdateDoctor, values);
 
 			if (result.changedRows === 0) {
-				throw new Error('Doctor not found.');
+				throw new ValidationError('Doctor not found.');
 			}
 
 			return this.getById(doctorId);
 		} catch (error) {
 			console.error('Error updating doctor:', error);
-			throw error;
+			throw new DatabaseError('Failed to update doctor.');
+		}
+	}
+
+	/**
+	 * Check if a doctor has any appointments.
+	 * @param {number} doctorId - The ID of the doctor to update.
+	 * @returns {Promise<Object>} - A promise that resolves to the check appointments for specific doctor.
+	 * @throws {Error} - If there's an error during the database operation or if no valid fields are provided.
+	 */
+	static async hasAppointments(doctorId) {
+		const query =
+			'SELECT COUNT(*) as count FROM appointment WHERE doctorId = ?';
+		try {
+			const [results] = await pool.execute(query, [doctorId]);
+			return results[0].count > 0;
+		} catch (error) {
+			console.error('Error checking doctor appointments:', error);
+			throw new DatabaseError('Failed to check doctor appointments.');
 		}
 	}
 };

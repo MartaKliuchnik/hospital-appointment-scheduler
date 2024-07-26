@@ -1,6 +1,7 @@
 const Role = require('../enums/Role');
 const RolePermissions = require('../config/rolePermissions');
-const Client = require('../models/client');
+const { validateClientId } = require('../utils/validations');
+const { sendErrorResponse } = require('../utils/responseHandlers');
 
 const rolePermissions = new RolePermissions();
 
@@ -26,26 +27,23 @@ const checkPermission = (requiredPermission, allowUnauthenticated = false) => {
 				);
 			}
 
-			// If we have a clientId
-			const client = await Client.findById(clientId);
-			if (!client) {
-				return res.status(404).json({ error: 'Client not found.' });
-			}
+			validateClientId(clientId);
 
 			// Get the latest client's role from the database, defaulting to ANONYMOUS if not set
 			const clientRole = req.client.role || Role.ANONYMOUS;
-
 			// Check if the role includes the required permission
 			if (rolePermissions.hasPermissions(clientRole, requiredPermission)) {
 				return next();
 			}
 
-			res.status(403).json({ error: 'Access denied.' });
+			return sendErrorResponse(res, 403, 'Access denied.');
 		} catch (error) {
 			console.error('Error checking permission:', error);
-			return res
-				.status(500)
-				.json({ error: 'An error occurred while checking permissions.' });
+			return sendErrorResponse(
+				res,
+				500,
+				'An error occurred while checking permissions.'
+			);
 		}
 	};
 };
@@ -65,14 +63,14 @@ const handleUnauthenticatedAccess = (
 	next
 ) => {
 	if (!allowUnauthenticated) {
-		return res.status(401).json({ error: 'Authentication required.' });
+		return sendErrorResponse(res, 401, 'Authentication required.');
 	}
 
 	if (rolePermissions.hasPermissions(Role.ANONYMOUS, requiredPermission)) {
 		return next();
 	}
 
-	res.status(403).json({ error: 'Access denied.' });
+	return sendErrorResponse(res, 403, 'Access denied.');
 };
 
 module.exports = checkPermission;

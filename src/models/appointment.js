@@ -1,5 +1,10 @@
 const { pool } = require('../utils/database');
 const Schedule = require('./schedule');
+const {
+	ValidationError,
+	NotFoundError,
+	DatabaseError,
+} = require('../utils/customErrors');
 
 module.exports = class Appointment {
 	/**
@@ -35,7 +40,9 @@ module.exports = class Appointment {
 			);
 
 			if (!isAvailable) {
-				throw new Error('The selected appointment time is not available.');
+				throw new ValidationError(
+					'The selected appointment time is not available.'
+				);
 			}
 
 			const queryCreateAppointment =
@@ -57,7 +64,7 @@ module.exports = class Appointment {
 			// If there's an error, roll back the transaction
 			await connection.rollback();
 			console.error('Error inserting appointment:', error);
-			throw error;
+			throw new DatabaseError('Failed to insert appointment.', error);
 		} finally {
 			connection.release();
 		}
@@ -81,12 +88,13 @@ module.exports = class Appointment {
 			return results.length > 0 ? results[0] : null;
 		} catch (error) {
 			console.error('Error retrieving appointment:', error);
-			throw new Error('Failed to retrieve appointment.');
+			throw new DatabaseError('Failed to retrieve appointment.', error);
 		}
 	}
 
 	/**
 	 * Validate the appointment time.
+	 * @param {string} appointmentTime - The appointment time to validate.
 	 * @returns {boolean} - Returns true if the appointment time is in the future; false otherwise.
 	 */
 	static isValidAppointmentTime(appointmentTime) {
@@ -98,7 +106,7 @@ module.exports = class Appointment {
 	/**
 	 * Format the appointment response.
 	 * @param {Object} appointment - The appointment object to format.
-	 * @returns {Object} - The formatteds appointment object.
+	 * @returns {Object} - The formatted appointment object.
 	 */
 	static formatAppointmentResponse(appointment) {
 		return {
@@ -131,7 +139,7 @@ module.exports = class Appointment {
 			};
 		} catch (error) {
 			console.error('Error retrieving client appointments:', error);
-			throw new Error('Failed to retrieve client appointments.');
+			throw new DatabaseError('Failed to retrieve client appointments.', error);
 		}
 	}
 
@@ -139,7 +147,7 @@ module.exports = class Appointment {
 	 * Delete or cancel an appointment based on client role.
 	 * @param {number} appointmentId - The ID of the appointment.
 	 * @param {string} clientRole - The role of the client.
-	 * @returns {Promise<undefined>}
+	 * @returns {Promise<void>}
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async deleteAppointmentById(appointmentId, clientRole) {
@@ -157,7 +165,7 @@ module.exports = class Appointment {
 				]);
 
 				if (result.affectedRows === 0) {
-					throw new Error('Appointment not found.');
+					throw new NotFoundError('Appointment not found.');
 				}
 			} else {
 				const queryCancelAppointment = `
@@ -170,22 +178,23 @@ module.exports = class Appointment {
 				]);
 
 				if (result.affectedRows === 0) {
-					throw new Error('Appointment not found.');
+					throw new NotFoundError('Appointment not found.');
 				}
 			}
 			await connection.commit();
 		} catch (error) {
 			await connection.rollback();
-			console.error('Error deleting client appointment:', error);
-			throw error;
+			console.error('Error deleting appointment:', error);
+			throw new DatabaseError('Failed to delete appointment.', error);
 		} finally {
 			connection.release();
 		}
 	}
 
 	/**
-	 * Change an appointment.
-	 * @param {number} appointmentId - The ID of the appointment.
+	 * Change an appointment time.
+	 * @param {string} newAppointmentTime - The new appointment time.
+	 * @param {number} appointmentId - The ID of the appointment to change.
 	 * @returns {Promise<Object>} - A promise that resolves to the updated appointment.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
@@ -198,7 +207,7 @@ module.exports = class Appointment {
 			// Get the current appointment details
 			const currentAppointment = await this.getAppointmentById(appointmentId);
 			if (!currentAppointment) {
-				throw new Error('Appointment not found.');
+				throw new NotFoundError('Appointment not found.');
 			}
 
 			// Check if the new time slot is available
@@ -209,7 +218,9 @@ module.exports = class Appointment {
 			);
 
 			if (!isAvailable) {
-				throw new Error('The selected appointment time is not available.');
+				throw new ValidationError(
+					'The selected appointment time is not available.'
+				);
 			}
 
 			const queryChangeAppointment =
@@ -221,7 +232,7 @@ module.exports = class Appointment {
 			]);
 
 			if (result.changedRows === 0) {
-				throw new Eror('No changes were made to the appointment.');
+				throw new Error('No changes were made to the appointment.');
 			}
 
 			await connection.commit();
@@ -229,12 +240,19 @@ module.exports = class Appointment {
 		} catch (error) {
 			await connection.rollback();
 			console.error('Error changing client appointment:', error);
-			throw error;
+			throw new DatabaseError('Failed to change appointment.', error);
 		} finally {
 			connection.release();
 		}
 	}
 
+	/**
+	 * Retrieve all appointments for a specific doctor and date.
+	 * @param {number} doctorId - The ID of the doctor.
+	 * @param {string} date - The date to retrieve appointments for.
+	 * @returns {Promise<Array>} - A promise that resolves to an array of appointments.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
 	static async getAppointmentsByDoctorAndDate(doctorId, date) {
 		const queryGetAppointments =
 			'SELECT * FROM appointment WHERE doctorId = ? AND DATE(appointmentTime) = DATE(?)';
@@ -248,10 +266,18 @@ module.exports = class Appointment {
 			return results;
 		} catch (error) {
 			console.error('Error retrieving appointments:', error);
-			throw new Error('Failed to retrieve appointments.');
+			throw new DatabaseError('Failed to retrieve appointments.', error);
 		}
 	}
 
+	/**
+	 * Check if a time slot is available.
+	 * @param {number} doctorId - The ID of the doctor.
+	 * @param {Date} appointmentTime - The time of the appointment.
+	 * @param {object} connection - The database connection to use.
+	 * @returns {Promise<boolean>} - A promise that resolves to true if the time slot is available, false otherwise.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
 	static async isTimeSlotAvailable(doctorId, appointmentTime, connection) {
 		const date = appointmentTime.toISOString().split('T')[0];
 		const appointmentTimeString = appointmentTime
@@ -290,7 +316,7 @@ module.exports = class Appointment {
 			);
 		} catch (error) {
 			console.error('Error checking time slot availability:', error);
-			throw new Error('Failed to check time slot availability.');
+			throw new DatabaseError('Failed to check time slot availability.', error);
 		}
 	}
 };

@@ -1,27 +1,41 @@
 const Doctor = require('../models/doctor');
+const {
+	NotFoundError,
+	DatabaseError,
+	ValidationError,
+} = require('../utils/customErrors');
+const {
+	sendSuccessResponse,
+	sendErrorResponse,
+} = require('../utils/responseHandlers');
+const { validateDoctorId } = require('../utils/validations');
 
 /**
  * Retrieve list of doctors from database.
  * @param {object} req - The request object.
  * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
  * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  * @throws {Error} - If there is an error during the appointment retrieval process.
  */
-exports.listDoctors = async (req, res) => {
+exports.listDoctors = async (req, res, next) => {
 	try {
 		const doctors = await Doctor.getAll();
 
 		// Check if the doctors exist in database
 		if (!doctors || doctors.length === 0) {
-			return res
-				.status(404)
-				.json({ error: 'No doctors found in the database.' });
+			throw new NotFoundError('No doctors found in the database.');
 		}
 
-		res.status(200).json({ doctors });
+		sendSuccessResponse(res, 200, 'Doctors retrieved successfully.', {
+			doctors,
+		});
 	} catch (error) {
-		console.error('Error retrieving doctors:', error);
-		res.status(500).json({ error: 'Failed to retrieve list of doctors.' });
+		if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else {
+			next(new DatabaseError('Failed to retrieve list of doctors.', error));
+		}
 	}
 };
 
@@ -29,29 +43,31 @@ exports.listDoctors = async (req, res) => {
  * Retrieve doctor by ID.
  * @param {object} req - The request object.
  * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
  * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  * @throws {Error} - If there is an error during the appointment retrieval process.
  */
-exports.getDoctor = async (req, res) => {
+exports.getDoctor = async (req, res, next) => {
 	const doctorId = parseInt(req.params.doctorId);
 
-	// Check if the doctorId is provided and is a valid number
-	if (isNaN(doctorId)) {
-		return res.status(400).json({ error: 'Invalid doctor ID.' });
-	}
-
 	try {
-		const doctor = await Doctor.getById(parseInt(doctorId));
+		validateDoctorId(doctorId);
 
+		const doctor = await Doctor.getById(doctorId);
 		// Check if the doctor exists
 		if (!doctor) {
-			return res.status(404).json({ error: 'Doctor not found.' });
+			throw new NotFoundError('Doctor not found.');
 		}
 
-		res.status(200).json(doctor);
+		sendSuccessResponse(res, 200, 'Doctor retrieved successfully.', doctor);
 	} catch (error) {
-		console.error('Error retrieving doctor:', error);
-		res.status(500).json({ error: 'Failed to retrieve doctor.' });
+		if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else {
+			next(new DatabaseError('Failed to retrieve doctor.', error));
+		}
 	}
 };
 
@@ -59,39 +75,44 @@ exports.getDoctor = async (req, res) => {
  * Delete a doctor for a specific ID.
  * @param {object} req - The request object.
  * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
  * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  * @throws {Error} - If there is an error during the doctor deletion process.
  */
-exports.deleteDoctor = async (req, res) => {
+exports.deleteDoctor = async (req, res, next) => {
 	const doctorId = parseInt(req.params.doctorId);
 
-	// Check if the doctorId is provided and is a valid number
-	if (isNaN(doctorId)) {
-		return res.status(400).json({ error: 'Invalid doctor ID.' });
-	}
-
 	try {
-		const doctor = await Doctor.getById(parseInt(doctorId));
+		validateDoctorId(doctorId);
 
+		const doctor = await Doctor.getById(doctorId);
 		// Check if the doctor exists
 		if (!doctor) {
-			return res.status(404).json({ error: 'Doctor not found.' });
+			throw new NotFoundError('Doctor not found.');
+		}
+
+		// Additional validation for updating
+		const hasAppointments = await Doctor.hasAppointments(doctorId);
+		if (hasAppointments) {
+			throw new ValidationError(
+				'This doctor has appointments. Deletion is forbidden.'
+			);
 		}
 
 		await Doctor.deleteById(doctorId);
-		res.status(200).json({ message: 'Doctor deleted successfully.' });
+		sendSuccessResponse(res, 200, 'Doctor deleted successfully.');
 	} catch (error) {
-		console.error('Error deleting doctor:', error);
-
-		if (error.message === 'Doctor not found.') {
-			return res.status(404).json({ error: 'Doctor not found.' });
+		if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
 		} else if (
 			error.message === 'This doctor has appointments. Deletion is forbidden.'
 		) {
-			return res.status(403).json({ error: error.message });
+			sendErrorResponse(res, 403, error.message);
+		} else {
+			next(new DatabaseError('Failed to delete doctor.', error));
 		}
-
-		res.status(500).json({ error: 'Failed to delete doctor.' });
 	}
 };
 
@@ -99,50 +120,65 @@ exports.deleteDoctor = async (req, res) => {
  * Update a doctor's information for a specific ID.
  * @param {object} req - The request object.
  * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
  * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  * @throws {Error} - If there is an error during the doctor updating process.
  */
-exports.updateDoctor = async (req, res) => {
+exports.updateDoctor = async (req, res, next) => {
 	const doctorId = parseInt(req.params.doctorId);
-	// Check if the doctorId is provided and is a valid number
-	if (isNaN(doctorId)) {
-		return res.status(400).json({ error: 'Invalid doctor ID.' });
-	}
-
-	const updateData = {
-		firstName: req.body.firstName,
-		lastName: req.body.lastName,
-		specialization: req.body.specialization,
-	};
-
-	// Remove undefined fields
-	Object.keys(updateData).forEach(
-		(key) => updateData[key] === undefined && delete updateData[key]
-	);
-
-	if (Object.keys(updateData).length === 0) {
-		return res.status(400).json({ error: 'No valid update data provided.' });
-	}
 
 	try {
-		const updatedDoctor = await Doctor.updateById(doctorId, updateData);
-		res.status(200).json(updatedDoctor);
-	} catch (error) {
-		console.error('Error updating doctor:', error);
+		validateDoctorId(doctorId);
 
-		if (error.message === 'Doctor not found.') {
-			return res.status(404).json({ error: 'Doctor not found.' });
-		} else if (error.message === 'No valid fields to update.') {
-			return res.status(400).json({ error: error.message });
-		} else if (error.code === 'ER_DATA_TOO_LONG' || error.errno === 1265) {
-			return res
-				.status(400)
-				.json({
-					error:
-						'Invalid specialization. Please provide a valid specialization from the allowed list.',
-				});
+		const doctor = await Doctor.getById(doctorId);
+		// Check if the doctor exists
+		if (!doctor) {
+			throw new NotFoundError('Doctor not found.');
 		}
-		
-		res.status(500).json({ error: 'Failed to update doctor.' });
+
+		// Additional validation for updating
+		const hasAppointments = await Doctor.hasAppointments(doctorId);
+		if (hasAppointments) {
+			throw new ValidationError(
+				'This doctor has appointments. Update is forbidden.'
+			);
+		}
+
+		const updateData = {
+			firstName: req.body.firstName,
+			lastName: req.body.lastName,
+			specialization: req.body.specialization,
+		};
+
+		// Remove undefined fields
+		Object.keys(updateData).forEach(
+			(key) => updateData[key] === undefined && delete updateData[key]
+		);
+
+		if (Object.keys(updateData).length === 0) {
+			throw new ValidationError('No valid update data provided.');
+		}
+
+		const updatedDoctor = await Doctor.updateById(doctorId, updateData);
+		sendSuccessResponse(
+			res,
+			200,
+			'Doctor updated successfully.',
+			updatedDoctor
+		);
+	} catch (error) {
+		if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else if (error.code === 'ER_DATA_TOO_LONG' || error.errno === 1265) {
+			sendErrorResponse(
+				res,
+				400,
+				'Invalid specialization. Please provide a valid specialization from the allowed list.'
+			);
+		} else {
+			next(new DatabaseError('Failed to update doctor.', error));
+		}
 	}
 };

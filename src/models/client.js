@@ -2,6 +2,7 @@ const Role = require('../enums/Role');
 const { comparePassword } = require('../utils/auth');
 const { pool } = require('../utils/database');
 const { createJWT } = require('../utils/jwt');
+const { DatabaseError } = require('../utils/customErrors');
 
 module.exports = class Client {
 	/**
@@ -10,9 +11,8 @@ module.exports = class Client {
 	 * @param {string} phoneNumber - The phone number of the client.
 	 * @param {string} email - The email address of the client.
 	 * @param {string} hashedPassword - The hashed password of the client.
-	 * @param {string} lastName - The last name of the client.
-	 * @param {Role} role - The role of the client.
-	 * @param {clientId|null} clientId - The ID of the client.
+	 * @param {Role} role - The role of the client (default: Role.PATIENT).
+	 * @param {number|null} clientId - The ID of the client (default: null).
 	 */
 	constructor(
 		firstName,
@@ -46,14 +46,14 @@ module.exports = class Client {
 	 * Verify a plain-text password against a hashed password.
 	 * @param {string} inputPassword - The plain-text password to verify.
 	 * @returns {Promise<boolean>} A promise that resolves to true if the password is valid, false otherwise.
-	 * @throws {Error} Throws an error if the password comparison fails.
+	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	async verifyPassword(inputPassword) {
 		try {
 			return await comparePassword(inputPassword, this.password);
 		} catch (error) {
 			console.error('Password comparison error:', error);
-			throw new Error('Error during authentication');
+			throw new DatabaseError('Error during authentication');
 		}
 	}
 
@@ -80,13 +80,13 @@ module.exports = class Client {
 			return this.clientId;
 		} catch (error) {
 			console.error('Error registering client:', error);
-			throw new Error('Failed to register client');
+			throw new DatabaseError('Failed to register client');
 		}
 	}
 
 	/**
-	 * Find a client from the database by their email address.
-	 * @param {string} email - The email of the client to find.
+	 * Find a client by their email address.
+	 * @param {string} email - The email address of the client to find.
 	 * @returns {Promise<Client|null>} - A promise that resolves to a Client instance, or null if not found.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
@@ -110,13 +110,13 @@ module.exports = class Client {
 			);
 		} catch (error) {
 			console.error('Error finding client by email:', error);
-			throw new Error('Failed to find client');
+			throw new DatabaseError('Failed to find client by email');
 		}
 	}
 
 	/**
-	 * Find a client from the database by their clientId.
-	 * @param {string} clientId - The clientId of the client to find.
+	 * Find a client by their ID.
+	 * @param {number} clientId - The ID of the client to find.
 	 * @returns {Promise<Client|null>} - A promise that resolves to a Client instance, or null if not found.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
@@ -140,7 +140,7 @@ module.exports = class Client {
 			);
 		} catch (error) {
 			console.error('Error finding client by id:', error);
-			throw new Error('Failed to find client');
+			throw new DatabaseError('Failed to find client by ID');
 		}
 	}
 
@@ -166,12 +166,12 @@ module.exports = class Client {
 			);
 		} catch (error) {
 			console.error('JWT creation error:', error);
-			throw new Error('Error creating authentication token');
+			throw new DatabaseError('Error creating authentication token');
 		}
 	}
 
 	/**
-	 * Remove sensitive information from a user object.
+	 * Remove sensitive information from the client object.
 	 * @returns {Object} - An object containing only the safe-to-expose client data.
 	 */
 	toSafeObject() {
@@ -187,8 +187,8 @@ module.exports = class Client {
 	}
 
 	/**
-	 * Update the role of a specified user.
-	 * @param {string} newRole - The new role to assign to the client.
+	 * Update the role of the client.
+	 * @param {Role} newRole - The new role to assign to the client.
 	 * @returns {Promise<boolean>} - A promise that resolves to true if the role was successfully updated, false otherwise.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
@@ -213,7 +213,7 @@ module.exports = class Client {
 			return false;
 		} catch (error) {
 			console.error('Error updating user role:', error);
-			throw new Error('Failed to update user role');
+			throw new DatabaseError('Failed to update user role');
 		}
 	}
 };

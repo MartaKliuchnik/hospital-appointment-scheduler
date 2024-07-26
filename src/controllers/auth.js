@@ -2,6 +2,16 @@ const path = require('path');
 const rootDir = require('../utils/path');
 const { hashPassword } = require('../utils/auth');
 const Client = require('../models/client');
+const {
+	validateLoginInput,
+	validateRegistrationInput,
+} = require('../utils/validations');
+const {
+	AuthenticationError,
+	DatabaseError,
+	ValidationError,
+} = require('../utils/customErrors');
+const { sendSuccessResponse } = require('../utils/responseHandlers');
 
 /**
  * Serve the login page.
@@ -17,41 +27,43 @@ exports.getLogin = (req, res) => {
  * Handle login requests.
  * @param {object} req - The request object, containing the email and password in the body.
  * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
  * @returns {Promise<void>} - Sends a JSON response with a token and sanitized client data if successful, or an error message if not.
  * @throws {Error} - If there is an error during the loggin process.
  */
-exports.postLogin = async (req, res) => {
+exports.postLogin = async (req, res, next) => {
 	const { email, password } = req.body;
 
-	if (!email || !password) {
-		return res.status(400).json({
-			error: 'Email and password are required',
-		});
-	}
-
 	try {
-		const client = await Client.findByEmail(email);
+		validateLoginInput(email, password);
 
+		const client = await Client.findByEmail(email);
 		if (!client) {
-			return res.status(401).json({
-				error: 'User does not exist',
-			});
+			throw new AuthenticationError('User does not exist');
 		}
 
 		let isPasswordValid = await client.verifyPassword(password);
 		if (!isPasswordValid) {
-			return res.status(400).json({ error: 'Incorrect email or password' });
+			throw new AuthenticationError('Incorrect email or password');
 		}
 
 		const token = client.createAuthToken();
 
-		res.status(200).json({
+		sendSuccessResponse(res, 200, 'User logged successfully', {
 			token,
 			client: client.toSafeObject(),
 		});
 	} catch (error) {
-		console.error('Login error:', error);
-		res.status(500).json({ error: 'An error occurred during login' });
+		if (
+			error instanceof ValidationError ||
+			error instanceof AuthenticationError
+		) {
+			next(error);
+		} else {
+			next(
+				new DatabaseError('An unexpected error occurred during login', error)
+			);
+		}
 	}
 };
 
@@ -69,26 +81,22 @@ exports.getRegister = (req, res) => {
  * Handle client registration requests.
  * @param {object} req - The request object, containing the client's details in the body.
  * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
  * @returns {Promise<void>} - Sends a JSON response with a success message and client ID if successful, or an error message if not.
  * @throws {Error} - If there is an error during the registration process.
  */
-exports.postRegister = async (req, res) => {
+exports.postRegister = async (req, res, next) => {
 	const { firstName, lastName, phoneNumber, email, password } = req.body;
 
-	if (!firstName || !lastName || !phoneNumber || !email || !password) {
-		res.status(400).json({
-			error:
-				'Invalid input: all fields are required and must be in a valid format.',
-		});
-	}
-
-	if (!Client.validateEmail(email)) {
-		return res.status(400).json({
-			error: 'Invalid email address',
-		});
-	}
-
 	try {
+		validateRegistrationInput(
+			firstName,
+			lastName,
+			phoneNumber,
+			email,
+			password
+		);
+
 		const hashedPassword = await hashPassword(password);
 		const client = new Client(
 			firstName,
@@ -99,21 +107,19 @@ exports.postRegister = async (req, res) => {
 		);
 		const clientId = await client.register();
 
-		res.status(201).json({
-			message: 'User registered successfully',
-			clientId,
-		});
+		sendSuccessResponse(res, 200, 'User registered successfully', { clientId });
 	} catch (error) {
-		console.error('Error registering user:', error);
-
 		if (error.code === 'ER_DUP_ENTRY') {
-			return res.status(409).json({
-				error: 'Email or phone number already in use',
-			});
+			next(new ValidationError('Email or phone number already in use'));
+		} else if (error instanceof ValidationError) {
+			next(error);
+		} else {
+			next(
+				new DatabaseError(
+					'An unexpected error occurred during registration',
+					error
+				)
+			);
 		}
-
-		res
-			.status(500)
-			.json({ error: 'An unexpected error occurred during registration' });
 	}
 };

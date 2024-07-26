@@ -1,17 +1,19 @@
 const bcrypt = require('bcrypt');
+const { DatabaseError } = require('../utils/customErrors');
 
 /**
- * Create hashed password by using the bcrypt library.
+ * Create a hashed password using the bcrypt library.
  * @param {string} password - The plain-text password to be hashed.
  * @returns {Promise<string>} - A promise that resolves to the hashed password.
- * @throws {Error} - Throws an error if hashing fails.
+ * @throws {Error} - Throws a error if hashing fails.
  */
 const hashPassword = async (password) => {
 	try {
 		const hashedPassword = await bcrypt.hash(password, 10);
 		return hashedPassword;
 	} catch (error) {
-		throw new Error('Error hashing password');
+		console.error('Error hashing password:', error);
+		throw new DatabaseError('Error hashing password', error);
 	}
 };
 
@@ -26,8 +28,9 @@ const comparePassword = async (password, hashedPassword) => {
 	try {
 		const isMatch = await bcrypt.compare(password, hashedPassword);
 		return isMatch;
-	} catch {
-		throw new Error('Error comparing password');
+	} catch (error) {
+		console.error('Error comparing password:', error);
+		throw new DatabaseError('Error comparing password', error);
 	}
 };
 
