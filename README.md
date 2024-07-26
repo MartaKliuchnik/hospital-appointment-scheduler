@@ -14,26 +14,26 @@
    - Endpoint **/api/v1/auth/register**
    - Endpoint **/api/v1/auth/login**
 
-   5.2 [Doctor Management](#doctor-management)
+     5.2 [Doctor Management](#doctor-management)
 
    - Doctor data model.
    - Endpoint **/api/v1/doctors**
    - Endpoint **/api/v1/doctors/:doctorId**
 
-   5.3 [Authentication](#authentication)
+     5.3 [Authentication](#authentication)
 
-   5.4 [Change Client Role](#change-client-role)
+     5.4 [Change Client Role](#change-client-role)
 
    - Endpoint **/api/v1/clients/:clientId/role**
 
-   5.5 [Appointment Management](#appointment-management)
+     5.5 [Appointment Management](#appointment-management)
 
    - Appointment data model.
    - Endpoint **/api/v1/appointments**
    - Endpoint **/api/v1/appointments/clients/:clientId**
    - Endpoint **/api/v1/appointments/:appointmentId**
 
-   5.6 [Schedule Management](#schedule-management)
+     5.6 [Schedule Management](#schedule-management)
 
    - Schedule data model.
    - Endpoint **/api/v1/schedules/:scheduleId**
@@ -103,6 +103,14 @@ Information about clients.
 |     | email            | varchar(255) | Email address of the client (must be unique) |
 |     | password         | varchar(255) | Password for the client's account            |
 |     | registrationDate | datetime     | Date and time when the client registered     |
+|     | role             | enum         | Role of the client.                          |
+
+Predefined list of client role:
+
+- ANONYMOS: An unauthorized client, usually with limited access.
+- ADMIN: A client with administrative privileges, able to manage other clients
+  and system settings.
+- PATIENT: A client who uses the services provided by the healthcare system.
 
 #### 2. Register a new user
 
@@ -146,49 +154,74 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
 
 ```
 
-**Responses**
+**Example Responses**
 
 Status code: **201 Created**
 
 Description: The user has been successfully registered. The response includes a
-success message and the clientId of the newly created client.
+success message and the data with the clientId of the newly created client.
 
 ```
 {
-  "message": "User registered successfully",
-  "clientId": 1
+    "message": "User registered successfully",
+    "data": {
+        "clientId": 2
+    }
 }
 ```
 
 Status code: **400 Bad Request**
 
-Description: The provided first name, last name, phone number, email address or
-password is not in a valid format.
+Description: The request was invalid because one or more of the provided fields
+(first name, last name, phone number, email address, or password) did not meet
+the required format or were missing.
 
 ```
 {
-   "error": "Invalid input: all fields are required and must be in a valid format."
+   "message": "All fields are required and must be in a valid format."
+}
+```
+
+Description: The email address provided in the request does not meet the
+required format or is otherwise invalid.
+
+```
+{
+   "message": "Invalid email address."
 }
 ```
 
 Status code: **409 Conflict**
 
-Description: The provided email address is already registered with another user.
+Description: This response indicates that the request could not be processed
+because the email or phone number is already in use.
 
 ```
 {
-   "error": "Email or phone number already in use"
+   "message": "Email already in use."
+}
+```
+
+```
+{
+   "message": "Phone number already in use."
 }
 ```
 
 Status code: **500 Internal Server Error**
 
-Description: The server encountered an unexpected condition that prevented it
-from processing the request.
+Description: This response indicates an unexpected error occurred during the
+registration process.
 
 ```
 {
-   error: 'Error registering user'
+   message: 'An unexpected error occurred during registration.'
+}
+```
+
+```
+{
+   message: 'Failed to register client.'
 }
 ```
 
@@ -225,7 +258,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 
 ```
 
-**Responses**
+**Example Responses**
 
 Status code: **200 OK**
 
@@ -234,47 +267,67 @@ server responds with a JSON object containing a JWT token and user information.
 
 ```
 {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-    client:{
-        "clientId": 1
-        "firstName": "Alex",
-        "lastName": "Fox",
-        "phoneNumber": "1234567890",
-        "email": "alex@example.com",
-        "password": "some123password",
-        "registrationDate": “2024-01-02 10:00:00”
+    "message": "User logged successfully.",
+    "data": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+      "client" : {
+          "clientId": 1
+          "firstName": "Alex",
+          "lastName": "Fox",
+          "phoneNumber": "1234567890",
+          "email": "alex@example.com",
+          "role": "PATIENT"
+      }
     }
 }
 ```
 
 Status code: **400 Bad Request**
 
-Description: The provided email address or password is not in a valid format.
+Description: The provided email address or password is missing.
 
 ```
 {
-   "error": "Email and password are required"
+   "error": "Email and password are required."
 }
 ```
 
 Status code: **401 Unauthorized**
 
-Description: The login request failed due to incorrect email or password.
+Description: The login request failed due to incorrect email.
 
 ```
 {
-   "error": "User not found"
+   "message": "User does not exist."
+}
+```
+
+Description: The login request failed due to incorrect password.
+
+```
+{
+   "message": "Incorrect email or password."
 }
 ```
 
 Status code: **500 Internal Server Error**
+
+Description: An error occurred while creating the authentication token. This
+issue prevents the client from receiving a valid token, which is necessary for
+authentication.
+
+```
+{
+   "message": "Error creating authentication token."
+}
+```
 
 Description: The server encountered an unexpected condition that prevented it
 from processing the request.
 
 ```
 {
-   error: 'Error logging in user'
+   "message": "An unexpected error occurred during login."
 }
 ```
 
@@ -323,15 +376,18 @@ Description: The server successfully retrieves the list of doctors.
 
 ```
 {
-  "doctors": [
-    {
-      "doctorId": 123,
-      "firstName": "Jane",
-      "lastName": "Doe",
-      "specialization": "NEUROLOGY"
-    },
-    ...
-  ]
+  "message": "Doctors retrieved successfully.",
+    "data": {
+      "doctors": [
+        {
+          "doctorId": 123,
+          "firstName": "Jane",
+          "lastName": "Doe",
+          "specialization": "NEUROLOGY"
+        },
+        ...
+      ]
+    }
 }
 ```
 
@@ -341,7 +397,18 @@ Description: The server cannot find any doctors in the database.
 
 ```
 {
-   "error": "No doctors found in the database."
+   "message": "No doctors found in the database."
+}
+```
+
+Status code: **500 Internal Server Error**
+
+Description: The server encountered an unexpected condition that prevented it
+from processing the request.
+
+```
+{
+   "message": "Failed to retrieve doctors."
 }
 ```
 
@@ -381,12 +448,15 @@ Description: The server successfully retrieves the doctor's information.
 
 ```
 {
-  {
-    "doctorId": 123,
-    "firstName": "Jane",
-    "lastName": "Doe",
-    "specialization": "NEUROLOGY"
-  }
+  "message": "Doctor retrieved successfully.",
+    "data": [
+        {
+            "doctorId": 1,
+            "firstName": "John",
+            "lastName": "Doe",
+            "specialization": "CARDIOLOGY"
+        }
+    ]
 }
 ```
 
@@ -396,7 +466,7 @@ Description: The provided doctor ID is invalid (not a number).
 
 ```
 {
-  "error": "Invalid doctor ID."
+  "message": "Invalid doctor ID."
 }
 ```
 
@@ -406,7 +476,7 @@ Description: No doctor with the specified ID exists in the database.
 
 ```
 {
-  "error": "Doctor not found."
+  "message": "Doctor not found."
 }
 ```
 
@@ -417,7 +487,7 @@ request.
 
 ```
 {
-  "error": "Failed to retrieve doctor."
+  "message": "Failed to retrieve doctor."
 }
 ```
 
@@ -454,7 +524,7 @@ Description: The server successfully deletes the doctor.
 
 ```
 {
-  "message": "Doctor deleted successfully."
+   "message": "Doctor deleted successfully."
 }
 ```
 
@@ -464,7 +534,35 @@ Description: The provided doctor ID is invalid (not a number).
 
 ```
 {
-  "error": "Invalid doctor ID."
+  "message": "Invalid doctor ID."
+}
+```
+
+Status Code: **401 Unauthorized**
+
+Description: This status code is used when a user must authenticate themselves to access the requested resource. It indicates that authentication is required.
+
+```
+{
+   "message": "Authentication required."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The request to delete the doctor record cannot be processed because the doctor currently has appointments scheduled. To ensure data integrity and avoid disrupting ongoing or future appointments, deletion of records associated with existing appointments is prohibited.
+
+```
+{
+  "message": "This doctor has appointment(s). Deletion is forbidden."
+}
+```
+
+Description: Only authorized users with the required admin privileges are permitted to delete doctor records. 
+
+```
+{
+  "error": "Access denied."
 }
 ```
 
@@ -474,27 +572,7 @@ Description: No doctor with the specified ID exists in the database.
 
 ```
 {
-  "error": "Doctor not found."
-}
-```
-
-Status Code: **403 Forbidden**
-
-Description: The doctor cannot be deleted due to existing appointments or other
-constraints.
-
-```
-{
-  "error": "This doctor has appointments. Deletion is forbidden."
-}
-```
-
-Description: The user does not have admin privileges required to perform this
-operation.
-
-```
-{
-  "error": "Access denied. Admin privileges required."
+  "message": "Doctor not found."
 }
 ```
 
@@ -505,7 +583,7 @@ request.
 
 ```
 {
-  "error": "Failed to delete doctor."
+  "message": "Failed to delete doctor."
 }
 ```
 
@@ -546,12 +624,15 @@ Description: The server successfully updates the doctor's information.
 
 ```
 [
-    {
-        "doctorId": 123,
-        "firstName": "John",
-        "lastName": "Doe",
-        "specialization": "CARDIOLOGY"
-    }
+    "message": "Doctor updated successfully.",
+    "data": [
+        {
+            "doctorId": 123,
+            "firstName": "John",
+            "lastName": "Doe",
+            "specialization": "CARDIOLOGY"
+        }
+    ]
 ]
 ```
 
@@ -561,7 +642,7 @@ Description: The provided doctor ID is invalid (not a number).
 
 ```
 {
-  "error": "Invalid doctor ID."
+  "message": "Invalid doctor ID."
 }
 ```
 
@@ -569,7 +650,43 @@ Description: No valid update data is provided.
 
 ```
 {
-  "error": "No valid update data provided."
+    "message": "No valid update data provided."
+}
+```
+
+Description: The provided specialization value is not valid. The specialization must be one of the predefined values from the allowed list. Please ensure that the specialization matches one of the valid options.
+
+```
+{
+    "message": "Invalid specialization. Please provide a valid specialization from the allowed list."
+}
+```
+
+Status Code: **401 Unauthorized**
+
+Description: This status code is used when a user must authenticate themselves to access the requested resource. It indicates that authentication is required.
+
+```
+{
+   "message": "Authentication required."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: Only authorized users with the required admin privileges are permitted to delete doctor records. 
+
+```
+{
+  "error": "Access denied."
+}
+```
+
+Description: The request to update the doctor record cannot be processed because the doctor currently has appointments scheduled. To ensure data integrity and avoid disrupting ongoing or future appointments, updates to records associated with existing appointments are prohibited.
+
+```
+{
+  "message": "This doctor has appointment(s). Update is forbidden."
 }
 ```
 
@@ -579,18 +696,7 @@ Description: No doctor with the specified ID exists in the database.
 
 ```
 {
-  "error": "Doctor not found."
-}
-```
-
-Status Code: **403 Forbidden**
-
-Description: The user does not have admin privileges required to perform this
-operation.
-
-```
-{
-  "error": "Access denied. Admin privileges required."
+  "message": "Doctor not found."
 }
 ```
 
@@ -664,7 +770,7 @@ client.
 curl -X PUT http://localhost:8080/api/v1/clients/123/role \
 -H "Authorization: Bearer <your-jwt-token>" \
 -H "Content-Type: application/json" \
--d '{ "newRole": "PATIENT" }'
+-d '{ "newRole": "ADMIN" }'
 ```
 
 **Example Responses**
@@ -676,7 +782,9 @@ Description: The client's role was successfully updated.
 ```
 {
   "message": "User role updated successfully.",
-  "newRole": "PATIENT"
+    "data": {
+        "newRole": "ADMIN"
+    }
 }
 ```
 
@@ -686,15 +794,15 @@ Description: The request is invalid or missing required client ID parameter.
 
 ```
 {
-  "error": "Invalid client ID."
+  "message": "Invalid client ID."
 }
 ```
 
-Description: The request is invalid or missing required parameters.
+Description: The request is invalid or missing required parameters. The role must be one of the predefined values from the allowed list. Please ensure that the role matches one of the valid options.
 
 ```
 {
-  "error": "Invalid role provided."
+  "message": "Invalid role. Please provide a valid role from the allowed list."
 }
 ```
 
@@ -702,7 +810,7 @@ Description: The client already has the specified role.
 
 ```
 {
-  error: 'Client already has this role.'
+  "message": "Client already has this role."
 }
 ```
 
@@ -710,27 +818,23 @@ Description: The attempt to update the user's role in the database failed.
 
 ```
 {
-  "error": "User role update failed."
+  "message": "User role update failed."
 }
 ```
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials, or the
-provided token is invalid. Therefore, the server refuses to respond to the
-request. Ensure that the correct authentication token is provided in the request
-header.
+Description: This status code is used when a user must authenticate themselves to access the requested resource. It indicates that authentication is required.
 
 ```
 {
-  error: 'Authentication failed.'
+   "message": "Authentication required."
 }
 ```
 
 Status Code: **403 Forbidden**
 
-Description: The authenticated user does not have the required permissions to
-perform this action.
+Description: Only authorized users with the required admin privileges are permitted to update client role.
 
 ```
 {
@@ -744,7 +848,7 @@ Description: The server cannot find the specified client.
 
 ```
 {
-  "error": "Client not found."
+  "message": "Client not found."
 }
 ```
 
@@ -755,13 +859,7 @@ request.
 
 ```
 {
-  "error": "An error occurred while updating the role."
-}
-```
-
-```
-{
-  "error": "An error occurred while checking permissions."
+  "message": "Failed to update user role."
 }
 ```
 

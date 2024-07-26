@@ -2,6 +2,7 @@ const {
 	ValidationError,
 	AuthenticationError,
 	DatabaseError,
+	ConflictError,
 } = require('../utils/customErrors');
 const { sendErrorResponse } = require('../utils/responseHandlers');
 
@@ -22,6 +23,10 @@ const errorHandler = (err, req, res, next) => {
 
 	if (err instanceof AuthenticationError) {
 		return sendErrorResponse(res, 401, err.message);
+	}
+
+	if (err instanceof ConflictError) {
+		return sendErrorResponse(res, 409, err.message);
 	}
 
 	if (err instanceof DatabaseError) {

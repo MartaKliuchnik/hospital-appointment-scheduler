@@ -1,3 +1,4 @@
+const MedicalSpecializations = require('../enums/Specialization');
 const Doctor = require('../models/doctor');
 const {
 	NotFoundError,
@@ -34,7 +35,7 @@ exports.listDoctors = async (req, res, next) => {
 		if (error instanceof NotFoundError) {
 			sendErrorResponse(res, 404, error.message);
 		} else {
-			next(new DatabaseError('Failed to retrieve list of doctors.', error));
+			next(new DatabaseError('Failed to retrieve doctors.', error));
 		}
 	}
 };
@@ -95,7 +96,7 @@ exports.deleteDoctor = async (req, res, next) => {
 		const hasAppointments = await Doctor.hasAppointments(doctorId);
 		if (hasAppointments) {
 			throw new ValidationError(
-				'This doctor has appointments. Deletion is forbidden.'
+				'This doctor has appointment(s). Deletion is forbidden.'
 			);
 		}
 
@@ -106,10 +107,6 @@ exports.deleteDoctor = async (req, res, next) => {
 			sendErrorResponse(res, 400, error.message);
 		} else if (error instanceof NotFoundError) {
 			sendErrorResponse(res, 404, error.message);
-		} else if (
-			error.message === 'This doctor has appointments. Deletion is forbidden.'
-		) {
-			sendErrorResponse(res, 403, error.message);
 		} else {
 			next(new DatabaseError('Failed to delete doctor.', error));
 		}
@@ -140,7 +137,7 @@ exports.updateDoctor = async (req, res, next) => {
 		const hasAppointments = await Doctor.hasAppointments(doctorId);
 		if (hasAppointments) {
 			throw new ValidationError(
-				'This doctor has appointments. Update is forbidden.'
+				'This doctor has appointment(s). Update is forbidden.'
 			);
 		}
 
@@ -149,6 +146,10 @@ exports.updateDoctor = async (req, res, next) => {
 			lastName: req.body.lastName,
 			specialization: req.body.specialization,
 		};
+
+		if (!Object.keys(MedicalSpecializations).includes(req.body.specialization.toUpperCase())) {
+			throw new ValidationError('Invalid specialization. Please provide a valid specialization from the allowed list.');
+		}
 
 		// Remove undefined fields
 		Object.keys(updateData).forEach(
@@ -171,12 +172,6 @@ exports.updateDoctor = async (req, res, next) => {
 			sendErrorResponse(res, 400, error.message);
 		} else if (error instanceof NotFoundError) {
 			sendErrorResponse(res, 404, error.message);
-		} else if (error.code === 'ER_DATA_TOO_LONG' || error.errno === 1265) {
-			sendErrorResponse(
-				res,
-				400,
-				'Invalid specialization. Please provide a valid specialization from the allowed list.'
-			);
 		} else {
 			next(new DatabaseError('Failed to update doctor.', error));
 		}

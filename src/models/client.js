@@ -53,7 +53,7 @@ module.exports = class Client {
 			return await comparePassword(inputPassword, this.password);
 		} catch (error) {
 			console.error('Password comparison error:', error);
-			throw new DatabaseError('Error during authentication');
+			throw new DatabaseError('Error during authentication.');
 		}
 	}
 
@@ -80,7 +80,7 @@ module.exports = class Client {
 			return this.clientId;
 		} catch (error) {
 			console.error('Error registering client:', error);
-			throw new DatabaseError('Failed to register client');
+			throw new DatabaseError('Failed to register client.');
 		}
 	}
 
@@ -110,7 +110,7 @@ module.exports = class Client {
 			);
 		} catch (error) {
 			console.error('Error finding client by email:', error);
-			throw new DatabaseError('Failed to find client by email');
+			throw new DatabaseError('Failed to find client by email.');
 		}
 	}
 
@@ -166,7 +166,7 @@ module.exports = class Client {
 			);
 		} catch (error) {
 			console.error('JWT creation error:', error);
-			throw new DatabaseError('Error creating authentication token');
+			throw new DatabaseError('Error creating authentication token.');
 		}
 	}
 
@@ -213,7 +213,37 @@ module.exports = class Client {
 			return false;
 		} catch (error) {
 			console.error('Error updating user role:', error);
-			throw new DatabaseError('Failed to update user role');
+			throw new DatabaseError('Failed to update user role.');
+		}
+	}
+
+	/**
+	 * Find a client by their phone number.
+	 * @param {string} phoneNumber - The phone number of the client to find.
+	 * @returns {Promise<Client|null>} - A promise that resolves to a Client instance, or null if not found.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	static async findByPhoneNumber(phoneNumber) {
+		const query = 'SELECT * FROM client WHERE phoneNumber = ?';
+
+		try {
+			const [rows] = await pool.execute(query, [phoneNumber]);
+			if (rows.length === 0) return null;
+
+			const clientData = rows[0];
+
+			return new Client(
+				clientData.firstName,
+				clientData.lastName,
+				clientData.phoneNumber,
+				clientData.email,
+				clientData.password,
+				clientData.role,
+				clientData.clientId
+			);
+		} catch (error) {
+			console.error('Error finding client by phone number:', error);
+			throw new DatabaseError('Failed to find client by phone number');
 		}
 	}
 };

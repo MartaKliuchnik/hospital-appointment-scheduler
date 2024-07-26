@@ -10,8 +10,10 @@ const {
 	AuthenticationError,
 	DatabaseError,
 	ValidationError,
+	ConflictError,
 } = require('../utils/customErrors');
 const { sendSuccessResponse } = require('../utils/responseHandlers');
+const { log } = require('console');
 
 /**
  * Serve the login page.
@@ -39,17 +41,17 @@ exports.postLogin = async (req, res, next) => {
 
 		const client = await Client.findByEmail(email);
 		if (!client) {
-			throw new AuthenticationError('User does not exist');
+			throw new AuthenticationError('User does not exist.');
 		}
 
 		let isPasswordValid = await client.verifyPassword(password);
 		if (!isPasswordValid) {
-			throw new AuthenticationError('Incorrect email or password');
+			throw new AuthenticationError('Incorrect email or password.');
 		}
 
 		const token = client.createAuthToken();
 
-		sendSuccessResponse(res, 200, 'User logged successfully', {
+		sendSuccessResponse(res, 200, 'User logged successfully.', {
 			token,
 			client: client.toSafeObject(),
 		});
@@ -61,7 +63,7 @@ exports.postLogin = async (req, res, next) => {
 			next(error);
 		} else {
 			next(
-				new DatabaseError('An unexpected error occurred during login', error)
+				new DatabaseError('An unexpected error occurred during login.', error)
 			);
 		}
 	}
@@ -89,7 +91,7 @@ exports.postRegister = async (req, res, next) => {
 	const { firstName, lastName, phoneNumber, email, password } = req.body;
 
 	try {
-		validateRegistrationInput(
+		await validateRegistrationInput(
 			firstName,
 			lastName,
 			phoneNumber,
@@ -109,14 +111,16 @@ exports.postRegister = async (req, res, next) => {
 
 		sendSuccessResponse(res, 200, 'User registered successfully', { clientId });
 	} catch (error) {
-		if (error.code === 'ER_DUP_ENTRY') {
-			next(new ValidationError('Email or phone number already in use'));
+		console.error('Registration error:', error);
+
+		if (error instanceof ConflictError) {
+			next(error);
 		} else if (error instanceof ValidationError) {
 			next(error);
 		} else {
 			next(
 				new DatabaseError(
-					'An unexpected error occurred during registration',
+					'An unexpected error occurred during registration.',
 					error
 				)
 			);

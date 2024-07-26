@@ -8,9 +8,10 @@ const {
 	ValidationError,
 	NotFoundError,
 	AuthorizationError,
+	ConflictError,
 } = require('./customErrors');
 
-const validateRegistrationInput = (
+const validateRegistrationInput = async (
 	firstName,
 	lastName,
 	phoneNumber,
@@ -26,14 +27,26 @@ const validateRegistrationInput = (
 
 	// Validate email
 	if (!Client.validateEmail(email)) {
-		throw new ValidationError('Invalid email address');
+		throw new ValidationError('Invalid email address.');
+	}
+
+	const isClientExist = await Client.findByEmail(email);
+	// Check if client with this email exists
+	if (isClientExist) {
+		throw new ConflictError('Email already in use.');
+	}
+
+	const isPhoneNumberExist = await Client.findByPhoneNumber(phoneNumber);
+	// Check if client with this number exists
+	if (isPhoneNumberExist) {
+		throw new ConflictError('Phone number already in use.');
 	}
 };
 
 const validateLoginInput = (email, password) => {
 	// Check if email and password exist
 	if (!email || !password) {
-		throw new ValidationError('Email and password are required');
+		throw new ValidationError('Email and password are required.');
 	}
 };
 
@@ -43,15 +56,15 @@ const validateUserRoleUpdate = async (clientId, newRole) => {
 		throw new ValidationError('Invalid client ID.');
 	}
 
-	// Check for missing parameters and valid role
-	if (!newRole || !Object.values(Role).includes(newRole)) {
-		throw new ValidationError('Invalid role provided.');
-	}
-
 	// Check if client exists
 	const client = await Client.findById(clientId);
 	if (!client) {
 		throw new NotFoundError('Client not found.');
+	}
+
+	// Check for missing parameters and valid role
+	if (!newRole || !Object.values(Role).includes(newRole)) {
+		throw new ValidationError('Invalid role. Please provide a valid role from the allowed list.');
 	}
 
 	// Check if the new role is different from the current role
