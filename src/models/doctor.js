@@ -15,7 +15,7 @@ module.exports = class Doctor {
 	constructor(firstName, lastName, specialization, doctorId = null) {
 		this.firstName = firstName;
 		this.lastName = lastName;
-		this.specialization = specialization;
+		this.specialization = specialization.toUpperCase();
 		this.doctorId = doctorId;
 	}
 

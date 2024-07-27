@@ -9,7 +9,10 @@ const {
 	sendSuccessResponse,
 	sendErrorResponse,
 } = require('../utils/responseHandlers');
-const { validateDoctorId } = require('../utils/validations');
+const {
+	validateDoctorId,
+	validateCreatingDoctorInput,
+} = require('../utils/validations');
 
 /**
  * Retrieve list of doctors from database.
@@ -68,6 +71,40 @@ exports.getDoctor = async (req, res, next) => {
 			sendErrorResponse(res, 404, error.message);
 		} else {
 			next(new DatabaseError('Failed to retrieve doctor.', error));
+		}
+	}
+};
+
+/**
+ * Create a new doctor.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the appointment creation process.
+ */
+exports.createDoctor = async (req, res, next) => {
+	const { firstName, lastName, specialization } = req.body;
+
+	try {
+		validateCreatingDoctorInput(firstName, lastName, specialization);
+
+		const doctor = new Doctor(firstName, lastName, specialization);
+		const doctorId = await doctor.insert();
+
+		const doctorDetails = await Doctor.getById(doctorId);
+
+		sendSuccessResponse(
+			res,
+			200,
+			'Doctor created successfully.',
+			doctorDetails
+		);
+	} catch (error) {
+		if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else {
+			next(new DatabaseError('Failed to create doctor.', error));
 		}
 	}
 };
@@ -147,8 +184,14 @@ exports.updateDoctor = async (req, res, next) => {
 			specialization: req.body.specialization,
 		};
 
-		if (!Object.keys(MedicalSpecializations).includes(req.body.specialization.toUpperCase())) {
-			throw new ValidationError('Invalid specialization. Please provide a valid specialization from the allowed list.');
+		if (
+			!Object.keys(MedicalSpecializations).includes(
+				req.body.specialization.toUpperCase()
+			)
+		) {
+			throw new ValidationError(
+				'Invalid specialization. Please provide a valid specialization from the allowed list.'
+			);
 		}
 
 		// Remove undefined fields

@@ -32,11 +32,11 @@ router.get(
  * @description Create a new doctor
  * @access Private
  */
-// router.post(
-// 	'/',
-// 	checkPermission('create_doctor'),
-// 	doctortsController.createDoctor
-// );
+router.post(
+	'/',
+	checkPermission(Permission.CREATE_DOCTOR),
+	doctortsController.createDoctor
+);
 
 /**
  * @route DELETE /api/v1/doctors/:doctorId

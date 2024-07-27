@@ -12,7 +12,6 @@ const {
 } = require('../utils/responseHandlers');
 const {
 	validateUserRoleUpdate,
-	validateClientId,
 	validateClientDeletion,
 } = require('../utils/validations');
 

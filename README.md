@@ -578,7 +578,109 @@ request.
 }
 ```
 
-#### 4. Delete a specific doctor
+#### 4. Create a new doctor
+
+Endpoint
+
+- URL Path: **_/api/v1/schedules/doctors_**
+- Description: This endpoint allows an admin to create a new doctor record in the system.
+- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to create a new doctor.
+
+**Request Body**
+
+The request body should contain the following parameters:
+
+- firstName: The first name of the doctor.
+- lastName: The last name of the doctor.
+- specialization: The specialization of the doctor, which must be one of the predefined values from the allowed list of enum values.
+
+**Example Request**
+
+Description: This is a `POST` request used to create a new doctor record. The request must include an Authorization header with a valid bearer token for authentication and specify the Content-Type as application/json. The request body should contain the details of the doctor, including the firstName, lastName, and specialization.
+
+```
+
+curl -X POST http://localhost:8080/api/v1/schedules/doctors \
+-H "Authorization: Bearer <your-jwt-token>" \
+-H "Content-Type: application/json" \
+-d '{ "firstName": "Mike", "lastName": "Jonson", "specialization": "CARDIOLOGY" }'
+
+```
+
+**Example Responses**
+
+Status code: **201 Created**
+
+Description: The doctor was successfully created.
+
+```
+{
+    "message": "Doctor created successfully.",
+    "data": [
+        {
+            "doctorId": 8,
+            "firstName": "Mike",
+            "lastName": "Jonson",
+            "specialization": "CARDIOLOGY"
+        }
+    ]
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The request is invalid or missing required parameters.
+
+```
+{
+	"message": "All fields are required and must be in a valid format."
+}
+```
+
+Description: The provided specialization is invalid as it is not part of the allowed enum list.
+
+```
+{
+    "Invalid specialization. Please provide a valid specialization from the allowed list.
+}
+```
+
+Status Code: **401 Unauthorized**
+
+Description: The request lacks proper authentication credentials or the provided token is invalid. Ensure that the correct authentication token is provided.
+
+```
+{
+    "message": "Authentication failed: Missing client ID."
+}
+```
+```
+{
+    "message": "Authentication required."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The user does not have the required admin privileges to perform this operation.
+
+```
+{ 
+    "message": "Access denied. Admin privileges required."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{ 
+    "message": "Failed to create doctor." 
+}
+```
+
+#### 5. Delete a specific doctor
 
 Endpoint
 
@@ -685,7 +787,7 @@ request.
 }
 ```
 
-#### 5. Update a doctor's information
+#### 6. Update a doctor's information
 
 Endpoint
 

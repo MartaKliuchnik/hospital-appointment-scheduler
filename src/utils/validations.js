@@ -1,4 +1,5 @@
 const Role = require('../enums/Role');
+const MedicalSpecializations = require('../enums/Specialization');
 const WeekDay = require('../enums/WeekDay');
 const Appointment = require('../models/appointment');
 const Client = require('../models/client');
@@ -226,7 +227,7 @@ const validateCreatingScheduleInput = (
 	}
 
 	// Check if the scheduleDay is valid
-	if (!Object.keys(WeekDay).includes(scheduleDay)) {
+	if (!Object.keys(WeekDay).includes(scheduleDay.toUpperCase())) {
 		throw new ValidationError(
 			'Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list.'
 		);
@@ -253,6 +254,24 @@ const validateClientDeletion = async (clientId) => {
 	}
 };
 
+const validateCreatingDoctorInput = (firstName, lastName, specialization) => {
+	// Check for missing parameters
+	if (!firstName || !lastName || !specialization) {
+		throw new ValidationError(
+			'All fields are required and must be in a valid format.'
+		);
+	}
+
+	// Check if the specialization is valid
+	if (
+		!Object.keys(MedicalSpecializations).includes(specialization.toUpperCase())
+	) {
+		throw new ValidationError(
+			'Invalid specialization. Please provide a valid specialization from the allowed list.'
+		);
+	}
+};
+
 module.exports = {
 	validateLoginInput,
 	validateUserRoleUpdate,
@@ -266,4 +285,5 @@ module.exports = {
 	validateClientId,
 	validateCreatingScheduleInput,
 	validateClientDeletion,
+	validateCreatingDoctorInput,
 };
