@@ -633,7 +633,7 @@ Description: The request is invalid or missing required parameters.
 
 ```
 {
-	"message": "All fields are required and must be in a valid format."
+    "message": "All fields are required and must be in a valid format."
 }
 ```
 
@@ -641,7 +641,7 @@ Description: The provided specialization is invalid as it is not part of the all
 
 ```
 {
-    "Invalid specialization. Please provide a valid specialization from the allowed list.
+    "message": "Invalid specialization. Please provide a valid specialization from the allowed list.
 }
 ```
 
@@ -1290,6 +1290,7 @@ Description: The server cannot find the specified client.
 {
     "message": "Client not found."
 }
+```
 
 Status Code: **401 Unauthorized**
 
@@ -1644,7 +1645,7 @@ Description: The doctor ID provided is invalid.
 
 ```
 {
-	  "message": "Invalid doctor ID."
+	"message": "Invalid doctor ID."
 }
 ```
 
@@ -1705,11 +1706,11 @@ Description: The schedule is successfully retrieved.
 {
     "message": "Schedule retrieved successfully.",
     "data": {
-      "doctorId": 1,
-      "scheduleDay": "MONDAY",
-      "startTime": "09:00:00",
-      "endTime": "13:00:00",
-      "scheduleId": 123
+        "doctorId": 1,
+        "scheduleDay": "MONDAY",
+        "startTime": "09:00:00",
+        "endTime": "13:00:00",
+        "scheduleId": 123
     }
 }
 ```
@@ -1720,7 +1721,7 @@ Description: The schedule ID provided is invalid.
 
 ```
 {
-	  "message": "Invalid schedule ID."
+	"message": "Invalid schedule ID."
 }
 ```
 
@@ -1790,11 +1791,11 @@ Description: The schedule is successfully created.
 {
     "message": "Schedule created successfully.",
     "data": {
-        "doctorId": 123,
-        "scheduleDay": "MONDAY",
-        "startTime": "09:00:00",
-        "endTime": "17:00:00"
-        "scheduleId": 3
+            "doctorId": 123,
+            "scheduleDay": "MONDAY",
+            "startTime": "09:00:00",
+            "endTime": "17:00:00"
+            "scheduleId": 3
     }
 }
 ```
@@ -1805,7 +1806,7 @@ Description: The request is invalid or missing required parameters.
 
 ```
 {
-	  "message": "All fields are required and must be in a valid format."
+	"message": "All fields are required and must be in a valid format."
 }
 ```
 
@@ -1813,7 +1814,7 @@ Description: The provided doctor ID is invalid (not a number).
 
 ```
 {
-	  "message": "Invalid doctor ID."
+	"message": "Invalid doctor ID."
 }
 ```
 
@@ -1822,7 +1823,7 @@ allowed enum list.
 
 ```
 {
-	  "message": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
+	"message": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
 }
 ```
 
@@ -2004,11 +2005,11 @@ Description: The server successfully updates the schedule.
 {
     "message": "Schedule updated successfully.",
     "data": {
-        "doctorId": 1,
-        "scheduleDay": "FRIDAY",
-        "startTime": "13:00:00",
-        "endTime": "17:00:00",
-        "scheduleId": 123
+            "doctorId": 1,
+            "scheduleDay": "FRIDAY",
+            "startTime": "13:00:00",
+            "endTime": "17:00:00",
+            "scheduleId": 123
     }
 }
 ```
@@ -2044,7 +2045,7 @@ allowed enum list.
 
 ```
 {
-	  "message": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
+	"message": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
 }
 ```
 
