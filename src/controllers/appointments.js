@@ -2,6 +2,13 @@ const path = require('path');
 const rootDir = require('../utils/path');
 const Appointment = require('../models/appointment');
 const { formatClientAppointmentsResponse } = require('../utils/formatResponse');
+const {
+	NotFoundError,
+	AuthenticationError,
+	ValidationError,
+	DatabaseError,
+	AuthorizationError,
+} = require('../utils/customErrors');
 
 const {
 	validateAppointmentCreation,
@@ -9,7 +16,10 @@ const {
 	validateAppointmentDeletion,
 	validateAppointmentUpdate,
 } = require('../utils/validations');
-const { sendSuccessResponse } = require('../utils/responseHandlers');
+const {
+	sendSuccessResponse,
+	sendErrorResponse,
+} = require('../utils/responseHandlers');
 
 /**
  * Serve the schedule page.
@@ -45,11 +55,22 @@ exports.createAppointment = async (req, res, next) => {
 		const formattedAppointment =
 			Appointment.formatAppointmentResponse(appointmentDetails);
 
-		sendSuccessResponse(res, 201, 'Appointment created successfully.', {
-			appointment: formattedAppointment,
-		});
+		sendSuccessResponse(
+			res,
+			201,
+			'Appointment created successfully.',
+			formattedAppointment
+		);
 	} catch (error) {
-		next(error);
+		if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else if (error instanceof AuthenticationError) {
+			sendErrorResponse(res, 401, error.message);
+		} else if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else {
+			next(new DatabaseError('Failed to create appointment.', error));
+		}
 	}
 };
 
@@ -72,7 +93,7 @@ exports.getClientAppointments = async (req, res, next) => {
 
 		// Check if the appointments exist for this client
 		if (!result.appointments || result.appointments.length === 0) {
-			return sendSuccessResponse(
+			return sendErrorResponse(
 				res,
 				404,
 				'No appointments found for this client.'
@@ -87,7 +108,15 @@ exports.getClientAppointments = async (req, res, next) => {
 			response
 		);
 	} catch (error) {
-		next(error);
+		if (error instanceof AuthorizationError) {
+			sendErrorResponse(res, 403, error.message);
+		} else if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else {
+			next(new DatabaseError('Failed to retrieve client appointments.', error));
+		}
 	}
 };
 
@@ -105,7 +134,7 @@ exports.deleteAppointment = async (req, res, next) => {
 	const clientRole = req.client.role;
 
 	try {
-		await validateAppointmentDeletion(appointmentId, clientId);
+		await validateAppointmentDeletion(appointmentId, clientId, clientRole);
 
 		await Appointment.deleteAppointmentById(appointmentId, clientRole);
 		sendSuccessResponse(
@@ -116,7 +145,17 @@ exports.deleteAppointment = async (req, res, next) => {
 				: 'Appointment canceled successfully.'
 		);
 	} catch (error) {
-		next(error);
+		if (error instanceof AuthenticationError) {
+			sendErrorResponse(res, 401, error.message);
+		} else if (error instanceof AuthorizationError) {
+			sendErrorResponse(res, 403, error.message);
+		} else if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else {
+			next(new DatabaseError('Failed to delete appointment.', error));
+		}
 	}
 };
 
@@ -153,6 +192,16 @@ exports.updateAppointment = async (req, res, next) => {
 			response
 		);
 	} catch (error) {
-		next(error);
+		if (error instanceof AuthenticationError) {
+			sendErrorResponse(res, 401, error.message);
+		} else if (error instanceof AuthorizationError) {
+			sendErrorResponse(res, 403, error.message);
+		} else if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else {
+			next(new DatabaseError('Failed to change appointment.', error));
+		}
 	}
 };

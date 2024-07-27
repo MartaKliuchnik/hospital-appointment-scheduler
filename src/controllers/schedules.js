@@ -1,10 +1,12 @@
 const Doctor = require('../models/doctor');
 const Schedule = require('../models/schedule');
+const WeekDay = require('../enums/WeekDay');
 const { formatDoctorScheduleResponse } = require('../utils/formatResponse');
 const {
 	ValidationError,
 	NotFoundError,
 	DatabaseError,
+	AuthorizationError,
 } = require('../utils/customErrors');
 const {
 	sendSuccessResponse,
@@ -43,12 +45,7 @@ exports.getSchedule = async (req, res, next) => {
 		} else if (error instanceof NotFoundError) {
 			sendErrorResponse(res, 404, error.message);
 		} else {
-			next(
-				new DatabaseError(
-					'An error occurred while retrieving the schedule.',
-					error
-				)
-			);
+			next(new DatabaseError('Failed to retrieve schedule.', error));
 		}
 	}
 };
@@ -94,13 +91,10 @@ exports.createSchedule = async (req, res, next) => {
 			sendErrorResponse(res, 400, error.message);
 		} else if (error instanceof NotFoundError) {
 			sendErrorResponse(res, 404, error.message);
+		} else if (error instanceof AuthorizationError) {
+			sendErrorResponse(res, 403, error.message);
 		} else {
-			next(
-				new DatabaseError(
-					'An error occurred while creating the schedule.',
-					error
-				)
-			);
+			next(new DatabaseError('Failed to create schedule.', error));
 		}
 	}
 };
@@ -138,12 +132,7 @@ exports.getDoctorSchedule = async (req, res, next) => {
 		} else if (error instanceof NotFoundError) {
 			sendErrorResponse(res, 404, error.message);
 		} else {
-			next(
-				new DatabaseError(
-					'An error occurred while retrieving the schedule.',
-					error
-				)
-			);
+			next(new DatabaseError('Failed to retrieve schedule.', error));
 		}
 	}
 };
@@ -176,12 +165,7 @@ exports.deleteSchedule = async (req, res, next) => {
 		} else if (error instanceof NotFoundError) {
 			sendErrorResponse(res, 404, error.message);
 		} else {
-			next(
-				new DatabaseError(
-					'An error occurred while deleting the schedule.',
-					error
-				)
-			);
+			next(new DatabaseError('Failed to delete schedule.', error));
 		}
 	}
 };
@@ -217,7 +201,14 @@ exports.updateSchedule = async (req, res, next) => {
 		const schedule = await Schedule.getById(scheduleId);
 		// Check if the schedule exists
 		if (!schedule) {
-			return res.status(404).json({ error: 'Schedule not found' });
+			throw new NotFoundError('Schedule not found.');
+		}
+
+		// Check if the scheduleDay is valid
+		if (!Object.keys(WeekDay).includes(req.body.scheduleDay)) {
+			throw new ValidationError(
+				'Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list.'
+			);
 		}
 
 		const updatedSchedule = await Schedule.updateById(scheduleId, updateData);
@@ -233,12 +224,6 @@ exports.updateSchedule = async (req, res, next) => {
 			sendErrorResponse(res, 400, error.message);
 		} else if (error instanceof NotFoundError) {
 			sendErrorResponse(res, 404, error.message);
-		} else if (error.code === 'ER_DATA_TOO_LONG' || error.errno === 1265) {
-			sendErrorResponse(
-				res,
-				400,
-				'Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list.'
-			);
 		} else {
 			next(new DatabaseError('Failed to update schedule.', error));
 		}

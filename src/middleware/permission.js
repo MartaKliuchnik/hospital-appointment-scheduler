@@ -36,7 +36,11 @@ const checkPermission = (requiredPermission, allowUnauthenticated = false) => {
 				return next();
 			}
 
-			return sendErrorResponse(res, 403, 'Access denied.');
+			return sendErrorResponse(
+				res,
+				403,
+				'Access denied. Admin privileges required.'
+			);
 		} catch (error) {
 			console.error('Error checking permission:', error);
 			return sendErrorResponse(

@@ -1,5 +1,6 @@
 const { pool } = require('../utils/database');
 const Schedule = require('./schedule');
+const Status = require('../enums/Status');
 const {
 	ValidationError,
 	NotFoundError,
@@ -16,7 +17,7 @@ module.exports = class Appointment {
 		this.clientId = clientId;
 		this.doctorId = doctorId;
 		this.appointmentTime = appointmentTime;
-		this.appointmentStatus = 'SCHEDULED';
+		this.appointmentStatus = Status.SCHEDULED;
 	}
 
 	/**
@@ -64,7 +65,7 @@ module.exports = class Appointment {
 			// If there's an error, roll back the transaction
 			await connection.rollback();
 			console.error('Error inserting appointment:', error);
-			throw new DatabaseError('Failed to insert appointment.', error);
+			throw error;
 		} finally {
 			connection.release();
 		}
@@ -88,7 +89,7 @@ module.exports = class Appointment {
 			return results.length > 0 ? results[0] : null;
 		} catch (error) {
 			console.error('Error retrieving appointment:', error);
-			throw new DatabaseError('Failed to retrieve appointment.', error);
+			throw error;
 		}
 	}
 
@@ -139,7 +140,7 @@ module.exports = class Appointment {
 			};
 		} catch (error) {
 			console.error('Error retrieving client appointments:', error);
-			throw new DatabaseError('Failed to retrieve client appointments.', error);
+			throw error;
 		}
 	}
 
@@ -170,10 +171,11 @@ module.exports = class Appointment {
 			} else {
 				const queryCancelAppointment = `
                 UPDATE appointment 
-                SET appointmentStatus = 'CANCELED' 
+                SET appointmentStatus = ? 
                 WHERE appointmentId = ?`;
 
 				const [result] = await connection.execute(queryCancelAppointment, [
+					Status.CANCELED,
 					appointmentId,
 				]);
 
@@ -185,7 +187,7 @@ module.exports = class Appointment {
 		} catch (error) {
 			await connection.rollback();
 			console.error('Error deleting appointment:', error);
-			throw new DatabaseError('Failed to delete appointment.', error);
+			throw error;
 		} finally {
 			connection.release();
 		}
@@ -207,7 +209,7 @@ module.exports = class Appointment {
 			// Get the current appointment details
 			const currentAppointment = await this.getAppointmentById(appointmentId);
 			if (!currentAppointment) {
-				throw new NotFoundError('Appointment not found.');
+				throw new NotFoundError("Appointment doesn't exist.");
 			}
 
 			// Check if the new time slot is available
@@ -240,7 +242,7 @@ module.exports = class Appointment {
 		} catch (error) {
 			await connection.rollback();
 			console.error('Error changing client appointment:', error);
-			throw new DatabaseError('Failed to change appointment.', error);
+			throw error;
 		} finally {
 			connection.release();
 		}

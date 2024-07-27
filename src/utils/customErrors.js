@@ -1,3 +1,11 @@
+class ValidationError extends Error {
+	constructor(message) {
+		super(message);
+		this.name = 'ValidationError';
+		this.statusCode = 400;
+	}
+}
+
 class AuthenticationError extends Error {
 	constructor(message) {
 		super(message);
@@ -11,14 +19,6 @@ class AuthorizationError extends Error {
 		super(message);
 		this.name = 'AuthorizationError';
 		this.statusCode = 403;
-	}
-}
-
-class ValidationError extends Error {
-	constructor(message) {
-		super(message);
-		this.name = 'ValidationError';
-		this.statusCode = 400;
 	}
 }
 
@@ -55,3 +55,5 @@ module.exports = {
 	DatabaseError,
 	ConflictError,
 };
+
+

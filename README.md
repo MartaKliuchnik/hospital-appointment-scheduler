@@ -14,26 +14,26 @@
    - Endpoint **/api/v1/auth/register**
    - Endpoint **/api/v1/auth/login**
 
-     5.2 [Doctor Management](#doctor-management)
+   5.2 [Doctor Management](#doctor-management)
 
    - Doctor data model.
    - Endpoint **/api/v1/doctors**
    - Endpoint **/api/v1/doctors/:doctorId**
 
-     5.3 [Authentication](#authentication)
+   5.3 [Authentication](#authentication)
 
-     5.4 [Change Client Role](#change-client-role)
+   5.4 [Change Client Role](#change-client-role)
 
    - Endpoint **/api/v1/clients/:clientId/role**
 
-     5.5 [Appointment Management](#appointment-management)
+   5.5 [Appointment Management](#appointment-management)
 
    - Appointment data model.
    - Endpoint **/api/v1/appointments**
    - Endpoint **/api/v1/appointments/clients/:clientId**
    - Endpoint **/api/v1/appointments/:appointmentId**
 
-     5.6 [Schedule Management](#schedule-management)
+   5.6 [Schedule Management](#schedule-management)
 
    - Schedule data model.
    - Endpoint **/api/v1/schedules/:scheduleId**
@@ -105,7 +105,7 @@ Information about clients.
 |     | registrationDate | datetime     | Date and time when the client registered     |
 |     | role             | enum         | Role of the client.                          |
 
-Predefined list of client role:
+Predefined list of client roles:
 
 - ANONYMOS: An unauthorized client, usually with limited access.
 - ADMIN: A client with administrative privileges, able to manage other clients
@@ -163,7 +163,7 @@ success message and the data with the clientId of the newly created client.
 
 ```
 {
-    "message": "User registered successfully",
+    "message": "User registered successfully.",
     "data": {
         "clientId": 2
     }
@@ -178,7 +178,7 @@ the required format or were missing.
 
 ```
 {
-   "message": "All fields are required and must be in a valid format."
+    "message": "All fields are required and must be in a valid format."
 }
 ```
 
@@ -187,7 +187,7 @@ required format or is otherwise invalid.
 
 ```
 {
-   "message": "Invalid email address."
+    "message": "Invalid email address."
 }
 ```
 
@@ -198,13 +198,12 @@ because the email or phone number is already in use.
 
 ```
 {
-   "message": "Email already in use."
+    "message": "Email already in use."
 }
 ```
-
 ```
 {
-   "message": "Phone number already in use."
+    "message": "Phone number already in use."
 }
 ```
 
@@ -215,13 +214,12 @@ registration process.
 
 ```
 {
-   message: 'An unexpected error occurred during registration.'
+    "message": 'An unexpected error occurred during registration.'
 }
 ```
-
 ```
 {
-   message: 'Failed to register client.'
+    "message": 'Failed to register client.'
 }
 ```
 
@@ -288,7 +286,7 @@ Description: The provided email address or password is missing.
 
 ```
 {
-   "error": "Email and password are required."
+    "message": "Email and password are required."
 }
 ```
 
@@ -298,7 +296,7 @@ Description: The login request failed due to incorrect email.
 
 ```
 {
-   "message": "User does not exist."
+    "message": "User does not exist."
 }
 ```
 
@@ -306,7 +304,7 @@ Description: The login request failed due to incorrect password.
 
 ```
 {
-   "message": "Incorrect email or password."
+    "message": "Incorrect email or password."
 }
 ```
 
@@ -318,7 +316,7 @@ authentication.
 
 ```
 {
-   "message": "Error creating authentication token."
+    "message": "Error creating authentication token."
 }
 ```
 
@@ -327,7 +325,7 @@ from processing the request.
 
 ```
 {
-   "message": "An unexpected error occurred during login."
+    "message": "An unexpected error occurred during login."
 }
 ```
 
@@ -376,17 +374,17 @@ Description: The server successfully retrieves the list of doctors.
 
 ```
 {
-  "message": "Doctors retrieved successfully.",
+    "message": "Doctors retrieved successfully.",
     "data": {
-      "doctors": [
-        {
-          "doctorId": 123,
-          "firstName": "Jane",
-          "lastName": "Doe",
-          "specialization": "NEUROLOGY"
-        },
-        ...
-      ]
+        "doctors": [
+          {
+            "doctorId": 123,
+            "firstName": "Jane",
+            "lastName": "Doe",
+            "specialization": "NEUROLOGY"
+          },
+          ...
+        ]
     }
 }
 ```
@@ -397,7 +395,7 @@ Description: The server cannot find any doctors in the database.
 
 ```
 {
-   "message": "No doctors found in the database."
+    "message": "No doctors found in the database."
 }
 ```
 
@@ -408,7 +406,7 @@ from processing the request.
 
 ```
 {
-   "message": "Failed to retrieve doctors."
+    "message": "Failed to retrieve doctors."
 }
 ```
 
@@ -448,7 +446,7 @@ Description: The server successfully retrieves the doctor's information.
 
 ```
 {
-  "message": "Doctor retrieved successfully.",
+    "message": "Doctor retrieved successfully.",
     "data": [
         {
             "doctorId": 1,
@@ -466,7 +464,7 @@ Description: The provided doctor ID is invalid (not a number).
 
 ```
 {
-  "message": "Invalid doctor ID."
+    "message": "Invalid doctor ID."
 }
 ```
 
@@ -476,7 +474,7 @@ Description: No doctor with the specified ID exists in the database.
 
 ```
 {
-  "message": "Doctor not found."
+    "message": "Doctor not found."
 }
 ```
 
@@ -487,7 +485,7 @@ request.
 
 ```
 {
-  "message": "Failed to retrieve doctor."
+    "message": "Failed to retrieve doctor."
 }
 ```
 
@@ -503,6 +501,12 @@ Endpoint
 - Authentication and Authorization: This endpoint requires admin-level
   authentication. Only users with admin privileges are allowed to delete doctor
   records.
+
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- doctorId: The unique identifier of the doctor to delete.
 
 **Example Request**
 
@@ -524,7 +528,7 @@ Description: The server successfully deletes the doctor.
 
 ```
 {
-   "message": "Doctor deleted successfully."
+    "message": "Doctor deleted successfully."
 }
 ```
 
@@ -534,35 +538,40 @@ Description: The provided doctor ID is invalid (not a number).
 
 ```
 {
-  "message": "Invalid doctor ID."
+    "message": "Invalid doctor ID."
 }
 ```
 
 Status Code: **401 Unauthorized**
 
-Description: This status code is used when a user must authenticate themselves to access the requested resource. It indicates that authentication is required.
+Description: This status code is used when a user must authenticate themselves
+to access the requested resource. It indicates that authentication is required.
 
 ```
-{
-   "message": "Authentication required."
+{ 
+    "message": "Authentication required."
 }
 ```
 
 Status Code: **403 Forbidden**
 
-Description: The request to delete the doctor record cannot be processed because the doctor currently has appointments scheduled. To ensure data integrity and avoid disrupting ongoing or future appointments, deletion of records associated with existing appointments is prohibited.
+Description: The request to delete the doctor record cannot be processed because
+the doctor currently has appointments scheduled. To ensure data integrity and
+avoid disrupting ongoing or future appointments, deletion of records associated
+with existing appointments is prohibited.
 
 ```
 {
-  "message": "This doctor has appointment(s). Deletion is forbidden."
+    "message": "This doctor has appointment(s). Deletion is forbidden."
 }
 ```
 
-Description: Only authorized users with the required admin privileges are permitted to delete doctor records. 
+Description: Only authorized users with the required admin privileges are
+permitted to delete doctor records.
 
 ```
 {
-  "error": "Access denied."
+    "message": "Access denied. Admin privileges required."
 }
 ```
 
@@ -572,7 +581,7 @@ Description: No doctor with the specified ID exists in the database.
 
 ```
 {
-  "message": "Doctor not found."
+    "message": "Doctor not found."
 }
 ```
 
@@ -583,7 +592,7 @@ request.
 
 ```
 {
-  "message": "Failed to delete doctor."
+    "message": "Failed to delete doctor."
 }
 ```
 
@@ -600,6 +609,12 @@ Endpoint
 - Authentication and Authorization: This endpoint requires admin-level
   authentication. Only users with admin privileges are allowed to update doctor
   records.
+
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- doctorId: The unique identifier of the doctor to update. 
 
 **Example Request**
 
@@ -642,7 +657,7 @@ Description: The provided doctor ID is invalid (not a number).
 
 ```
 {
-  "message": "Invalid doctor ID."
+    "message": "Invalid doctor ID."
 }
 ```
 
@@ -654,7 +669,9 @@ Description: No valid update data is provided.
 }
 ```
 
-Description: The provided specialization value is not valid. The specialization must be one of the predefined values from the allowed list. Please ensure that the specialization matches one of the valid options.
+Description: The provided specialization value is not valid. The specialization
+must be one of the predefined values from the allowed list. Please ensure that
+the specialization matches one of the valid options.
 
 ```
 {
@@ -664,29 +681,34 @@ Description: The provided specialization value is not valid. The specialization 
 
 Status Code: **401 Unauthorized**
 
-Description: This status code is used when a user must authenticate themselves to access the requested resource. It indicates that authentication is required.
+Description: This status code is used when a user must authenticate themselves
+to access the requested resource. It indicates that authentication is required.
 
 ```
 {
-   "message": "Authentication required."
+    "message": "Authentication required."
 }
 ```
 
 Status Code: **403 Forbidden**
 
-Description: Only authorized users with the required admin privileges are permitted to delete doctor records. 
+Description: Only authorized users with the required admin privileges are
+permitted to delete doctor records.
 
 ```
 {
-  "error": "Access denied."
+    "message": "Access denied. Admin privileges required."
 }
 ```
 
-Description: The request to update the doctor record cannot be processed because the doctor currently has appointments scheduled. To ensure data integrity and avoid disrupting ongoing or future appointments, updates to records associated with existing appointments are prohibited.
+Description: The request to update the doctor record cannot be processed because
+the doctor currently has appointments scheduled. To ensure data integrity and
+avoid disrupting ongoing or future appointments, updates to records associated
+with existing appointments are prohibited.
 
 ```
 {
-  "message": "This doctor has appointment(s). Update is forbidden."
+    "message": "This doctor has appointment(s). Update is forbidden."
 }
 ```
 
@@ -696,7 +718,7 @@ Description: No doctor with the specified ID exists in the database.
 
 ```
 {
-  "message": "Doctor not found."
+    "message": "Doctor not found."
 }
 ```
 
@@ -707,7 +729,7 @@ request.
 
 ```
 {
-  "error": "Failed to update doctor."
+    "message": "Failed to update doctor."
 }
 ```
 
@@ -719,7 +741,7 @@ look like this:
 
 ```
 {
-   Authorization: Bearer <your-jwt-token>
+    Authorization: Bearer <your-jwt-token>
 }
 ```
 
@@ -751,9 +773,9 @@ Endpoint
 - Authentication: Required (Admin only)
 - Authorization: Requires UPDATE_USER_ROLE permission
 
-**Request Body**
+**Request Parameter**
 
-The request body should contain the following parameter:
+The request should include the following path parameter:
 
 - clientId: The ID of the client whose role is to be updated.
 
@@ -781,7 +803,7 @@ Description: The client's role was successfully updated.
 
 ```
 {
-  "message": "User role updated successfully.",
+    "message": "User role updated successfully.",
     "data": {
         "newRole": "ADMIN"
     }
@@ -794,15 +816,17 @@ Description: The request is invalid or missing required client ID parameter.
 
 ```
 {
-  "message": "Invalid client ID."
+    "message": "Invalid client ID."
 }
 ```
 
-Description: The request is invalid or missing required parameters. The role must be one of the predefined values from the allowed list. Please ensure that the role matches one of the valid options.
+Description: The request is invalid or missing required parameters. The role
+must be one of the predefined values from the allowed list. Please ensure that
+the role matches one of the valid options.
 
 ```
 {
-  "message": "Invalid role. Please provide a valid role from the allowed list."
+    "message": "Invalid role. Please provide a valid role from the allowed list."
 }
 ```
 
@@ -810,7 +834,7 @@ Description: The client already has the specified role.
 
 ```
 {
-  "message": "Client already has this role."
+    "message": "Client already has this role."
 }
 ```
 
@@ -818,27 +842,29 @@ Description: The attempt to update the user's role in the database failed.
 
 ```
 {
-  "message": "User role update failed."
+    "message": "User role update failed."
 }
 ```
 
 Status Code: **401 Unauthorized**
 
-Description: This status code is used when a user must authenticate themselves to access the requested resource. It indicates that authentication is required.
+Description: This status code is used when a user must authenticate themselves
+to access the requested resource. It indicates that authentication is required.
 
 ```
 {
-   "message": "Authentication required."
+    "message": "Authentication required."
 }
 ```
 
 Status Code: **403 Forbidden**
 
-Description: Only authorized users with the required admin privileges are permitted to update client role.
+Description: Only authorized users with the required admin privileges are
+permitted to update client role.
 
 ```
 {
-  "error": "Access denied."
+    "message": "Access denied. Admin privileges required."
 }
 ```
 
@@ -848,7 +874,7 @@ Description: The server cannot find the specified client.
 
 ```
 {
-  "message": "Client not found."
+    "message": "Client not found."
 }
 ```
 
@@ -859,7 +885,7 @@ request.
 
 ```
 {
-  "message": "Failed to update user role."
+    "message": "Failed to update user role."
 }
 ```
 
@@ -877,8 +903,7 @@ Information about appointments.
 |     | appointmentTime   | datetime  | Date and time of the appointment                              |
 |     | appointmentStatus | enum      | Status of the appointment                                     |
 
-Predefined list of statuses for the appointment: 'SCHEDULED', 'COMPLETED',
-'CANCELED'.
+Predefined list of statuses for the appointment: 'SCHEDULED', 'CANCELED'.
 
 #### 2. Creates a new appointment for a client
 
@@ -892,7 +917,6 @@ Endpoint
 
 The request body should contain the following parameters:
 
-- clientId: The ID of the client scheduling the appointment.
 - doctorId: The ID of the doctor with whom the appointment is scheduled.
 - appointmentTime: The date and time of the appointment.
 
@@ -908,7 +932,7 @@ including the client's ID, the doctor's ID, and the appointment time.
 curl -X POST http://localhost:8080/api/v1/appointments \
 -H "Authorization: Bearer <your-jwt-token>" \
 -H "Content-Type: application/json" \
--d '{ "clientId": 123, "doctorId": 456, "appointmentTime": "2024-08-15 10:00:00" }'
+-d '{ "doctorId": 1, "appointmentTime": "2024-07-29 10:00:00" }'
 
 ```
 
@@ -920,12 +944,12 @@ Description: The appointment is successfully created.
 
 ```
 {
-  "message": "Appointment created successfully.",
-  "appointment": {
-        "appointmentId": 78,
-        "clientId": 123,
-        "doctorId": 456,
-        "appointmentTime": "2024-08-15 10:00:00",
+    "message": "Appointment created successfully.",
+    "data": {
+        "appointmentId": 4,
+        "clientId": 1,
+        "doctorId": 1,
+        "appointmentTime": "2024-07-29 10:00:00",
         "appointmentStatus": "SCHEDULED"
     }
 }
@@ -937,7 +961,7 @@ Description: The request is invalid or missing required parameters.
 
 ```
 {
-  "error": "Invalid request: doctorId, and appointmentTime are required parameters."
+    "message": "Invalid request: doctorId and appointmentTime are required parameters."
 }
 ```
 
@@ -945,7 +969,7 @@ Description: The request contains invalid data.
 
 ```
 {
-  "error": "Cannot schedule appointments in the past. Please choose a future date and time."
+    "message": "Invalid appointment time. Please choose a future date and time."
 }
 ```
 
@@ -954,16 +978,7 @@ is not available.
 
 ```
 {
-  "error": "The selected appointment time is not available."
-}
-```
-
-Description: The request is invalid because it contains incorrect information.
-Ensure the date is correctly formatted.
-
-```
-{
-  "error": "Invalid appointment time. Please choose a future date and time."
+    "message": "The selected appointment time is not available."
 }
 ```
 
@@ -971,12 +986,17 @@ Status Code: **401 Unauthorized**
 
 Description: The request lacks proper authentication credentials, or the
 provided token is invalid. Therefore, the server refuses to respond to the
-request. Ensure that the correct authentication token is provided in the request
-header.
+request. Ensure that the correct authentication token, and client ID are
+provided.
 
 ```
 {
-  "error": "Authentication failed: Missing client ID."
+    "message": "Authentication failed: Missing client ID."
+}
+```
+```
+{
+    "message": "Authentication required."
 }
 ```
 
@@ -986,7 +1006,7 @@ Description: The server cannot find the specified client.
 
 ```
 {
-  "error": "Client not found."
+    "message": "Client not found."
 }
 ```
 
@@ -994,7 +1014,7 @@ Description: The server cannot find the specified doctor.
 
 ```
 {
-  "error": "Doctor not found."
+    "message": "Doctor not found."
 }
 ```
 
@@ -1005,13 +1025,7 @@ request.
 
 ```
 {
-  "error": "An error occurred while creating the appointment."
-}
-```
-
-```
-{
-  "error": "Failed to insert appointment."
+    "message": "Failed to insert appointment."
 }
 ```
 
@@ -1023,9 +1037,9 @@ Endpoint
 - Description: This endpoint retrieves all appointments for a specific client.
 - Authentication: Authentication is required for this endpoint.
 
-**Request Body**
+**Request Parameter**
 
-The request body should contain the following parameter:
+The request should include the following path parameter:
 
 - clientId: The ID of the client for whom appointments are to be retrieved.
 
@@ -1052,16 +1066,19 @@ response body.
 
 ```
 {
-  "clientId": 2,
-  "appointments": [
-    {
-      "appointmentId": 4,
-      "doctorId": 3,
-      "appointmentTime": "2024-08-15 14:30:00",
-      "appointmentStatus": "SCHEDULED"
-    },
-    ...
-  ]
+    "message": "Appointments retrieved successfully.",
+    "data": {
+      "clientId": 2,
+      "appointments": [
+        {
+          "appointmentId": 4,
+          "doctorId": 3,
+          "appointmentTime": "2024-08-15 14:30:00",
+          "appointmentStatus": "SCHEDULED"
+        },
+        ...
+      ]
+    }
 }
 ```
 
@@ -1071,7 +1088,7 @@ Description: The request is invalid or missing required client ID parameter.
 
 ```
 {
-  "error": "Invalid client ID."
+    "message": "Invalid client ID."
 }
 ```
 
@@ -1083,18 +1100,19 @@ Ensure that the correct authentication token is provided in the request header.
 
 ```
 {
-  "error": "Authentication failed: Token not provided."
+    "message": "Authentication required."
 }
 ```
 
 Status Code: **403 Forbidden**
 
-Description: The request is understood by the server, but authorization is
-refused because the user lacks sufficient rights to access the resource.
+Description: Description: Only users with admin privileges are allowed to view
+or manage appointments that belong to other clients. Regular users are
+restricted to viewing and managing only their own appointments.
 
 ```
 {
-  "error": "You have permission to view only your own appointments."
+    "message": "You have permission to view only your own appointments."
 }
 ```
 
@@ -1104,7 +1122,7 @@ Description: The server cannot find the specified appointments for this client.
 
 ```
 {
-  "message": "No appointments found for this client."
+    "message": "No appointments found for this client."
 }
 ```
 
@@ -1115,13 +1133,7 @@ request.
 
 ```
 {
-  "error": "Failed to retrieve client appointments."
-}
-```
-
-```
-{
-  "error": "An error occurred while retrieving the client's appointment."
+    "message": "Failed to retrieve client appointments."
 }
 ```
 
@@ -1134,9 +1146,9 @@ Endpoint
   an existing appointment.
 - Authentication: Authentication is required for this endpoint.
 
-**Request Body**
+**Request Parameter**
 
-The request body should contain the following parameter:
+The request should include the following path parameter:
 
 - appointmentTime: parameters to specify the changes to the appointment.
 
@@ -1163,13 +1175,13 @@ changes.
 
 ```
 {
-  "message": "Appointment updated successfully.",
-  "appointment": {
-        "appointmentId": 456,
-        "clientId": 1,
-        "doctorId": 2,
-        "appointmentTime": "2024-08-15 14:30:00",
-        "appointmentStatus": "SCHEDULED"
+    "message": "Appointment updated successfully.",
+    "data": {
+          "appointmentId": 456,
+          "clientId": 1,
+          "doctorId": 2,
+          "appointmentTime": "2024-08-15 14:30:00",
+          "appointmentStatus": "SCHEDULED"
     }
 }
 ```
@@ -1181,7 +1193,7 @@ parameter.
 
 ```
 {
-  "error": "Invalid appointment ID."
+    "message": "Invalid appointment ID."
 }
 ```
 
@@ -1190,19 +1202,33 @@ Ensure the date is correctly formatted.
 
 ```
 {
-  "error": "Invalid appointment time. Please choose a future date and time."
+    "message": "Invalid appointment time. Please choose a future date and time."
+}
+```
+
+Description: The client is attempting to schedule an appointment at a time that
+is not available.
+
+```
+{
+    "message": "The selected appointment time is not available."
 }
 ```
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials or the provided
-token is invalid. Therefore, the server refuses to respond to the request.
-Ensure that the correct authentication token is provided in the request header.
+Description: The request lacks proper authentication credentials, or the
+provided token is invalid. Ensure that the correct authentication token, and
+client ID are provided.
 
 ```
 {
-  "error": "Authentication failed: Missing client ID."
+    "message": "Authentication failed: Missing client ID."
+}
+```
+```
+{
+    "message": "Authentication required."
 }
 ```
 
@@ -1213,17 +1239,17 @@ refused because the user lacks sufficient rights to access the resource.
 
 ```
 {
-  "error": "You do not have permission to update this appointment."
+    "message": "You do not have permission to update this appointment."
 }
 ```
 
 Status Code: **404 Not Found**
 
-Description: The server cannot find the specified appointment for this client.
+Description: The server cannot find the specified appointment with this ID.
 
 ```
 {
-  "error": "Appointment doesn't exist."
+    "message": "Appointment doesn't exist."
 }
 ```
 
@@ -1234,13 +1260,7 @@ request.
 
 ```
 {
-  "error": "Failed to update appointment."
-}
-```
-
-```
-{
-  "error": "An error occurred while updating the client's appointment."
+    "message": "Failed to update appointment."
 }
 ```
 
@@ -1252,6 +1272,12 @@ Endpoint
 - Description: This endpoint allows authenticated clients to delete a specific
   appointment associated with a client.
 - Authentication: Authentication is required for this endpoint.
+
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- appointmentId: The unique identifier of the appointment.
 
 **Example Request**
 
@@ -1270,11 +1296,19 @@ curl -X DELETE http://localhost:8080/api/v1/appointments/client-appointment/12 \
 
 Status Code: **200 OK**
 
-Description: The server successfully deleted the appointment.
+Description: The server successfully deleted or canceled the appointment.
 
+For ADMIN:
 ```
 {
-  "message": "Appointment deleted successfully."
+    "message": "Appointment deleted successfully."
+}
+```
+
+For PATIENT:
+```
+{
+    "message": "Appointment canceled successfully."
 }
 ```
 
@@ -1285,19 +1319,24 @@ parameter.
 
 ```
 {
-  "error": "Invalid appointment ID."
+    "message": "Invalid appointment ID."
 }
 ```
 
 Status Code: **401 Unauthorized**
 
-Description: The request lacks proper authentication credentials or the provided
-token is invalid. Therefore, the server refuses to respond to the request.
-Ensure that the correct authentication token is provided in the request header.
+Description: The request lacks proper authentication credentials, or the
+provided token is invalid. Ensure that the correct authentication token, and
+client ID are provided.
 
 ```
 {
-  "error": "Authentication failed: Missing client ID."
+    "message": "Authentication failed: Missing client ID."
+}
+```
+```
+{
+    "message": "Authentication required."
 }
 ```
 
@@ -1308,17 +1347,17 @@ refused because the user lacks sufficient rights to access the resource.
 
 ```
 {
-  "error": "You do not have permission to delete this appointment."
+    "message": "You do not have permission to delete this appointment."
 }
 ```
 
 Status Code: **404 Not Found**
 
-Description: The server cannot find the specified appointment for this client.
+Description: The server cannot find the specified appointment with this ID.
 
 ```
 {
-  "error": "Appointment not found."
+    "message": "Appointment not found."
 }
 ```
 
@@ -1329,13 +1368,7 @@ request.
 
 ```
 {
-  "error": "Failed to delete appointment."
-}
-```
-
-```
-{
-  "error": "An error occurred while deleting the client's appointment."
+    "message": "Failed to delete appointment."
 }
 ```
 
@@ -1356,13 +1389,19 @@ Information about schedules.
 Predefined list of days of the week for the doctor's schedule: 'MONDAY',
 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'.
 
-#### 3. Retrieve schedules for a specific doctor
+#### 2. Retrieve schedules for a specific doctor
 
 Endpoint
 
 - URL Path: **_/api/v1/schedules/doctor-schedule/:doctorId_**
 - Description: This endpoint retrieves all schedules for a specific doctor.
 - Authentication: No authentication required for this endpoint.
+
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- doctorId: The unique identifier of the doctor.
 
 **Example Request**
 
@@ -1384,34 +1423,29 @@ Description: The schedules are successfully retrieved.
 
 ```
 {
-    "doctorId": 123,
-    "schedules": [
-        {
-            "scheduleDay": "MONDAY",
-            "startTime": "14:00:00",
-            "endTime": "17:00:00",
-            "scheduleId": 3
-        },
-        ...
-    ]
+    "message": "Doctor schedules retrieved successfully.",
+    "data": {
+        "doctorId": 123,
+        "schedules": [
+            {
+                "scheduleDay": "MONDAY",
+                "startTime": "14:00:00",
+                "endTime": "17:00:00",
+                "scheduleId": 3
+            },
+            ...
+        ]
+    }
 }
 ```
 
 Status Code: **400 Bad Request**
 
-Description: The request is invalid or missing required parameters.
-
-```
-{
-	error: 'Invalid request: Missing required parameters. Please provide doctorId, scheduleDay, startTime, and endTime.',
-}
-```
-
 Description: The doctor ID provided is invalid.
 
 ```
 {
-	error: 'Invalid doctor ID.'
+	  "message": "Invalid doctor ID."
 }
 ```
 
@@ -1421,7 +1455,7 @@ Description: No schedules found for the specified doctor.
 
 ```
 {
-   "error": "No schedules found for this doctor."
+    "message": "No schedules found for this doctor."
 }
 ```
 
@@ -1432,23 +1466,23 @@ request.
 
 ```
 {
-  "error": "An error occurred while retrieving the schedule."
+    "message": "Failed to retrieve schedule."
 }
 ```
 
-```
-{
-  "error": "Failed to retrieve schedule."
-}
-```
-
-#### 4. Retrieve a schedule by ID
+#### 3. Retrieve a schedule by ID
 
 Endpoint
 
 - URL Path: **_/api/v1/schedules/:scheduleId_**
 - Description: This endpoint retrieves a specific schedule by its ID.
-- Authentication: Authentication: No authentication required for this endpoint.
+- Authentication: No authentication required for this endpoint.
+
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- scheduleId: The unique identifier of the schedule.
 
 **Example Request**
 
@@ -1470,29 +1504,24 @@ Description: The schedule is successfully retrieved.
 
 ```
 {
-    "doctorId": 1,
-    "scheduleDay": "MONDAY",
-    "startTime": "09:00:00",
-    "endTime": "13:00:00",
-    "scheduleId": 123
+    "message": "Schedule retrieved successfully.",
+    "data": {
+      "doctorId": 1,
+      "scheduleDay": "MONDAY",
+      "startTime": "09:00:00",
+      "endTime": "13:00:00",
+      "scheduleId": 123
+    }
 }
 ```
 
 Status Code: **400 Bad Request**
 
-Description: The request is invalid or missing required parameters.
-
-```
-{
-	error: 'Invalid request: Missing required parameters. Please provide doctorId, scheduleDay, startTime, and endTime.',
-}
-```
-
 Description: The schedule ID provided is invalid.
 
 ```
 {
-	error: 'Invalid schedule ID.'
+	  "message": "Invalid schedule ID."
 }
 ```
 
@@ -1502,7 +1531,7 @@ Description: The server cannot find the specified schedule.
 
 ```
 {
-   "error": "Schedule doesn't exist."
+    "message": "Schedule doesn't exist."
 }
 ```
 
@@ -1513,17 +1542,11 @@ request.
 
 ```
 {
-  "error": "An error occurred while retrieving the schedule."
+    "message": "Failed to retrieve schedule."
 }
 ```
 
-```
-{
-  "error": "Failed to retrieve schedule."
-}
-```
-
-#### 5. Create a new schedule for a doctor
+#### 4. Create a new schedule for a doctor
 
 Endpoint
 
@@ -1567,7 +1590,7 @@ Description: The schedule is successfully created.
 ```
 {
     "message": "Schedule created successfully.",
-    "scheduleDetails": {
+    "data": {
         "doctorId": 123,
         "scheduleDay": "MONDAY",
         "startTime": "09:00:00",
@@ -1583,7 +1606,7 @@ Description: The request is invalid or missing required parameters.
 
 ```
 {
-	error: 'Invalid request: Missing required parameters. Please provide doctorId, scheduleDay, startTime, and endTime.',
+	  "message": "All fields are required and must be in a valid format."
 }
 ```
 
@@ -1591,7 +1614,44 @@ Description: The provided doctor ID is invalid (not a number).
 
 ```
 {
-	error: 'Invalid doctor ID.'
+	  "message": "Invalid doctor ID."
+}
+```
+
+Description: The provided schedule day is invalid as it is not part of the
+allowed enum list.
+
+```
+{
+	  "message": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
+}
+```
+
+Status Code: **401 Unauthorized**
+
+Description: The request lacks proper authentication credentials, or the
+provided token is invalid. Ensure that the correct authentication token, and
+client ID are provided.
+
+```
+{
+    "message": "Authentication failed: Missing client ID."
+}
+```
+```
+{
+    "message": "Authentication required."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The user does not have admin privileges required to perform this
+operation.
+
+```
+{ 
+    "message": "Access denied. Admin privileges required."
 }
 ```
 
@@ -1600,8 +1660,8 @@ Status Code: **404 Not Found**
 Description: The server cannot find the specified doctor.
 
 ```
-{
-   "error": "Doctor not found."
+{ 
+    "message": "Doctor not found." 
 }
 ```
 
@@ -1611,18 +1671,12 @@ Description: An unexpected error occurred on the server while processing the
 request.
 
 ```
-{
-  "error": "An error occurred while creating the schedule."
+{ 
+    "message": "Failed to create schedule." 
 }
 ```
 
-```
-{
-  "error": "Failed to insert schedule."
-}
-```
-
-#### 6. Delete a specific schedule
+#### 5. Delete a specific schedule
 
 Endpoint
 
@@ -1634,6 +1688,12 @@ Endpoint
 - Authentication and Authorization: This endpoint requires admin-level
   authentication. Only users with admin privileges are allowed to delete
   schedule records.
+
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- sceduleId: The unique identifier of the schedule.
 
 **Example Request**
 
@@ -1654,8 +1714,8 @@ Status Code: **200 OK**
 Description: The server successfully deletes the schedule.
 
 ```
-{
-  "message": "Schedule deleted successfully."
+{ 
+    "message": "Schedule deleted successfully." 
 }
 ```
 
@@ -1664,8 +1724,8 @@ Status Code: **400 Bad Request**
 Description: The provided schedule ID is invalid.
 
 ```
-{
-  "error": "Invalid schedule ID."
+{ 
+    "message": "Invalid schedule ID."
 }
 ```
 
@@ -1674,8 +1734,8 @@ Status Code: **404 Not Found**
 Description: No schedule with the specified ID exists in the database.
 
 ```
-{
-  "error": "Schedule not found."
+{ 
+    "message": "Schedule not found." 
 }
 ```
 
@@ -1685,8 +1745,8 @@ Description: The user does not have admin privileges required to perform this
 operation.
 
 ```
-{
-  "error": "Access denied. Admin privileges required."
+{ 
+    "message": "Access denied. Admin privileges required."
 }
 ```
 
@@ -1696,18 +1756,12 @@ Description: An unexpected error occurred on the server while processing the
 request.
 
 ```
-{
-  "error": "An error occurred while deleting the schedule."
+{ 
+    "message": "Failed to delete schedule." 
 }
 ```
 
-```
-{
-  "error": "Failed to delete schedule."
-}
-```
-
-#### 7. Update a specific schedule
+#### 6. Update a specific schedule
 
 Endpoint
 
@@ -1720,6 +1774,12 @@ Endpoint
   authentication. Only users with admin privileges are allowed to update
   schedule records.
 
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- scheduleId: The unique identifier of the schedule.
+
 **Example Request**
 
 Description: A `PUT` request to update a specific schedule associated with a
@@ -1731,11 +1791,7 @@ and the updated schedule information in the request body.
 curl -X PUT http://localhost:8080/api/v1/schedules/123 \
 -H "Authorization: Bearer <your-jwt-token>" \
 -H "Content-Type: application/json" \
--d '{
-  "scheduleDay": "FRIDAY",
-  "startTime": "13:00:00",
-  "endTime": "17:00:00",
-}'
+-d '{ "scheduleDay": "FRIDAY", "startTime": "13:00:00", "endTime": "17:00:00", }'
 
 ```
 
@@ -1748,7 +1804,7 @@ Description: The server successfully updates the schedule.
 ```
 {
     "message": "Schedule updated successfully.",
-    "schedule": {
+    "data": {
         "doctorId": 1,
         "scheduleDay": "FRIDAY",
         "startTime": "13:00:00",
@@ -1763,32 +1819,33 @@ Status Code: **400 Bad Request**
 Description: The provided schedule ID is invalid.
 
 ```
-{
-  "error": "Invalid schedule ID."
+{ 
+    "message": "Invalid schedule ID." 
 }
 ```
 
-Description: No valid update data is provided.
+Description: The request did not include any valid data for updating the schedule. Ensure that at least one field (scheduleDay, startTime, or endTime) is provided and contains a valid value.
 
 ```
-{
-  "error": "No valid fields to update."
+{ 
+    "message": "No changes applied to the schedule." 
 }
 ```
 
-Description: No changes applied.
+Description: The request did not include any valid fields for updating the schedule. All fields provided in the request were either undefined or missing, resulting in no changes being applied to the schedule.
 
 ```
-{
-  "error": "No changes applied to the schedule."
+{ 
+    "message": "No changes applied to the schedule." 
 }
 ```
 
-Description: The request body contains invalid scheduleDay data.
+Description: The provided schedule day is invalid as it is not part of the
+allowed enum list.
 
 ```
 {
-  "error": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
+	  "message": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
 }
 ```
 
@@ -1797,8 +1854,8 @@ Status Code: **404 Not Found**
 Description: No schedule with the specified ID exists in the database.
 
 ```
-{
-  "error": "Schedule not found."
+{ 
+    "message": "Schedule not found."
 }
 ```
 
@@ -1808,8 +1865,8 @@ Description: The user does not have admin privileges required to perform this
 operation.
 
 ```
-{
-  "error": "Access denied. Admin privileges required."
+{ 
+    "message": "Access denied. Admin privileges required." 
 }
 ```
 
@@ -1819,8 +1876,8 @@ Description: An unexpected error occurred on the server while processing the
 request.
 
 ```
-{
-  "error": "Failed to update schedule."
+{ 
+    "message": "Failed to update schedule." 
 }
 ```
 
@@ -1829,19 +1886,25 @@ request.
 1. Clone current repository into a your directory:
 
 ```
+
 git clone https://github.com/MartaKliuchnik/hospital-appointment-scheduler.git
+
 ```
 
 2. Switch to project folder:
 
 ```
+
 cd hospital-appointment-scheduler
+
 ```
 
 3. Install the dependencies:
 
 ```
+
 npm install
+
 ```
 
 ## Running in Docker Container
@@ -1852,12 +1915,17 @@ on your system. Use the following commands:
 1. Build and run the application:
 
 ```
+
 docker compose up
+
 ```
 
 2. Stop the application
 
 ```
+
 docker compose down
+
+```
 
 ```

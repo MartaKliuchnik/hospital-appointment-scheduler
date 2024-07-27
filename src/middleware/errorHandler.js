@@ -38,6 +38,7 @@ const errorHandler = (err, req, res, next) => {
 		);
 	}
 
+	console.error('Unexpected Error:', err);
 	return sendErrorResponse(
 		res,
 		500,

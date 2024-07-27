@@ -43,7 +43,7 @@ module.exports = class Schedule {
 			return this.scheduleId;
 		} catch (error) {
 			console.error('Error inserting schedule:', error);
-			throw new DatabaseError('Failed to insert schedule.', error);
+			throw new DatabaseError('Failed to create schedule.', error);
 		}
 	}
 
@@ -90,7 +90,7 @@ module.exports = class Schedule {
 			return schedules.map(Schedule.fromDatabaseResult);
 		} catch (error) {
 			console.error('Error retrieving schedules by doctor ID:', error);
-			throw new DatabaseError('Failed to retrieve schedules.', error);
+			throw new DatabaseError('Failed to retrieve schedule.', error);
 		}
 	}
 

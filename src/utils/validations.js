@@ -64,7 +64,9 @@ const validateUserRoleUpdate = async (clientId, newRole) => {
 
 	// Check for missing parameters and valid role
 	if (!newRole || !Object.values(Role).includes(newRole)) {
-		throw new ValidationError('Invalid role. Please provide a valid role from the allowed list.');
+		throw new ValidationError(
+			'Invalid role. Please provide a valid role from the allowed list.'
+		);
 	}
 
 	// Check if the new role is different from the current role
@@ -126,7 +128,7 @@ const validateClientAppointmentAccess = (clientId, currentClient, role) => {
 	}
 };
 
-const validateAppointmentDeletion = async (appointmentId, clientId) => {
+const validateAppointmentDeletion = async (appointmentId, clientId, role) => {
 	// Check authentication
 	if (!clientId) {
 		throw new AuthenticationError('Authentication failed: Missing client ID.');
@@ -144,7 +146,7 @@ const validateAppointmentDeletion = async (appointmentId, clientId) => {
 	}
 
 	// Check if the appointment belongs to the client
-	if (appointment.clientId !== clientId) {
+	if (appointment.clientId !== clientId && role !== 'ADMIN') {
 		throw new AuthorizationError(
 			'You do not have permission to delete this appointment.'
 		);
@@ -223,6 +225,7 @@ const validateCreatingScheduleInput = (
 		);
 	}
 
+	// Check if the scheduleDay is valid
 	if (!Object.keys(WeekDay).includes(scheduleDay)) {
 		throw new ValidationError(
 			'Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list.'
