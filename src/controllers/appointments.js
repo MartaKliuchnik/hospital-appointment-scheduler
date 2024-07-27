@@ -20,6 +20,8 @@ const {
 	sendSuccessResponse,
 	sendErrorResponse,
 } = require('../utils/responseHandlers');
+const Status = require('../enums/Status');
+const { pool } = require('../utils/database');
 
 /**
  * Serve the schedule page.
@@ -136,14 +138,33 @@ exports.deleteAppointment = async (req, res, next) => {
 	try {
 		await validateAppointmentDeletion(appointmentId, clientId, clientRole);
 
-		await Appointment.deleteAppointmentById(appointmentId, clientRole);
-		sendSuccessResponse(
-			res,
-			200,
-			clientRole === 'ADMIN'
-				? 'Appointment deleted successfully.'
-				: 'Appointment canceled successfully.'
-		);
+		const connection = await pool.getConnection();
+		await connection.beginTransaction();
+
+		try {
+			if (clientRole === 'ADMIN') {
+				await Appointment.softDeleteAppointment(appointmentId, connection);
+			} else {
+				await Appointment.updateAppointmentStatus(
+					appointmentId,
+					Status.CANCELED
+				);
+			}
+
+			await connection.commit();
+			sendSuccessResponse(
+				res,
+				200,
+				clientRole === 'ADMIN'
+					? 'Appointment soft deleted successfully.'
+					: 'Appointment canceled successfully.'
+			);
+		} catch (error) {
+			await connection.rollback();
+			throw error;
+		} finally {
+			connection.release();
+		}
 	} catch (error) {
 		if (error instanceof AuthenticationError) {
 			sendErrorResponse(res, 401, error.message);
@@ -154,7 +175,7 @@ exports.deleteAppointment = async (req, res, next) => {
 		} else if (error instanceof NotFoundError) {
 			sendErrorResponse(res, 404, error.message);
 		} else {
-			next(new DatabaseError('Failed to delete appointment.', error));
+			next(new DatabaseError('Failed to delete/cancel appointment.', error));
 		}
 	}
 };

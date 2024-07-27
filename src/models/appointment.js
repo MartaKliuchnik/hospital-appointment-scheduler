@@ -13,11 +13,12 @@ module.exports = class Appointment {
 	 * @param {number} doctorId - The ID of the doctor.
 	 * @param {string} appointmentTime - The time for appointment.
 	 */
-	constructor(clientId, doctorId, appointmentTime) {
+	constructor(clientId, doctorId, appointmentTime, deletedAt = null) {
 		this.clientId = clientId;
 		this.doctorId = doctorId;
 		this.appointmentTime = appointmentTime;
 		this.appointmentStatus = Status.SCHEDULED;
+		this.deletedAt = deletedAt;
 	}
 
 	/**
@@ -39,7 +40,6 @@ module.exports = class Appointment {
 				appointmentTime,
 				connection
 			);
-
 			if (!isAvailable) {
 				throw new ValidationError(
 					'The selected appointment time is not available.'
@@ -145,51 +145,53 @@ module.exports = class Appointment {
 	}
 
 	/**
-	 * Delete or cancel an appointment based on client role.
-	 * @param {number} appointmentId - The ID of the appointment.
-	 * @param {string} clientRole - The role of the client.
-	 * @returns {Promise<void>}
+	 * Soft deletes an appointment by marking it as deleted in the database.
+	 * @param {number} appointmentId - The ID of the appointment to be soft deleted.
+	 * @param {object} connection - The database connection object used for executing the query.
+	 * @returns {Promise<void>} - A promise that resolves when the operation is complete.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
-	static async deleteAppointmentById(appointmentId, clientRole) {
-		const connection = await pool.getConnection();
+	static async softDeleteAppointment(appointmentId, connection) {
+		const querySoftDeleteAppointment =
+			'UPDATE appointment SET deletedAt = NOW() WHERE appointmentId = ?';
 
 		try {
-			await connection.beginTransaction();
+			const [result] = await connection.execute(querySoftDeleteAppointment, [
+				appointmentId,
+			]);
 
-			if (clientRole === 'ADMIN') {
-				const queryDeleteAppointment =
-					'DELETE FROM appointment WHERE appointmentId = ?';
-
-				const [result] = await connection.execute(queryDeleteAppointment, [
-					appointmentId,
-				]);
-
-				if (result.affectedRows === 0) {
-					throw new NotFoundError('Appointment not found.');
-				}
-			} else {
-				const queryCancelAppointment = `
-                UPDATE appointment 
-                SET appointmentStatus = ? 
-                WHERE appointmentId = ?`;
-
-				const [result] = await connection.execute(queryCancelAppointment, [
-					Status.CANCELED,
-					appointmentId,
-				]);
-
-				if (result.affectedRows === 0) {
-					throw new NotFoundError('Appointment not found.');
-				}
+			if (result.affectedRows === 0) {
+				throw new NotFoundError('Appointment not found.');
 			}
-			await connection.commit();
 		} catch (error) {
-			await connection.rollback();
-			console.error('Error deleting appointment:', error);
-			throw error;
-		} finally {
-			connection.release();
+			console.error('Error soft deleting appointment:', error);
+			throw new DatabaseError('Failed to soft delete appointment.', error);
+		}
+	}
+
+	/**
+	 * Updates the status of an appointment in the database.
+	 * @param {number} appointmentId - The ID of the appointment to be updated.
+	 * @param {string} newStatus - The new status to set for the appointment. The value must be one of the valid status options.
+	 * @returns {Promise<void>} - A promise that resolves when the status update operation is complete.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	static async updateAppointmentStatus(appointmentId, newStatus) {
+		const queryUpdateAppointmentStatus =
+			'UPDATE appointment SET appointmentStatus = ? WHERE appointmentId = ?';
+
+		try {
+			const [result] = await pool.execute(queryUpdateAppointmentStatus, [
+				newStatus,
+				appointmentId,
+			]);
+
+			if (result.affectedRows === 0) {
+				throw new NotFoundError('Appointment not found.');
+			}
+		} catch (error) {
+			console.error('Error updating appointment status:', error);
+			throw new DatabaseError('Failed to update appointment status.', error);
 		}
 	}
 
@@ -256,13 +258,14 @@ module.exports = class Appointment {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getAppointmentsByDoctorAndDate(doctorId, date) {
-		const queryGetAppointments =
-			'SELECT * FROM appointment WHERE doctorId = ? AND DATE(appointmentTime) = DATE(?)';
+		const queryGetAppointments = `SELECT * FROM appointment WHERE doctorId = ? AND DATE(appointmentTime) = DATE(?) AND appointmentStatus NOT IN (?, ?)
+			AND deletedAt IS NULL `;
 
 		try {
 			const [results] = await pool.execute(queryGetAppointments, [
 				doctorId,
 				date,
+				Status.CANCELED,
 			]);
 
 			return results;
@@ -293,6 +296,8 @@ module.exports = class Appointment {
 			WHERE doctorId = ? 
 			AND DATE(appointmentTime) = DATE(?)
 			AND ABS(TIMESTAMPDIFF(MINUTE, appointmentTime, ?)) < 20
+			AND appointmentStatus NOT IN (?, ?)
+			AND deletedAt IS NULL
 			FOR UPDATE`;
 
 		try {
@@ -300,6 +305,7 @@ module.exports = class Appointment {
 				doctorId,
 				date,
 				appointmentTimeString,
+				Status.CANCELED,
 			]);
 
 			if (results[0].count > 0) {

@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS appointment (
     doctorId INT NOT NULL,
     appointmentTime DATETIME NOT NULL,
     appointmentStatus ENUM('SCHEDULED', 'CANCELED') NOT NULL,
+    deletedAt DATETIME DEFAULT NULL,
     FOREIGN KEY (doctorId) REFERENCES doctor(doctorId),
     FOREIGN KEY (clientId) REFERENCES client(clientId)
 );

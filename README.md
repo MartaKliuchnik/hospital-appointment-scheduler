@@ -84,7 +84,7 @@ endpoint path. For instance, to access the register page:
 
 ## Entity Relationship Diagram
 
-![alt text](<Hospital Appointment Scheduler.drawio.png>)
+![alt text](<HospitalAppointmentScheduler.jpg>)
 
 ## API Documentation
 
