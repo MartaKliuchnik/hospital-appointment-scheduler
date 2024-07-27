@@ -2,7 +2,7 @@ const Role = require('../enums/Role');
 const { comparePassword } = require('../utils/auth');
 const { pool } = require('../utils/database');
 const { createJWT } = require('../utils/jwt');
-const { DatabaseError } = require('../utils/customErrors');
+const { DatabaseError, NotFoundError } = require('../utils/customErrors');
 
 module.exports = class Client {
 	/**
@@ -244,6 +244,31 @@ module.exports = class Client {
 		} catch (error) {
 			console.error('Error finding client by phone number:', error);
 			throw new DatabaseError('Failed to find client by phone number');
+		}
+	}
+
+	/**
+	 * Deletes the specific client from the database.
+	 * @param {number} clientId - The ID of the client to be deleted.
+	 * @param {object} connection - The database connection object used for executing the query.
+	 * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	static async delete(clientId, connection) {
+		const query = 'DELETE FROM client WHERE clientId = ?';
+
+		try {
+			const [result] = await connection.execute(query, [clientId]);
+			if (result.affectedRows === 0) {
+				throw new NotFoundError('Client not found.');
+			}
+		} catch (error) {
+			console.error('Error deleting user:', error);
+			if (error instanceof NotFoundError) {
+				throw error; 
+			} else {
+				throw new DatabaseError('Failed to delete client.', error); 
+			}
 		}
 	}
 };

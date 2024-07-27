@@ -13,6 +13,7 @@
    - Client data model.
    - Endpoint **/api/v1/auth/register**
    - Endpoint **/api/v1/auth/login**
+   - Endpoint **/api/v1/clients/:clientId**
 
    5.2 [Doctor Management](#doctor-management)
 
@@ -326,6 +327,94 @@ from processing the request.
 ```
 {
     "message": "An unexpected error occurred during login."
+}
+```
+
+#### 4. Delete a specific client
+
+Endpoint
+
+- URL Path: **_/api/v1/clients/:clientId_**
+- Description: This endpoint allows an admin to delete a specific client from the database based on the provided client ID. The admin sends a DELETE request with the client ID as a path parameter. The server processes this request to remove the client record.
+- Authentication and Authorization:  This endpoint requires admin-level authentication. Only users with admin privileges can perform this operation.
+
+**Request Parameter**
+
+The request must include the following path parameter:
+
+- clientId: The unique identifier of the client to be deleted.
+
+**Example Request**
+
+Description: A `DELETE` request to remove a specific client identified by clientId. This request must include an authorization token for an admin user.
+
+```
+
+curl -X DELETE http://localhost:8080/api/v1/clientId/123 \
+-H "Authorization: Bearer <your-jwt-token>" \
+
+```
+
+**Example Responses**
+
+Status Code: **200 OK**
+
+Description: The client was successfully deleted.
+
+```
+{ 
+    "message": "Client deleted successfully." 
+}
+```
+
+Status Code: **400 Bad Request**
+
+Description: The provided client ID is invalid or missing.
+
+```
+{ 
+    "message": "Invalid client ID."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The user does not have the required admin privileges to perform this operation.
+
+```
+{ 
+    "message": "Access denied. Admin privileges required."
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: No client with the specified ID exists in the database.
+
+```
+{ 
+    "message": "Client not found." 
+}
+```
+
+Status code: **409 Conflict**
+
+Description:  The request could not be processed because the client has existing appointments, which prevents deletion.
+
+```
+{
+    "message": "This client has appointment(s). Deletion is forbidden."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the
+request.
+
+```
+{ 
+    "message": "Failed to delete client." 
 }
 ```
 

@@ -16,4 +16,15 @@ router.put(
 	clietnsController.updateUserRole
 );
 
+/**
+ * @route DELETE /api/v1/clients/:clientId
+ * @description Delete the specified user
+ * @access Private
+ */
+router.delete(
+	'/:clientId',
+	checkPermission(Permission.DELETE_CLIENT),
+	clietnsController.deleteClient
+);
+
 module.exports = router;

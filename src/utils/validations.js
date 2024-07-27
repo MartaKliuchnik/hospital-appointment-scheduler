@@ -238,6 +238,21 @@ const validateCreatingScheduleInput = (
 	}
 };
 
+const validateClientDeletion = async (clientId) => {
+	// Check if the clientId is provided and is a valid number
+	if (!clientId || isNaN(clientId)) {
+		throw new ValidationError('Invalid client ID.');
+	}
+
+	const appointments = await Appointment.getAppointmentsByClientId(clientId);
+	// Check if the client has appointmen(s)
+	if (appointments.appointments && appointments.appointments.length > 0) {
+		throw new ConflictError(
+			'This client has appointment(s). Deletion is forbidden.'
+		);
+	}
+};
+
 module.exports = {
 	validateLoginInput,
 	validateUserRoleUpdate,
@@ -250,4 +265,5 @@ module.exports = {
 	validateScheduleId,
 	validateClientId,
 	validateCreatingScheduleInput,
+	validateClientDeletion,
 };

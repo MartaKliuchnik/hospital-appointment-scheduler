@@ -30,6 +30,8 @@ const Permission = Object.freeze({
 	UPDATE_SCHEDULE: 'UPDATE_SCHEDULE',
 	/** Permission to delete specified schedule */
 	DELETE_SCHEDULE: 'DELETE_SCHEDULE',
+	/** Permission to delete client entries */
+	DELETE_CLIENT: 'DELETE_CLIENT',
 });
 
 module.exports = Permission;
