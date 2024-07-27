@@ -11,7 +11,8 @@ module.exports = class Appointment {
 	/**
 	 * @param {number} clientId - The ID of the client.
 	 * @param {number} doctorId - The ID of the doctor.
-	 * @param {string} appointmentTime - The time for appointment.
+	 * @param {string} appointmentTime - The scheduled time for the appointment, in a format compatible with the database (e.g., 'YYYY-MM-DD HH:MM:SS').
+	 * @param {Date|null} [deletedAt=null] - The timestamp indicating when the appointment was deleted, if applicable. Defaults to null for non-deleted appointments.
 	 */
 	constructor(clientId, doctorId, appointmentTime, deletedAt = null) {
 		this.clientId = clientId;
@@ -127,7 +128,7 @@ module.exports = class Appointment {
 	 */
 	static async getAppointmentsByClientId(clientId) {
 		const querySelectClientAppointments =
-			'SELECT * FROM appointment WHERE clientId = ?';
+			'SELECT * FROM appointment WHERE clientId = ? AND deletedAt IS NULL';
 
 		try {
 			const [results] = await pool.execute(querySelectClientAppointments, [
@@ -258,7 +259,7 @@ module.exports = class Appointment {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getAppointmentsByDoctorAndDate(doctorId, date) {
-		const queryGetAppointments = `SELECT * FROM appointment WHERE doctorId = ? AND DATE(appointmentTime) = DATE(?) AND appointmentStatus NOT IN (?, ?)
+		const queryGetAppointments = `SELECT * FROM appointment WHERE doctorId = ? AND DATE(appointmentTime) = DATE(?) AND appointmentStatus NOT IN (?)
 			AND deletedAt IS NULL `;
 
 		try {
@@ -296,7 +297,7 @@ module.exports = class Appointment {
 			WHERE doctorId = ? 
 			AND DATE(appointmentTime) = DATE(?)
 			AND ABS(TIMESTAMPDIFF(MINUTE, appointmentTime, ?)) < 20
-			AND appointmentStatus NOT IN (?, ?)
+			AND appointmentStatus NOT IN (?)
 			AND deletedAt IS NULL
 			FOR UPDATE`;
 

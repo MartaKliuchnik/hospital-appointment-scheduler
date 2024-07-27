@@ -15,6 +15,7 @@ const {
 	validateClientAppointmentAccess,
 	validateAppointmentDeletion,
 	validateAppointmentUpdate,
+	validateClientId,
 } = require('../utils/validations');
 const {
 	sendSuccessResponse,
@@ -90,6 +91,7 @@ exports.getClientAppointments = async (req, res, next) => {
 
 	try {
 		validateClientAppointmentAccess(clientId, currentClient, req.client.role);
+		await validateClientId(clientId);
 
 		const result = await Appointment.getAppointmentsByClientId(clientId);
 
@@ -181,7 +183,7 @@ exports.deleteAppointment = async (req, res, next) => {
 };
 
 /**
- * Update an appointment for a specific ID.
+ * Update an appointmentTime for a specific appointment.
  * @param {object} req - The request object.
  * @param {object} res - The response object.
  * @param {function} next - The next middleware function.

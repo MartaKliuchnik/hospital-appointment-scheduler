@@ -208,7 +208,7 @@ const validateClientId = async (clientId) => {
 	// If we have a clientId
 	const client = await Client.findById(clientId);
 	if (!client) {
-		return res.status(404).json({ error: 'Client not found.' });
+		throw new ValidationError('Client not found.');
 	}
 };
 

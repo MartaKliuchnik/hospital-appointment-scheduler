@@ -84,7 +84,7 @@ endpoint path. For instance, to access the register page:
 
 ## Entity Relationship Diagram
 
-![alt text](<HospitalAppointmentScheduler.jpg>)
+![alt text](HospitalAppointmentScheduler.drawio.png)
 
 ## API Documentation
 
@@ -895,13 +895,14 @@ request.
 
 Information about appointments.
 
-| Key | Column Name       | Data Type | Description                                                   |
-| :-- | :---------------- | :-------- | :------------------------------------------------------------ |
-| PK  | appointmentId     | int       | Primary key for the Appointment record                        |
-| FK  | clientId          | int       | Foreign key referencing the clientId in the Appointment table |
-| FK  | doctorId          | int       | Foreign key referencing the doctorId in the Appointment table |
-|     | appointmentTime   | datetime  | Date and time of the appointment                              |
-|     | appointmentStatus | enum      | Status of the appointment                                     |
+| Key | Column Name       | Data Type | Description                                                                     |
+| :-- | :---------------- | :-------- | :------------------------------------------------------------------------------ |
+| PK  | appointmentId     | int       | Primary key for the Appointment record                                          |
+| FK  | clientId          | int       | Foreign key referencing the clientId in the Appointment table                   |
+| FK  | doctorId          | int       | Foreign key referencing the doctorId in the Appointment table                   |
+|     | appointmentTime   | datetime  | Date and time of the appointment                                                |
+|     | appointmentStatus | enum      | Status of the appointment (e.g., 'SCHEDULED', 'CANCELED')                       |
+|     | deleteAt          | datetime  | Date and time when the appointment was soft deleted by an admin (if applicable) |
 
 Predefined list of statuses for the appointment: 'SCHEDULED', 'CANCELED'.
 
@@ -950,7 +951,8 @@ Description: The appointment is successfully created.
         "clientId": 1,
         "doctorId": 1,
         "appointmentTime": "2024-07-29 10:00:00",
-        "appointmentStatus": "SCHEDULED"
+        "appointmentStatus": "SCHEDULED",
+        "deletedAt": null
     }
 }
 ```
@@ -1047,8 +1049,7 @@ The request should include the following path parameter:
 
 Description: A `GET` request to retrieve all appointments for the client with
 ID 1. It includes an Authorization header with a bearer token for
-authentication.
-
+authentication. This query will retrieve all appointments for the given clientId that have not been marked as deleted (i.e., where deletedAt is NULL).
 ```
 
 curl -X GET http://localhost:8080/api/v1/appointments/clients/2 \
@@ -1074,7 +1075,8 @@ response body.
           "appointmentId": 4,
           "doctorId": 3,
           "appointmentTime": "2024-08-15 14:30:00",
-          "appointmentStatus": "SCHEDULED"
+          "appointmentStatus": "SCHEDULED",
+          "deletedAt": null
         },
         ...
       ]
@@ -1091,6 +1093,13 @@ Description: The request is invalid or missing required client ID parameter.
     "message": "Invalid client ID."
 }
 ```
+
+Description: The server cannot find the specified client.
+
+```
+{
+    "message": "Client not found."
+}
 
 Status Code: **401 Unauthorized**
 
@@ -1181,7 +1190,8 @@ changes.
           "clientId": 1,
           "doctorId": 2,
           "appointmentTime": "2024-08-15 14:30:00",
-          "appointmentStatus": "SCHEDULED"
+          "appointmentStatus": "SCHEDULED",
+          "deletedAt": null
     }
 }
 ```
@@ -1269,8 +1279,7 @@ request.
 Endpoint
 
 - URL Path: **_/api/v1/client/appointments/client-appointment/:appointmentId_**
-- Description: This endpoint allows authenticated clients to delete a specific
-  appointment associated with a client.
+- Description: This endpoint allows authenticated clients to delete or cancel a specific appointment associated with a client, depending on their role (admin or patient).
 - Authentication: Authentication is required for this endpoint.
 
 **Request Parameter**
@@ -1281,9 +1290,7 @@ The request should include the following path parameter:
 
 **Example Request**
 
-Description: A `DELETE` request to delete a specific appointment associated with
-a client. It includes authentication token in the request header for
-authorization.
+Description: A DELETE request to delete or cancel (depending on the client's role) a specific appointment associated with a client. It includes an authentication token in the request header for authorization.
 
 ```
 
@@ -1298,7 +1305,8 @@ Status Code: **200 OK**
 
 Description: The server successfully deleted or canceled the appointment.
 
-For ADMIN:
+For ADMIN: 
+This process includes setting the deletedAt timestamp for the appointment. After this step, the patient will not be able to see this appointment.
 ```
 {
     "message": "Appointment deleted successfully."
@@ -1306,6 +1314,7 @@ For ADMIN:
 ```
 
 For PATIENT:
+This process includes changing the appointment status to CANCELED, freeing up the time slot for other appointments.
 ```
 {
     "message": "Appointment canceled successfully."
