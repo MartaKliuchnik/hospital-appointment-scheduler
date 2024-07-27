@@ -126,14 +126,22 @@ module.exports = class Appointment {
 	 * @returns {Promise<Array>} - A promise that resolves to an array of appointments.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
-	static async getAppointmentsByClientId(clientId) {
-		const querySelectClientAppointments =
-			'SELECT * FROM appointment WHERE clientId = ? AND deletedAt IS NULL';
+	static async getAppointmentsByClientId(clientId, clientRole) {
+		const queryAllClientAppointments =
+			'SELECT * FROM appointment WHERE clientId = ? ORDER BY appointmentTime ASC';
 
+		const queryAvailableClientAppointments =
+			'SELECT * FROM appointment WHERE clientId = ? AND deletedAt IS NULL ORDER BY appointmentTime ASC';
+
+		let results;
 		try {
-			const [results] = await pool.execute(querySelectClientAppointments, [
-				clientId,
-			]);
+			if (clientRole === 'PATIENT') {
+				[results] = await pool.execute(queryAvailableClientAppointments, [
+					clientId,
+				]);
+			} else {
+				[results] = await pool.execute(queryAllClientAppointments, [clientId]);
+			}
 
 			return {
 				clientId: clientId,

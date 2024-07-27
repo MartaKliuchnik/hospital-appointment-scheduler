@@ -93,7 +93,10 @@ exports.getClientAppointments = async (req, res, next) => {
 		validateClientAppointmentAccess(clientId, currentClient, req.client.role);
 		await validateClientId(clientId);
 
-		const result = await Appointment.getAppointmentsByClientId(clientId);
+		const result = await Appointment.getAppointmentsByClientId(
+			clientId,
+			req.client.role
+		);
 
 		// Check if the appointments exist for this client
 		if (!result.appointments || result.appointments.length === 0) {

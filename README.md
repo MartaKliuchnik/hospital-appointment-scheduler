@@ -1036,7 +1036,7 @@ request.
 Endpoint
 
 - URL Path: **_/api/v1/appointments/clients/:clientId_**
-- Description: This endpoint retrieves all appointments for a specific client.
+- Description: This endpoint retrieves all appointments for a specific client. If the client role is 'PATIENT', it will only retrieve appointments that have not been marked as deleted (i.e., where deletedAt is NULL). For other roles, it retrieves all appointments. The appointments are sorted by appointmentTime in ascending order.
 - Authentication: Authentication is required for this endpoint.
 
 **Request Parameter**
@@ -1049,7 +1049,8 @@ The request should include the following path parameter:
 
 Description: A `GET` request to retrieve all appointments for the client with
 ID 1. It includes an Authorization header with a bearer token for
-authentication. This query will retrieve all appointments for the given clientId that have not been marked as deleted (i.e., where deletedAt is NULL).
+authentication. 
+
 ```
 
 curl -X GET http://localhost:8080/api/v1/appointments/clients/2 \
@@ -1061,9 +1062,7 @@ curl -X GET http://localhost:8080/api/v1/appointments/clients/2 \
 
 Status code: **200 OK**
 
-Description: The server successfully retrieved all appointments for the
-specified client and provided the list with all client appointments in the
-response body.
+Description: The server successfully retrieved all appointments for the specified client. For clients with the role 'PATIENT', only appointments that have not been marked as deleted are included. For other roles, all appointments are included. The appointments are sorted by appointmentTime in ascending order.
 
 ```
 {
