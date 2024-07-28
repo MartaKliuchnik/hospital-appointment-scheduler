@@ -129,17 +129,13 @@ The request body must be in JSON format and include the following fields:
 
 - firstName (string, required): The first name of the new user.
 - lastName (string, required): The last name of the new user.
-- phoneNumber: (string, required) - The user's phone number.
-- email: (string, required) - The email address for the new user. Must be a
-  valid email format.
-- password: (string, required) - The password for the new user. Should meet
-  security requirements such as minimum length, inclusion of special characters.
+- phoneNumber: (string, required) - The user's phone number. The phone number should adhere to one of the following formats: plain phone number with 10 digits(1234567890); international number with a leading + (+1234567890); international with country code, parentheses for area code, and hyphens (+1 (123) 456-7890); area code in parentheses followed by digits and hyphen ((123) 456-7890).
+- email: (string, required) - The email address for the new user. Must be a valid email format.
+- password: (string, required) - The password for the new user. Should meet security requirements such as minimum length, inclusion of special characters.
 
 **Example Request**
 
-Description: A `POST` request to the client registration endpoint. It includes a
-JSON payload in the request body with the user's first name, last name, phone
-number, email, and password for registration.
+Description: A `POST` request to the client registration endpoint. It includes a JSON payload in the request body with the user's first name, last name, phone number, email, and password for registration.
 
 ```
 
@@ -192,6 +188,14 @@ required format or is otherwise invalid.
 }
 ```
 
+Description: The phone number provided in the request does not meet the required format or is otherwise invalid.
+
+```
+{
+    "message": "Invalid phone number."
+}
+```
+
 Status code: **409 Conflict**
 
 Description: This response indicates that the request could not be processed
@@ -215,12 +219,12 @@ registration process.
 
 ```
 {
-    "message": 'An unexpected error occurred during registration.'
+    "message": "An unexpected error occurred during registration."
 }
 ```
 ```
 {
-    "message": 'Failed to register client.'
+    "message": "Failed to register client."
 }
 ```
 
@@ -1645,7 +1649,7 @@ Description: The doctor ID provided is invalid.
 
 ```
 {
-	"message": "Invalid doctor ID."
+    "message": "Invalid doctor ID."
 }
 ```
 
@@ -1721,7 +1725,7 @@ Description: The schedule ID provided is invalid.
 
 ```
 {
-	"message": "Invalid schedule ID."
+    "message": "Invalid schedule ID."
 }
 ```
 
@@ -1791,11 +1795,11 @@ Description: The schedule is successfully created.
 {
     "message": "Schedule created successfully.",
     "data": {
-            "doctorId": 123,
-            "scheduleDay": "MONDAY",
-            "startTime": "09:00:00",
-            "endTime": "17:00:00"
-            "scheduleId": 3
+        "doctorId": 123,
+        "scheduleDay": "MONDAY",
+        "startTime": "09:00:00",
+        "endTime": "17:00:00"
+        "scheduleId": 3
     }
 }
 ```
@@ -1806,7 +1810,7 @@ Description: The request is invalid or missing required parameters.
 
 ```
 {
-	"message": "All fields are required and must be in a valid format."
+    "message": "All fields are required and must be in a valid format."
 }
 ```
 
@@ -1814,7 +1818,7 @@ Description: The provided doctor ID is invalid (not a number).
 
 ```
 {
-	"message": "Invalid doctor ID."
+    "message": "Invalid doctor ID."
 }
 ```
 
@@ -1823,7 +1827,7 @@ allowed enum list.
 
 ```
 {
-	"message": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
+    "message": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
 }
 ```
 
@@ -2005,11 +2009,11 @@ Description: The server successfully updates the schedule.
 {
     "message": "Schedule updated successfully.",
     "data": {
-            "doctorId": 1,
-            "scheduleDay": "FRIDAY",
-            "startTime": "13:00:00",
-            "endTime": "17:00:00",
-            "scheduleId": 123
+        "doctorId": 1,
+        "scheduleDay": "FRIDAY",
+        "startTime": "13:00:00",
+        "endTime": "17:00:00",
+        "scheduleId": 123
     }
 }
 ```
@@ -2044,8 +2048,8 @@ Description: The provided schedule day is invalid as it is not part of the
 allowed enum list.
 
 ```
-{
-	"message": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
+{ 
+    "message": "Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list."
 }
 ```
 
@@ -2128,4 +2132,3 @@ docker compose down
 
 ```
 
-```

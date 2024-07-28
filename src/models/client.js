@@ -34,12 +34,22 @@ module.exports = class Client {
 
 	/**
 	 * Validate email address.
-	 * @param {string} email - The email address ti be validated.
+	 * @param {string} email - The email address to be validated.
 	 * @returns {boolean} - Returns true if the email address is valid, false otherwise.
 	 */
 	static validateEmail(email) {
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 		return emailRegex.test(email);
+	}
+
+	/**
+	 * Validate phone number.
+	 * @param {string} phoneNumber - The phone number to be validated.
+	 * @returns {boolean} - Returns true if the phone number is valid, false otherwise.
+	 */
+	static validatePhone(phoneNumber) {
+		const phoneNumberRegex = /^\+?[1-9]\d{1,14}$|^(\+\d{1,2}\s?)?((\(\d{1,4}\))|\d{1,4})?[\s.-]?\d{1,4}[\s.-]?\d{1,4}[\s.-]?\d{1,9}$/;
+		return phoneNumberRegex.test(phoneNumber);
 	}
 
 	/**

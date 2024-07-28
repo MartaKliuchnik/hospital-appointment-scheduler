@@ -31,6 +31,11 @@ const validateRegistrationInput = async (
 		throw new ValidationError('Invalid email address.');
 	}
 
+	// Validate phone number
+	if (!Client.validateEmail(phoneNumber)) {
+		throw new ValidationError('Invalid phone number.');
+	}
+
 	const isClientExist = await Client.findByEmail(email);
 	// Check if client with this email exists
 	if (isClientExist) {
