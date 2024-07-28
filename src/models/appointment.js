@@ -6,6 +6,7 @@ const {
 	NotFoundError,
 	DatabaseError,
 } = require('../utils/customErrors');
+const { sendErrorResponse } = require('../utils/responseHandlers');
 
 module.exports = class Appointment {
 	/**
@@ -333,7 +334,7 @@ module.exports = class Appointment {
 			);
 		} catch (error) {
 			console.error('Error checking time slot availability:', error);
-			throw new DatabaseError('Failed to check time slot availability.', error);
+			throw error;
 		}
 	}
 };

@@ -129,7 +129,7 @@ The request body must be in JSON format and include the following fields:
 
 - firstName (string, required): The first name of the new user.
 - lastName (string, required): The last name of the new user.
-- phoneNumber: (string, required) - The user's phone number. The phone number should adhere to one of the following formats: plain phone number with 10 digits(1234567890); international number with a leading + (+1234567890); international with country code, parentheses for area code, and hyphens (+1 (123) 456-7890); area code in parentheses followed by digits and hyphen ((123) 456-7890).
+- phoneNumber: (string, required) - The user's phone number. The phone number should adhere to one of the following formats: plain phone number with 10 digits(1234567890); international number with a leading + (+1234567890); international with country code, parentheses for area code, and hyphens (+1(123)456-7890); area code in parentheses followed by digits and hyphen ((123)456-7890).
 - email: (string, required) - The email address for the new user. Must be a valid email format.
 - password: (string, required) - The password for the new user. Should meet security requirements such as minimum length, inclusion of special characters.
 

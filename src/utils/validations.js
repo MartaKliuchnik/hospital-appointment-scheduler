@@ -32,7 +32,7 @@ const validateRegistrationInput = async (
 	}
 
 	// Validate phone number
-	if (!Client.validateEmail(phoneNumber)) {
+	if (!Client.validatePhone(phoneNumber)) {
 		throw new ValidationError('Invalid phone number.');
 	}
 
