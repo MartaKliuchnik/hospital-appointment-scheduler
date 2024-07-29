@@ -5,7 +5,7 @@ const path = require('path');
 // Database configuration
 const dbConfig = {
 	host: process.env.DATABASE_HOST || 'localhost',
-	user: process.env.DATABASE_USER ||'root',
+	user: process.env.DATABASE_USER || 'root',
 	password: process.env.DATABASE_PASSWORD,
 	database: process.env.DATABASE_NAME || 'hospitalAppointmentScheduler',
 	timezone: 'Z',
@@ -59,7 +59,7 @@ const createDatabase = async () => {
 		await promisePool.query('USE hospitalAppointmentScheduler');
 
 		// Execute SQL schema file
-		const schemaFilePath = path.join(__dirname, '..', '../schema.sql');
+		const schemaFilePath = path.join(__dirname, '..', '../01-schema.sql');
 		await executeSqlFile(schemaFilePath);
 
 		console.log('Database and tables created successfully.');

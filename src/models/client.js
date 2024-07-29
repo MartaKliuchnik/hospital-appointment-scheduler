@@ -20,7 +20,7 @@ module.exports = class Client {
 		phoneNumber,
 		email,
 		hashedPassword,
-		role = Role.PATIENT,
+		role,
 		clientId = null
 	) {
 		this.firstName = firstName;
@@ -28,7 +28,7 @@ module.exports = class Client {
 		this.phoneNumber = phoneNumber;
 		this.email = email;
 		this.password = hashedPassword;
-		this.role = role;
+		this.role = role || Role.PATIENT;
 		this.clientId = clientId;
 	}
 

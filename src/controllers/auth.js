@@ -66,7 +66,7 @@ exports.postLogin = async (req, res, next) => {
  * @throws {Error} - If there is an error during the registration process.
  */
 exports.postRegister = async (req, res, next) => {
-	const { firstName, lastName, phoneNumber, email, password } = req.body;
+	const { firstName, lastName, phoneNumber, email, password, role } = req.body;
 
 	try {
 		await validateRegistrationInput(
@@ -83,7 +83,8 @@ exports.postRegister = async (req, res, next) => {
 			lastName,
 			phoneNumber,
 			email,
-			hashedPassword
+			hashedPassword,
+			role
 		);
 		const clientId = await client.register();
 
