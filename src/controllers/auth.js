@@ -1,5 +1,3 @@
-const path = require('path');
-const rootDir = require('../utils/path');
 const { hashPassword } = require('../utils/auth');
 const Client = require('../models/client');
 const {
@@ -13,17 +11,7 @@ const {
 	ConflictError,
 } = require('../utils/customErrors');
 const { sendSuccessResponse } = require('../utils/responseHandlers');
-const { log } = require('console');
 
-/**
- * Serve the login page.
- * @param {object} req - The request object.
- * @param {object} res - The response object.
- * @returns {undefined} - This function does not return a value.
- */
-exports.getLogin = (req, res) => {
-	res.sendFile(path.join(rootDir, '../views', 'login-page.html'));
-};
 
 /**
  * Handle login requests.
@@ -67,16 +55,6 @@ exports.postLogin = async (req, res, next) => {
 			);
 		}
 	}
-};
-
-/**
- * Serve the register page.
- * @param {object} req - The request object.
- * @param {object} res - The response object.
- * @returns {undefined} - This function does not return a value.
- */
-exports.getRegister = (req, res) => {
-	res.sendFile(path.join(rootDir, '../views', 'register-page.html'));
 };
 
 /**

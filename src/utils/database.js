@@ -4,10 +4,10 @@ const path = require('path');
 
 // Database configuration
 const dbConfig = {
-	host: 'localhost',
-	user: 'root',
+	host: process.env.DATABASE_HOST || 'localhost',
+	user: process.env.DATABASE_USER ||'root',
 	password: process.env.DATABASE_PASSWORD,
-	database: 'hospitalAppointmentScheduler',
+	database: process.env.DATABASE_NAME || 'hospitalAppointmentScheduler',
 	timezone: 'Z',
 };
 

@@ -1,5 +1,3 @@
-const path = require('path');
-const rootDir = require('../utils/path');
 const Appointment = require('../models/appointment');
 const { formatClientAppointmentsResponse } = require('../utils/formatResponse');
 const {
@@ -23,16 +21,6 @@ const {
 } = require('../utils/responseHandlers');
 const Status = require('../enums/Status');
 const { pool } = require('../utils/database');
-
-/**
- * Serve the schedule page.
- * @param {object} req - The request object.
- * @param {object} res - The response object.
- * @returns {undefined} - This function does not return a value.
- */
-exports.listAppointments = (req, res) => {
-	res.sendFile(path.join(rootDir, '../views', 'schedule-page.html'));
-};
 
 /**
  * Create a new appointment.

@@ -6,7 +6,6 @@ const {
 	NotFoundError,
 	DatabaseError,
 } = require('../utils/customErrors');
-const { sendErrorResponse } = require('../utils/responseHandlers');
 
 module.exports = class Appointment {
 	/**

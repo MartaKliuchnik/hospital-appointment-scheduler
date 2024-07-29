@@ -5,16 +5,6 @@ const Permission = require('../enums/Permission');
 
 const router = Router();
 
-/**
- * @route GET /api/v1/appointments
- * @description Retrieve all appointments
- * @access Private
- */
-router.get(
-	'/',
-	checkPermission(Permission.READ_APPOINTMENT),
-	appointmentsController.listAppointments
-);
 
 /**
  * @route POST /api/v1/appointments
