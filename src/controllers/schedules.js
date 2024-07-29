@@ -65,7 +65,10 @@ exports.createSchedule = async (req, res, next) => {
 		validateCreatingScheduleInput(doctorId, scheduleDay, startTime, endTime);
 
 		// Check if doctor exists
-		const doctorExists = await Doctor.getById(parseInt(doctorId));
+		const doctorExists = await Doctor.getById(
+			parseInt(doctorId),
+			req.client.role
+		);
 		if (!doctorExists) {
 			throw new NotFoundError('Doctor not found.');
 		}

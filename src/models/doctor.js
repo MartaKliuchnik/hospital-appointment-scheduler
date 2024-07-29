@@ -11,12 +11,20 @@ module.exports = class Doctor {
 	 * @param {string} lastName - The last name of the doctor.
 	 * @param {string} specialization - The specialization of the doctor.
 	 * @param {number|null} doctorId - The ID of the doctor (default: null).
+	 * @param {boolean} [isActive=true] - The active status of the doctor (default: true).
 	 */
-	constructor(firstName, lastName, specialization, doctorId = null) {
+	constructor(
+		firstName,
+		lastName,
+		specialization,
+		doctorId = null,
+		isActive = true
+	) {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.specialization = specialization.toUpperCase();
 		this.doctorId = doctorId;
+		this.isActive = isActive;
 	}
 
 	/**
@@ -26,13 +34,14 @@ module.exports = class Doctor {
 	 */
 	async insert() {
 		const queryCreateDoctor =
-			'INSERT INTO doctor (firstName, lastName, specialization) VALUES (?, ?, ?)';
+			'INSERT INTO doctor (firstName, lastName, specialization, isActive) VALUES (?, ?, ?, ?)';
 
 		try {
 			const [result] = await pool.execute(queryCreateDoctor, [
 				this.firstName,
 				this.lastName,
 				this.specialization,
+				this.isActive,
 			]);
 
 			this.doctorId = result.insertId;
@@ -45,14 +54,21 @@ module.exports = class Doctor {
 
 	/**
 	 * Retrieve a list of all doctors from the database.
+	 * @param {string} clientRole - The role of the client making the request.
 	 * @returns {Promise<Array<Object>|null>} - A promise that resolves to the list of doctors, or null if none found.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
-	static async getAll() {
+	static async getAll(clientRole) {
+		const querySelectActiveDoctors = 'SELECT * FROM doctor WHERE isActive = 1';
 		const querySelectDoctors = 'SELECT * FROM doctor';
 
+		let results;
 		try {
-			const [results] = await pool.execute(querySelectDoctors);
+			if (clientRole === 'ADMIN') {
+				[results] = await pool.execute(querySelectDoctors);
+			} else {
+				[results] = await pool.execute(querySelectActiveDoctors);
+			}
 
 			return results.length > 0 ? results : null;
 		} catch (error) {
@@ -63,17 +79,25 @@ module.exports = class Doctor {
 
 	/**
 	 * Retrieve a doctor from the database by ID.
+	 * @param {string} clientRole - The role of the client making the request.
 	 * @param {number} doctorId - The ID of the doctor to retrieve.
 	 * @returns {Promise<Object|null>} - A promise that resolves to the retrieved doctor, or null if not found.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
-	static async getById(doctorId) {
+	static async getById(doctorId, clientRole) {
+		const querySelectActiveDoctorById =
+			'SELECT * FROM doctor WHERE doctorId = ? AND isActive = 1';
 		const querySelectDoctorById = 'SELECT * FROM doctor WHERE doctorId = ?';
 
+		let results;
 		try {
-			const [results] = await pool.execute(querySelectDoctorById, [doctorId]);
+			if (clientRole === 'ADMIN') {
+				[results] = await pool.execute(querySelectDoctorById, [doctorId]);
+			} else {
+				[results] = await pool.execute(querySelectActiveDoctorById, [doctorId]);
+			}
 
-			return results.length > 0 ? results : null;
+			return results.length > 0 ? results[0] : null;
 		} catch (error) {
 			console.error('Error retrieving doctor:', error);
 			throw new DatabaseError('Failed to retrieve doctor.');
@@ -81,16 +105,17 @@ module.exports = class Doctor {
 	}
 
 	/**
-	 * Delete a doctor from the database by ID.
+	 * Soft deletes a doctor from the database by ID.
 	 * @param {number} doctorId - The ID of the doctor.
-	 * @returns {Promise<void>}
+	 * @returns {Promise<void>} - A promise that resolves when the operation is complete.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async deleteById(doctorId) {
-		const queryDeleteDoctor = 'DELETE FROM doctor WHERE doctorId = ?';
+		const querySoftDeleteDoctor =
+			'UPDATE doctor SET isActive = false WHERE doctorId = ?';
 
 		try {
-			const [result] = await pool.execute(queryDeleteDoctor, [doctorId]);
+			const [result] = await pool.execute(querySoftDeleteDoctor, [doctorId]);
 
 			if ((result.affectedRows = 0)) {
 				throw new NotFoundError('Doctor not found.');
@@ -161,7 +186,7 @@ module.exports = class Doctor {
 			'SELECT COUNT(*) as count FROM appointment WHERE doctorId = ?';
 		try {
 			const [results] = await pool.execute(query, [doctorId]);
-			return results[0].count > 0;
+			return results[0].count > 0 ? results[0] : null;
 		} catch (error) {
 			console.error('Error checking doctor appointments:', error);
 			throw new DatabaseError('Failed to check doctor appointments.');

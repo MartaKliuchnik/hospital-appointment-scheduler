@@ -86,7 +86,8 @@ const validateUserRoleUpdate = async (clientId, newRole) => {
 const validateAppointmentCreation = async (
 	clientId,
 	doctorId,
-	appointmentTime
+	appointmentTime,
+	clientRole
 ) => {
 	// Check authentication
 	if (!clientId) {
@@ -107,8 +108,8 @@ const validateAppointmentCreation = async (
 	}
 
 	// Check if the doctor exists
-	const doctorExists = await Doctor.getById(doctorId);
-	if (!doctorExists) {
+	const doctor = await Doctor.getById(doctorId, clientRole);
+	if (!doctor || !doctor.isActive) {
 		throw new NotFoundError('Doctor not found.');
 	}
 

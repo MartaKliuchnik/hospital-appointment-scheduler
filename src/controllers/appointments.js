@@ -33,9 +33,15 @@ const { pool } = require('../utils/database');
 exports.createAppointment = async (req, res, next) => {
 	const { doctorId, appointmentTime } = req.body;
 	const clientId = req.client?.clientId;
+	const clientRole = req.client?.role;
 
 	try {
-		await validateAppointmentCreation(clientId, doctorId, appointmentTime);
+		await validateAppointmentCreation(
+			clientId,
+			doctorId,
+			appointmentTime,
+			clientRole
+		);
 
 		const appointment = new Appointment(clientId, doctorId, appointmentTime);
 		const appointmentId = await appointment.insertAppointment();

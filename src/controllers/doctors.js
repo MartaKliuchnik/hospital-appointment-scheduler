@@ -24,7 +24,7 @@ const {
  */
 exports.listDoctors = async (req, res, next) => {
 	try {
-		const doctors = await Doctor.getAll();
+		const doctors = await Doctor.getAll(req.client.role);
 
 		// Check if the doctors exist in database
 		if (!doctors || doctors.length === 0) {
@@ -57,7 +57,7 @@ exports.getDoctor = async (req, res, next) => {
 	try {
 		validateDoctorId(doctorId);
 
-		const doctor = await Doctor.getById(doctorId);
+		const doctor = await Doctor.getById(doctorId, req.client.role);
 		// Check if the doctor exists
 		if (!doctor) {
 			throw new NotFoundError('Doctor not found.');
@@ -92,7 +92,7 @@ exports.createDoctor = async (req, res, next) => {
 		const doctor = new Doctor(firstName, lastName, specialization);
 		const doctorId = await doctor.insert();
 
-		const doctorDetails = await Doctor.getById(doctorId);
+		const doctorDetails = await Doctor.getById(doctorId, req.client.role);
 
 		sendSuccessResponse(
 			res,
@@ -123,7 +123,7 @@ exports.deleteDoctor = async (req, res, next) => {
 	try {
 		validateDoctorId(doctorId);
 
-		const doctor = await Doctor.getById(doctorId);
+		const doctor = await Doctor.getById(doctorId, req.client.role);
 		// Check if the doctor exists
 		if (!doctor) {
 			throw new NotFoundError('Doctor not found.');
@@ -164,7 +164,7 @@ exports.updateDoctor = async (req, res, next) => {
 	try {
 		validateDoctorId(doctorId);
 
-		const doctor = await Doctor.getById(doctorId);
+		const doctor = await Doctor.getById(doctorId, req.client.role);
 		// Check if the doctor exists
 		if (!doctor) {
 			throw new NotFoundError('Doctor not found.');

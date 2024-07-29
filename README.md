@@ -434,6 +434,7 @@ Information about doctors.
 |     | firstName      | varchar(50) | First name of the doctor                                                |
 |     | lastName       | varchar(50) | Last name of the doctor                                                 |
 |     | specialization | enum        | Specialization field for the doctor, limited to specific medical fields |
+|     | isActive       | boolean     | Active status of the doctor                                             |
 
 Predefined list of medical specializations: 'CARDIOLOGY', 'NEUROLOGY',
 'ONCOLOGY', 'PEDIATRICS', 'DERMATOLOGY'.
@@ -451,7 +452,7 @@ Endpoint
 
 **Example Request**
 
-Description: A `GET` request to retrieve a list of all doctors.
+Description: A `GET` request to retrieve a list of all doctors. This endpoint retrieves a list of all doctors. The visibility of the doctors' data depends on the role of the client making the request: if the client has an ADMIN role, they can see all doctors, both active and inactive; if the client has a PATIENT role (non-admin role), they can only see active doctors.
 
 ```
 
@@ -474,7 +475,8 @@ Description: The server successfully retrieves the list of doctors.
             "doctorId": 123,
             "firstName": "Jane",
             "lastName": "Doe",
-            "specialization": "NEUROLOGY"
+            "specialization": "NEUROLOGY",
+            "isActive": 1, 
           },
           ...
         ]
@@ -523,7 +525,7 @@ The request should include the following path parameter:
 **Example Request**
 
 Description: A `GET` request to retrieve a specific doctor associated with a
-doctorId.
+doctorId. This endpoint retrieves a list of all doctors. The visibility of the doctors' data depends on the role of the client making the request: if the client has an ADMIN role, they can see all doctors, both active and inactive; if the client has a PATIENT role (non-admin role), they can only see active doctors.
 
 ```
 
@@ -625,7 +627,8 @@ Description: The doctor was successfully created.
             "doctorId": 8,
             "firstName": "Mike",
             "lastName": "Jonson",
-            "specialization": "CARDIOLOGY"
+            "specialization": "CARDIOLOGY",
+            "isActive": 1
         }
     ]
 }
@@ -689,10 +692,7 @@ Description: An unexpected error occurred on the server while processing the req
 Endpoint
 
 - URL Path: **_/api/v1/doctors/:doctorId_**
-- Description: This endpoint deletes a specific doctor based on their ID. The
-  client sends a DELETE request to the server with the doctor's ID as a path
-  parameter. The server processes the request by removing the specified doctor
-  from the database.
+- Description: This endpoint soft deletes a specific doctor based on their ID. The client sends a DELETE request to the server with the doctor's ID as a path parameter. Instead of removing the doctor from the database, the server processes the request by marking the doctor as inactive (isActive = false), effectively performing a soft delete. This request must include an authorization token for an admin user.
 - Authentication and Authorization: This endpoint requires admin-level
   authentication. Only users with admin privileges are allowed to delete doctor
   records.
@@ -705,8 +705,7 @@ The request should include the following path parameter:
 
 **Example Request**
 
-Description: A `DELETE` request to remove a specific doctor associated with a
-doctorId. This request must include an authorization token for an admin user.
+Description: A `DELETE` request to soft delete a specific doctor associated with a doctorId. This request must include an authorization token for an admin user.
 
 ```
 

@@ -27,7 +27,7 @@ const checkPermission = (requiredPermission, allowUnauthenticated = false) => {
 				);
 			}
 
-			validateClientId(clientId);
+			await validateClientId(clientId);
 
 			// Get the latest client's role from the database, defaulting to ANONYMOUS if not set
 			const clientRole = req.client.role || Role.ANONYMOUS;
