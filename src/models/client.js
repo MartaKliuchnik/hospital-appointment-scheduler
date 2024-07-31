@@ -13,6 +13,7 @@ module.exports = class Client {
 	 * @param {string} hashedPassword - The hashed password of the client.
 	 * @param {Role} role - The role of the client (default: Role.PATIENT).
 	 * @param {number|null} clientId - The ID of the client (default: null).
+	 * @param {Date|null} [deletedAt=null] - The timestamp indicating when the client was deleted, if applicable. Defaults to null for non-deleted clients.
 	 */
 	constructor(
 		firstName,
@@ -21,7 +22,8 @@ module.exports = class Client {
 		email,
 		hashedPassword,
 		role,
-		clientId = null
+		clientId = null,
+		deletedAt = null
 	) {
 		this.firstName = firstName;
 		this.lastName = lastName;
@@ -30,6 +32,7 @@ module.exports = class Client {
 		this.password = hashedPassword;
 		this.role = role || Role.PATIENT;
 		this.clientId = clientId;
+		this.deletedAt = deletedAt;
 	}
 
 	/**
@@ -38,7 +41,8 @@ module.exports = class Client {
 	 * @returns {boolean} - Returns true if the email address is valid, false otherwise.
 	 */
 	static validateEmail(email) {
-		const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		const emailRegex =
+			/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 		return emailRegex.test(email);
 	}
 
@@ -48,7 +52,8 @@ module.exports = class Client {
 	 * @returns {boolean} - Returns true if the phone number is valid, false otherwise.
 	 */
 	static validatePhone(phoneNumber) {
-		const phoneNumberRegex = /^\+?[1-9]\d{1,14}$|^(\+\d{1,2}\s?)?((\(\d{1,4}\))|\d{1,4})?[\s.-]?\d{1,4}[\s.-]?\d{1,4}[\s.-]?\d{1,9}$/;
+		const phoneNumberRegex =
+			/^\+?[1-9]\d{1,14}$|^(\+\d{1,2}\s?)?((\(\d{1,4}\))|\d{1,4})?[\s.-]?\d{1,4}[\s.-]?\d{1,4}[\s.-]?\d{1,9}$/;
 		return phoneNumberRegex.test(phoneNumber);
 	}
 
@@ -131,7 +136,8 @@ module.exports = class Client {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async findById(clientId) {
-		const query = 'SELECT * FROM client WHERE clientId = ?';
+		const query =
+			'SELECT * FROM client WHERE clientId = ?';
 
 		try {
 			const [rows] = await pool.execute(query, [clientId]);
@@ -151,6 +157,23 @@ module.exports = class Client {
 		} catch (error) {
 			console.error('Error finding client by id:', error);
 			throw new DatabaseError('Failed to find client by ID');
+		}
+	}
+
+	/**
+	 * Retrieve a list of all clients from the database.
+	 * @returns {Promise<Array<Object>|null>} - A promise that resolves to the list of clients, or null if none found.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	static async getAll() {
+		const querySelectClients = 'SELECT * FROM client';
+
+		try {
+			const [results] = await pool.execute(querySelectClients);
+			return results.length > 0 ? results : null;
+		} catch (error) {
+			console.error('Error retrieving clients:', error);
+			throw new DatabaseError('Failed to retrieve clients.');
 		}
 	}
 
@@ -258,13 +281,41 @@ module.exports = class Client {
 	}
 
 	/**
-	 * Deletes the specific client from the database.
+	 * Soft deletes the specific client from the database.
 	 * @param {number} clientId - The ID of the client to be deleted.
 	 * @param {object} connection - The database connection object used for executing the query.
 	 * @returns {Promise<void>} - A promise that resolves when the operation is complete.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
-	static async delete(clientId, connection) {
+	static async softDelete(clientId, connection) {
+		const query = 'UPDATE client SET deletedAt = NOW() WHERE clientId = ?';
+
+		try {
+			const [result] = await connection.execute(query, [clientId]);
+
+			if (result.affectedRows === 0) {
+				throw new NotFoundError('Client not found.');
+			}
+		} catch (error) {
+			console.error('Error deleting client:', error);
+
+			if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+				throw new ValidationError(
+					'This client has appointments. Deletion is forbidden.'
+				);
+			}
+			throw new DatabaseError('Failed to delete client.');
+		}
+	}
+
+	/**
+	 * Deletes the specific client from the database permanantly.
+	 * @param {number} clientId - The ID of the client to be deleted.
+	 * @param {object} connection - The database connection object used for executing the query.
+	 * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	static async hardDelete(clientId, connection) {
 		const query = 'DELETE FROM client WHERE clientId = ?';
 
 		try {
@@ -275,9 +326,9 @@ module.exports = class Client {
 		} catch (error) {
 			console.error('Error deleting user:', error);
 			if (error instanceof NotFoundError) {
-				throw error; 
+				throw error;
 			} else {
-				throw new DatabaseError('Failed to delete client.', error); 
+				throw new DatabaseError('Failed to delete client.', error);
 			}
 		}
 	}

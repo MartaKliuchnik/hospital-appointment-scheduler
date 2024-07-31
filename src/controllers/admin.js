@@ -60,6 +60,7 @@ exports.updateUserRole = async (req, res, next) => {
  */
 exports.deleteClient = async (req, res, next) => {
 	const clientId = parseInt(req.params.clientId);
+	const hardDelete = req.query.hardDelete === 'true';
 
 	const connection = await pool.getConnection();
 	await connection.beginTransaction();
@@ -73,10 +74,20 @@ exports.deleteClient = async (req, res, next) => {
 			throw new NotFoundError('Client not found.');
 		}
 
-		await Client.delete(clientId, connection);
+		if (hardDelete) {
+			await Client.hardDelete(clientId, connection);
+		} else {
+			await Client.softDelete(clientId, connection);
+		}
 
 		await connection.commit();
-		sendSuccessResponse(res, 200, 'Client deleted successfully.');
+		sendSuccessResponse(
+			res,
+			200,
+			hardDelete
+				? 'Client hard deleted successfully.'
+				: 'Client soft deleted successfully.'
+		);
 	} catch (error) {
 		if (connection) await connection.rollback();
 
@@ -91,5 +102,32 @@ exports.deleteClient = async (req, res, next) => {
 		}
 	} finally {
 		connection.release();
+	}
+};
+
+/**
+ * Retrieve list of clients from the database.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the client retrieval process.
+ */
+exports.listClients = async (req, res, next) => {
+	try {
+		const clients = await Client.getAll();
+
+		// Check if the clients exist in the database
+		if (!clients || clients.length === 0) {
+			throw new NotFoundError('No clients found in the database.');
+		}
+
+		sendSuccessResponse(res, 200, 'Clients retrieved successfully.', clients);
+	} catch (error) {
+		if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else {
+			next(new DatabaseError('Failed to retrieve clients.', error));
+		}
 	}
 };

@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const clietnsController = require('../controllers/admin');
+const clientsController = require('../controllers/admin');
 const checkPermission = require('../middleware/permission');
 const Permission = require('../enums/Permission');
 
@@ -13,7 +13,7 @@ const router = Router();
 router.put(
 	'/:clientId/role',
 	checkPermission(Permission.UPDATE_USER_ROLE),
-	clietnsController.updateUserRole
+	clientsController.updateUserRole
 );
 
 /**
@@ -24,7 +24,18 @@ router.put(
 router.delete(
 	'/:clientId',
 	checkPermission(Permission.DELETE_CLIENT),
-	clietnsController.deleteClient
+	clientsController.deleteClient
+);
+
+/**
+ * @route GET /api/v1/clients
+ * @description Retrieve all clients
+ * @access Private
+ */
+router.get(
+	'/',
+	checkPermission(Permission.READ_CLIENT),
+	clientsController.listClients
 );
 
 module.exports = router;

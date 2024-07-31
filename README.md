@@ -95,16 +95,17 @@ endpoint path. For instance, to access the register page:
 
 Information about clients.
 
-| Key | Column Name      | Data Type    | Description                                  |
-| :-- | :--------------- | :----------- | :------------------------------------------- |
-| PK  | clientId         | int          | Primary key for the Client record            |
-|     | firstName        | varchar(50)  | First name of the client                     |
-|     | lastName         | varchar(50)  | Last name of the client                      |
-|     | phoneNumber      | varchar(15)  | Phone number of the client (must be unique)  |
-|     | email            | varchar(255) | Email address of the client (must be unique) |
-|     | password         | varchar(255) | Password for the client's account            |
-|     | registrationDate | datetime     | Date and time when the client registered     |
-|     | role             | enum         | Role of the client.                          |
+| Key | Column Name      | Data Type    | Description                                    |
+| :-- | :--------------- | :----------- | :--------------------------------------------- |
+| PK  | clientId         | int          | Primary key for the Client record              |
+|     | firstName        | varchar(50)  | First name of the client                       |
+|     | lastName         | varchar(50)  | Last name of the client                        |
+|     | phoneNumber      | varchar(15)  | Phone number of the client (must be unique)    |
+|     | email            | varchar(255) | Email address of the client (must be unique)   |
+|     | password         | varchar(255) | Password for the client's account              |
+|     | registrationDate | datetime     | Date and time when the client registered       |
+|     | role             | enum         | Role of the client.                            |
+|     | deleteAt         | datetime     | Date and time when the client was soft deleted |
 
 Predefined list of client roles:
 
@@ -334,12 +335,77 @@ from processing the request.
 }
 ```
 
-#### 4. Delete a specific client
+#### 4. Retrieves a list of all clients
+
+Endpoint
+
+- URL Path: **_/api/v1/clients_**
+- Description: This endpoint retrieves a list of all clients along with their personal information. An admin sends a GET request to the server to retrieve this list. The server processes the request by querying the database for all clients and their personal information.
+- Authentication and Authorization: This endpoint requires admin-level authentication. Only users with admin privileges are allowed to view all clients in the database.
+
+**Example Request**
+
+Description: A `GET` request to retrieve a list of all clients. 
+
+```
+
+curl -X GET http://localhost:8080/api/v1/clients \
+
+```
+
+**Example Responses**
+
+Status code: **200 OK**
+
+Description: The server successfully retrieves the list of clients.
+
+```
+{
+    "message": "Clients retrieved successfully.",
+    "data": [
+        {
+            "clientId": 1,
+            "firstName": "Emily",
+            "lastName": "Smith",
+            "email": "emily.smith@example.com",
+            "password": "Smith123",
+            "phoneNumber": "+1(123)456-7890",
+            "registrationDate": "2024-07-30T21:33:41.000Z",
+            "role": "ADMIN",
+            "deletedAt": null
+        },
+        ...
+    ]
+}
+```
+
+Status Code: **404 Not Found**
+
+Description: The server cannot find any clients in the database.
+
+```
+{
+    "message": "No clients found in the database."
+}
+```
+
+Status code: **500 Internal Server Error**
+
+Description: The server encountered an unexpected condition that prevented it
+from processing the request.
+
+```
+{
+    "message": "Failed to retrieve clients."
+}
+```
+
+#### 5. Delete a specific client
 
 Endpoint
 
 - URL Path: **_/api/v1/clients/:clientId_**
-- Description: This endpoint allows an admin to delete a specific client from the database based on the provided client ID. The admin sends a DELETE request with the client ID as a path parameter. The server processes this request to remove the client record.
+- Description: This endpoint allows an admin to delete a specific client from the database based on the provided client ID. The admin sends a DELETE request with the client ID as a path parameter. By default, this performs a soft delete. For a hard delete, a query parameter can be added. The server processes this request to remove or mark the client record as deleted.
 - Authentication and Authorization:  This endpoint requires admin-level authentication. Only users with admin privileges can perform this operation.
 
 **Request Parameter**
@@ -348,9 +414,13 @@ The request must include the following path parameter:
 
 - clientId: The unique identifier of the client to be deleted.
 
+Optional query parameter:
+
+- hardDelete: If set to 'true', performs a hard delete instead of a soft delete.
+
 **Example Request**
 
-Description: A `DELETE` request to remove a specific client identified by clientId. This request must include an authorization token for an admin user.
+Description: A `DELETE` request to soft delete a specific client identified by clientId. This request must include an authorization token for an admin user.
 
 ```
 
@@ -359,15 +429,29 @@ curl -X DELETE http://localhost:8080/api/v1/clientId/123 \
 
 ```
 
+Description: A `DELETE` request to hard delete a specific client identified by clientId.
+
+```
+
+curl -X DELETE http://localhost:8080/api/v1/clientId/123?hardDelete=true \
+-H "Authorization: Bearer <your-jwt-token>" \
+
+```
+
 **Example Responses**
 
 Status Code: **200 OK**
 
-Description: The client was successfully deleted.
+Description:  The client was successfully deleted (soft or hard).
 
 ```
 { 
-    "message": "Client deleted successfully." 
+    "message": "Client soft deleted successfully." 
+}
+```
+```
+{ 
+    "message": "Client hard deleted successfully." 
 }
 ```
 
