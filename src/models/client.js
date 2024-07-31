@@ -79,7 +79,7 @@ module.exports = class Client {
 	 */
 	async register() {
 		const queryAddClient =
-			'INSERT INTO client (firstName, lastName, phoneNumber, email, password, role) VALUES (?, ?, ?, ?, ?, ?)';
+			'INSERT INTO client (firstName, lastName, phoneNumber, email, password, role, deletedAt) VALUES (?, ?, ?, ?, ?, ?, ?)';
 
 		try {
 			const [client] = await pool.execute(queryAddClient, [
@@ -89,6 +89,7 @@ module.exports = class Client {
 				this.email,
 				this.password,
 				this.role,
+				this.deletedAt
 			]);
 
 			this.clientId = client.insertId;
@@ -216,6 +217,7 @@ module.exports = class Client {
 			email: this.email,
 			registrationData: this.registrationData,
 			role: this.role,
+			deletedAt: this.deletedAt
 		};
 	}
 

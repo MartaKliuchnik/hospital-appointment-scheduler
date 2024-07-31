@@ -23,8 +23,9 @@ const {
  * @throws {Error} - If there is an error during the appointment retrieval process.
  */
 exports.listDoctors = async (req, res, next) => {
+	const clientRole = req.client?.role ? req.client.role : 'ANONYMOUS';
 	try {
-		const doctors = await Doctor.getAll(req.client.role);
+		const doctors = await Doctor.getAll(clientRole);
 
 		// Check if the doctors exist in database
 		if (!doctors || doctors.length === 0) {
@@ -53,11 +54,12 @@ exports.listDoctors = async (req, res, next) => {
  */
 exports.getDoctor = async (req, res, next) => {
 	const doctorId = parseInt(req.params.doctorId);
+	const clientRole = req.client?.role ? req.client.role : 'ANONYMOUS';
 
 	try {
 		validateDoctorId(doctorId);
 
-		const doctor = await Doctor.getById(doctorId, req.client.role);
+		const doctor = await Doctor.getById(doctorId, clientRole);
 		// Check if the doctor exists
 		if (!doctor) {
 			throw new NotFoundError('Doctor not found.');

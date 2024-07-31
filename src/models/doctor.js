@@ -62,6 +62,8 @@ module.exports = class Doctor {
 		const querySelectActiveDoctors = 'SELECT * FROM doctor WHERE isActive = 1';
 		const querySelectDoctors = 'SELECT * FROM doctor';
 
+
+		console.log(`clientRole =`, clientRole);
 		let results;
 		try {
 			if (clientRole === 'ADMIN') {
