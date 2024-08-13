@@ -2,8 +2,9 @@ const Role = require('../../src/enums/Role');
 const Client = require('../../src/models/client');
 const { DatabaseError } = require('../../src/utils/customErrors');
 const { pool } = require('../../src/utils/database');
+const { createJWT } = require('../../src/utils/jwt');
 
-// - Mocked 'database' module to avoid real database queries during tests.
+// Mocked 'database' module to avoid real database queries during tests.
 jest.mock('../../src/utils/database', () => ({
 	pool: {
 		execute: jest.fn(),
@@ -15,6 +16,11 @@ jest.mock('../../src/utils/auth', () => ({
 	comparePassword: jest.fn(),
 }));
 
+// Mock 'jwt' module to avoid real auth token creation during tests
+jest.mock('../../src/utils/jwt', () => ({
+	createJWT: jest.fn(),
+}));
+
 /**
  * Test suite for Client Model implementation.
  * Includes methods for registering, validating email, and constructing Client instances.
@@ -23,13 +29,15 @@ describe('Client Model', () => {
 	let mockClientData;
 	beforeEach(() => {
 		mockClientData = {
+			clientId: 1,
 			firstName: 'Carlos',
 			lastName: 'Gonzalez',
 			phoneNumber: '+1(456)555-0123',
 			email: 'gonzalez@example.com',
 			password: 'Gonzalez123',
 			role: Role.PATIENT,
-			clientId: 1,
+			registrationDate: '2024-07-31T11:32:38.000Z',
+			deletedAt: null,
 		};
 	});
 
@@ -161,6 +169,131 @@ describe('Client Model', () => {
 			await expect(Client.findByEmail('gonzalez@example.com')).rejects.toThrow(
 				new DatabaseError('Failed to find client by email.')
 			);
+		});
+	});
+
+	// Find a client by their ID tests
+	describe('Find by ID', () => {
+		it('should return a Client instance when a client is found by ID', async () => {
+			pool.execute.mockResolvedValue([[mockClientData]]);
+
+			const result = await Client.findById('1');
+
+			// Verify the correct client data was returned
+			expect(result).toBeInstanceOf(Client);
+			expect(result.clientId).toBe(mockClientData.clientId);
+			expect(result.email).toBe(mockClientData.email);
+		});
+
+		it('should return null when client is not found', async () => {
+			pool.execute.mockResolvedValue([[]]);
+
+			const result = await Client.findById(1);
+			// Expect a null to be when client is not found
+			expect(result).toBeNull();
+		});
+
+		it('should throw DatabaseError on findById failure', async () => {
+			pool.execute.mockRejectedValue(new Error('Database error'));
+
+			// Expect a DatabaseError to be thrown when the findById fails
+			await expect(Client.findById(1)).rejects.toThrow(
+				new DatabaseError('Failed to find client by ID.')
+			);
+		});
+	});
+
+	// Retrieve a list of all clients tests
+	describe('Retrieve all clients', () => {
+		it('should return a list of all clients', async () => {
+			const mockListClients = [
+				mockClientData,
+				{
+					...mockClientData,
+					clientId: 2,
+					email: 'jane@example.com',
+					phoneNumber: '+1(123)444-7890',
+				},
+			];
+			pool.execute.mockResolvedValue([mockListClients]);
+
+			const result = await Client.getAll();
+
+			// Verify that the result contains the expected number of clients, and each client's data matches the mock data
+			expect(result).toHaveLength(2);
+			expect(result[0].clientId).toBe(mockListClients[0].clientId);
+			expect(result[1].email).toBe(mockListClients[1].email);
+		});
+
+		it('should return null when no clients are found', async () => {
+			pool.execute.mockResolvedValue([[]]);
+
+			const result = await Client.getAll();
+			// Expect a null to be returned when no clients are found
+			expect(result).toBeNull();
+		});
+
+		it('should throw DatabaseError on getAll failure', async () => {
+			pool.execute.mockRejectedValue(new Error('Database error'));
+
+			// Expect a DatabaseError to be thrown when the getAll fails
+			await expect(Client.getAll()).rejects.toThrow(
+				new DatabaseError('Failed to retrieve clients.')
+			);
+		});
+	});
+
+	// Create an authentication token tests
+	describe('Create JWT', () => {
+		it('should create a JWT token', () => {
+			const client = new Client(
+				mockClientData.firstName,
+				mockClientData.lastName,
+				mockClientData.phoneNumber,
+				mockClientData.email,
+				mockClientData.password,
+				mockClientData.role,
+				mockClientData.clientId
+			);
+
+			createJWT.mockReturnValue('mock.jwt.token');
+			const token = client.createAuthToken();
+
+			// Verify the token creation was successful and the correct parameters were used
+			expect(token).toBe('mock.jwt.token');
+			expect(createJWT).toHaveBeenCalledWith(
+				{
+					alg: 'HS256',
+					typ: 'JWT',
+				},
+				expect.objectContaining({
+					clientId: mockClientData.clientId,
+					firstName: mockClientData.firstName,
+					lastName: mockClientData.lastName,
+					role: mockClientData.role,
+				}),
+				process.env.JWT_SECRET
+			);
+		});
+
+		it('should throw DatabaseError on token creation failure', () => {
+			createJWT.mockImplementation(() => {
+				throw new Error('Token creation error.');
+			});
+
+			// Expect a DatabaseError to be thrown when token creation fails
+			expect(() => {
+				const client = new Client(
+					mockClientData.firstName,
+					mockClientData.lastName,
+					mockClientData.phoneNumber,
+					mockClientData.email,
+					mockClientData.password,
+					mockClientData.role,
+					mockClientData.clientId
+				);
+				client.createAuthToken();
+			}).toThrow(new DatabaseError('Error creating authentication token.'));
 		});
 	});
 });

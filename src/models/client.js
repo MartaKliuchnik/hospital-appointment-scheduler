@@ -146,7 +146,16 @@ module.exports = class Client {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async findById(clientId) {
-		const query = 'SELECT * FROM client WHERE clientId = ?';
+		const columns = [
+			'firstName',
+			'lastName',
+			'phoneNumber',
+			'email',
+			'password',
+			'role',
+			'clientId',
+		];
+		const query = `SELECT ${columns.join(',')} FROM client WHERE clientId = ?`;
 
 		try {
 			const [rows] = await pool.execute(query, [clientId]);
@@ -165,7 +174,7 @@ module.exports = class Client {
 			);
 		} catch (error) {
 			console.error('Error finding client by id:', error);
-			throw new DatabaseError('Failed to find client by ID');
+			throw new DatabaseError('Failed to find client by ID.');
 		}
 	}
 
@@ -175,11 +184,22 @@ module.exports = class Client {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getAll() {
-		const querySelectClients = 'SELECT * FROM client';
+		const columns = [
+			'clientId',
+			'firstName',
+			'lastName',
+			'email',
+			'password',
+			'phoneNumber',
+			'registrationDate',
+			'role',
+			'deletedAt',
+		];
+		const querySelectClients = `SELECT ${columns.join(',')} FROM client`;
 
 		try {
 			const [results] = await pool.execute(querySelectClients);
-			return results.length > 0 ? results : null;
+			return results.length > 0 ? results : [null];
 		} catch (error) {
 			console.error('Error retrieving clients:', error);
 			throw new DatabaseError('Failed to retrieve clients.');
