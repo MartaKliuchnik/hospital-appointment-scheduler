@@ -89,7 +89,7 @@ module.exports = class Client {
 				this.email,
 				this.password,
 				this.role,
-				this.deletedAt
+				this.deletedAt,
 			]);
 
 			this.clientId = client.insertId;
@@ -107,7 +107,16 @@ module.exports = class Client {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async findByEmail(email) {
-		const query = 'SELECT * FROM client WHERE email = ?';
+		const columns = [
+			'firstName',
+			'lastName',
+			'phoneNumber',
+			'email',
+			'password',
+			'role',
+			'clientId',
+		];
+		const query = `SELECT ${columns.join(',')} FROM client WHERE email = ?`;
 
 		try {
 			const [rows] = await pool.execute(query, [email]);
@@ -137,8 +146,7 @@ module.exports = class Client {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async findById(clientId) {
-		const query =
-			'SELECT * FROM client WHERE clientId = ?';
+		const query = 'SELECT * FROM client WHERE clientId = ?';
 
 		try {
 			const [rows] = await pool.execute(query, [clientId]);
@@ -217,7 +225,7 @@ module.exports = class Client {
 			email: this.email,
 			registrationData: this.registrationData,
 			role: this.role,
-			deletedAt: this.deletedAt
+			deletedAt: this.deletedAt,
 		};
 	}
 
