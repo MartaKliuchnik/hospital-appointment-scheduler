@@ -2,7 +2,11 @@ const Role = require('../enums/Role');
 const { comparePassword } = require('../utils/auth');
 const { pool } = require('../utils/database');
 const { createJWT } = require('../utils/jwt');
-const { DatabaseError, NotFoundError } = require('../utils/customErrors');
+const {
+	DatabaseError,
+	NotFoundError,
+	ValidationError,
+} = require('../utils/customErrors');
 
 module.exports = class Client {
 	/**
@@ -199,7 +203,7 @@ module.exports = class Client {
 
 		try {
 			const [results] = await pool.execute(querySelectClients);
-			return results.length > 0 ? results : [null];
+			return results.length > 0 ? results : null;
 		} catch (error) {
 			console.error('Error retrieving clients:', error);
 			throw new DatabaseError('Failed to retrieve clients.');
@@ -287,7 +291,18 @@ module.exports = class Client {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async findByPhoneNumber(phoneNumber) {
-		const query = 'SELECT * FROM client WHERE phoneNumber = ?';
+		const columns = [
+			'firstName',
+			'lastName',
+			'phoneNumber',
+			'email',
+			'password',
+			'role',
+			'clientId',
+		];
+		const query = `SELECT ${columns.join(
+			','
+		)} FROM client WHERE phoneNumber = ?`;
 
 		try {
 			const [rows] = await pool.execute(query, [phoneNumber]);
@@ -306,7 +321,7 @@ module.exports = class Client {
 			);
 		} catch (error) {
 			console.error('Error finding client by phone number:', error);
-			throw new DatabaseError('Failed to find client by phone number');
+			throw new DatabaseError('Failed to find client by phone number.');
 		}
 	}
 
@@ -333,8 +348,11 @@ module.exports = class Client {
 				throw new ValidationError(
 					'This client has appointments. Deletion is forbidden.'
 				);
+			} else if (error instanceof NotFoundError) {
+				throw error;
+			} else {
+				throw new DatabaseError('Failed to delete client.');
 			}
-			throw new DatabaseError('Failed to delete client.');
 		}
 	}
 
