@@ -13,6 +13,7 @@ const {
 const {
 	validateUserRoleUpdate,
 	validateClientDeletion,
+	validateClientId,
 } = require('../utils/validations');
 
 /**
@@ -128,6 +129,105 @@ exports.listClients = async (req, res, next) => {
 			sendErrorResponse(res, 404, error.message);
 		} else {
 			next(new DatabaseError('Failed to retrieve clients.', error));
+		}
+	}
+};
+
+/**
+ * Retrieve client by their ID.
+ * @param {object} req - The request object containing the client ID in params.
+ * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the appointment retrieval process.
+ */
+exports.getClientById = async (req, res, next) => {
+	const clientId = parseInt(req.params.clientId);
+	try {
+		validateClientId(clientId);
+
+		const client = await Client.findById(clientId);
+		// Check if the client exists
+		if (!client) {
+			throw new NotFoundError('Client not found.');
+		}
+
+		sendSuccessResponse(res, 200, 'Client retrieved successfully.', client);
+	} catch (error) {
+		if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else {
+			next(new DatabaseError('Failed to retrieve client.', error));
+		}
+	}
+};
+
+/**
+ * Retrieve client by their phone number.
+ * @param {object} req - The request object containing the client phone number in params.
+ * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the appointment retrieval process.
+ */
+exports.getClientByPhoneNumber = async (req, res, next) => {
+	const phoneNumber = req.params.phoneNumber;
+	try {
+		// Validate phone number
+		if (!Client.validatePhone(phoneNumber)) {
+			throw new ValidationError('Invalid phone number.');
+		}
+
+		const client = await Client.findByPhoneNumber(phoneNumber);
+		// Check if the client exists
+		if (!client) {
+			throw new NotFoundError('Client not found.');
+		}
+
+		sendSuccessResponse(res, 200, 'Client retrieved successfully.', client);
+	} catch (error) {
+		if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else {
+			next(new DatabaseError('Failed to retrieve client.', error));
+		}
+	}
+};
+
+/**
+ * Retrieve client by their email.
+ * @param {object} req - The request object containing the client email in params.
+ * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * @throws {Error} - If there is an error during the appointment retrieval process.
+ */
+exports.getClientByEmail = async (req, res, next) => {
+	const email = req.params.email;
+	try {
+		// Validate email
+		if (!Client.validateEmail(email)) {
+			throw new ValidationError('Invalid email address.');
+		}
+
+		const client = await Client.findByEmail(email);
+		// Check if the client exists
+		if (!client) {
+			throw new NotFoundError('Client not found.');
+		}
+
+		sendSuccessResponse(res, 200, 'Client retrieved successfully.', client);
+	} catch (error) {
+		if (error instanceof ValidationError) {
+			sendErrorResponse(res, 400, error.message);
+		} else if (error instanceof NotFoundError) {
+			sendErrorResponse(res, 404, error.message);
+		} else {
+			next(new DatabaseError('Failed to retrieve client.', error));
 		}
 	}
 };

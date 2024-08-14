@@ -38,4 +38,37 @@ router.get(
 	clientsController.listClients
 );
 
+/**
+ * @route GET /api/v1/clients/:clientId
+ * @description Retrieve a specified client by id
+ * @access Private
+ */
+router.get(
+	'/:clientId',
+	checkPermission(Permission.READ_CLIENT),
+	clientsController.getClientById
+);
+
+/**
+ * @route GET /api/v1/clients/email/:email
+ * @description Retrieve a specified client by email
+ * @access Private
+ */
+router.get(
+	'/email/:email',
+	checkPermission(Permission.READ_CLIENT),
+	clientsController.getClientByEmail
+);
+
+/**
+ * @route GET /api/v1/clients/phone/:phoneNumber
+ * @description Retrieve a specified client by phone number
+ * @access Private
+ */
+router.get(
+	'/phone/:phoneNumber',
+	checkPermission(Permission.READ_CLIENT),
+	clientsController.getClientByPhoneNumber
+);
+
 module.exports = router;
