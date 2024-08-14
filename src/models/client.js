@@ -71,7 +71,7 @@ module.exports = class Client {
 		try {
 			return await comparePassword(inputPassword, this.password);
 		} catch (error) {
-			console.error('Password comparison error:', error);
+			// console.error('Password comparison error:', error);
 			throw new DatabaseError('Error during authentication.');
 		}
 	}
@@ -99,7 +99,7 @@ module.exports = class Client {
 			this.clientId = client.insertId;
 			return this.clientId;
 		} catch (error) {
-			console.error('Error registering client:', error);
+			// console.error('Error registering client:', error);
 			throw new DatabaseError('Failed to register client.');
 		}
 	}
@@ -138,7 +138,7 @@ module.exports = class Client {
 				clientData.clientId
 			);
 		} catch (error) {
-			console.error('Error finding client by email:', error);
+			// console.error('Error finding client by email:', error);
 			throw new DatabaseError('Failed to find client by email.');
 		}
 	}
@@ -177,7 +177,7 @@ module.exports = class Client {
 				clientData.clientId
 			);
 		} catch (error) {
-			console.error('Error finding client by id:', error);
+			// console.error('Error finding client by id:', error);
 			throw new DatabaseError('Failed to find client by ID.');
 		}
 	}
@@ -205,7 +205,7 @@ module.exports = class Client {
 			const [results] = await pool.execute(querySelectClients);
 			return results.length > 0 ? results : null;
 		} catch (error) {
-			console.error('Error retrieving clients:', error);
+			// console.error('Error retrieving clients:', error);
 			throw new DatabaseError('Failed to retrieve clients.');
 		}
 	}
@@ -231,7 +231,7 @@ module.exports = class Client {
 				process.env.JWT_SECRET
 			);
 		} catch (error) {
-			console.error('JWT creation error:', error);
+			// console.error('JWT creation error:', error);
 			throw new DatabaseError('Error creating authentication token.');
 		}
 	}
@@ -262,7 +262,7 @@ module.exports = class Client {
 	async updateUserRole(newRole) {
 		// First, check if the new role is different from the current role
 		if (this.role === newRole) {
-			console.error('Role is already set to the new value');
+			// console.error('Role is already set to the new value');
 			return false;
 		}
 
@@ -279,7 +279,7 @@ module.exports = class Client {
 
 			return false;
 		} catch (error) {
-			console.error('Error updating user role:', error);
+			// console.error('Error updating user role:', error);
 			throw new DatabaseError('Failed to update user role.');
 		}
 	}
@@ -320,7 +320,7 @@ module.exports = class Client {
 				clientData.clientId
 			);
 		} catch (error) {
-			console.error('Error finding client by phone number:', error);
+			// console.error('Error finding client by phone number:', error);
 			throw new DatabaseError('Failed to find client by phone number.');
 		}
 	}
@@ -342,7 +342,7 @@ module.exports = class Client {
 				throw new NotFoundError('Client not found.');
 			}
 		} catch (error) {
-			console.error('Error deleting client:', error);
+			// console.error('Error deleting client:', error);
 
 			if (error.code === 'ER_ROW_IS_REFERENCED_2') {
 				throw new ValidationError(
@@ -372,7 +372,7 @@ module.exports = class Client {
 				throw new NotFoundError('Client not found.');
 			}
 		} catch (error) {
-			console.error('Error deleting user:', error);
+			// console.error('Error deleting user:', error);
 			if (error instanceof NotFoundError) {
 				throw error;
 			} else {

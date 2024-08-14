@@ -4,7 +4,7 @@
 	"description": "## Table of Contents",
 	"main": "index.js",
 	"scripts": {
-		"test": "jest --coverage",
+		"test": "jest --verbose",
 		"testwatch": "jest --watchAll",
 		"start": "nodemon src/app.js"
 	},

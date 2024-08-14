@@ -15,12 +15,10 @@ jest.mock('../../src/utils/database', () => ({
 		execute: jest.fn(),
 	},
 }));
-
 // Mocked 'auth' module to simulate password comparison without real authentication.
 jest.mock('../../src/utils/auth', () => ({
 	comparePassword: jest.fn(),
 }));
-
 // Mock 'jwt' module to avoid real auth token creation during tests
 jest.mock('../../src/utils/jwt', () => ({
 	createJWT: jest.fn(),
