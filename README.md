@@ -8,12 +8,14 @@
 4. [Entity Relationship Diagram](#entity-relationship-diagram)
 5. [API Documentation](#api-documentation)
 
-   5.1 [User Management](#patient-management)
+   5.1 [User Management](#user-management)
 
    - Client data model.
    - Endpoint **/api/v1/auth/register**
    - Endpoint **/api/v1/auth/login**
    - Endpoint **/api/v1/clients/:clientId**
+   - Endpoint **/api/v1/clients/email/:email**
+   - Endpoint **/api/v1/clients/phone/:phoneNumber**
 
    5.2 [Doctor Management](#doctor-management)
 
@@ -42,7 +44,7 @@
    - Endpoint **/api/v1/schedules/doctor-schedule/:doctorId**
 
 6. [Install](#install)
-7. [Running in Docker ContainerRun](#run)
+7. [Running in Docker ContainerRun](#running-in-docker-container)
 
 ## Description
 
@@ -465,6 +467,16 @@ Description: The provided client ID is invalid or missing.
 }
 ```
 
+Status Code: **401 Unauthorized**
+
+Description: The request lacks proper authentication credentials or the provided token is invalid. Ensure that the correct authentication token is provided.
+
+```
+{
+    "message": "Authentication required."
+}
+```
+
 Status Code: **403 Forbidden**
 
 Description: The user does not have the required admin privileges to perform this operation.
@@ -503,6 +515,297 @@ request.
 ```
 { 
     "message": "Failed to delete client." 
+}
+```
+
+#### 6. Retrieve a specific client by ID
+
+Endpoint
+
+- URL Path: **_/api/v1/clients/:clientId_**
+- Description: This endpoint retrieves information about a specific client based
+  on their ID. The admin-client sends a GET request to the server with the client's ID
+  as a path parameter. The server processes the request by querying the database
+  for the client with the specified ID.
+- Authentication and Authorization:  This endpoint requires admin-level authentication. Only users with admin privileges can perform this operation.
+
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- clientId: The unique identifier of the client to retrieve.
+
+**Example Request**
+
+Description: A `GET` request to retrieve a specific client associated with a clientId
+
+```
+
+curl -X GET http://localhost:8080/api/v1/clients/123
+
+```
+
+**Example Responses**
+
+Status code: **200 OK**
+
+Description: The server successfully retrieves the client's information.
+
+```
+{
+    "message": "Client retrieved successfully.",
+    "data": {
+        "firstName": "Carlos",
+        "lastName": "Gonzalez",
+        "phoneNumber": "+1(456)555-0123",
+        "email": "gonzalez@example.com",
+        "password": "$2b$10$Gj4xELvuBVqHkGIakaBAP.VLG4zSezU4u5",
+        "role": "PATIENT",
+        "clientId": 123,
+        "deletedAt": null
+    }
+}
+```
+
+Status code: **400 Bad Request**
+
+Description: The provided client ID is invalid (not a number).
+
+```
+{
+    "message": "Invalid client ID."
+}
+```
+
+Status Code: **401 Unauthorized**
+
+Description: The request lacks proper authentication credentials or the provided token is invalid. Ensure that the correct authentication token is provided.
+
+```
+{
+    "message": "Authentication required."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The user does not have the required admin privileges to perform this operation.
+
+```
+{ 
+    "message": "Access denied. Admin privileges required."
+}
+```
+
+Status code: **404 Not Found**
+
+Description: No client with the specified ID exists in the database.
+
+```
+{
+    "message": "Client not found."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+    "message": "Failed to retrieve client."
+}
+```
+
+#### 7. Retrieve a specific client by phone number
+
+Endpoint
+
+- URL Path: **_/api/v1/clients/phone/:phoneNumber_**
+- Description: This endpoint retrieves information about a specific client based on their phone number. The admin-client sends a GET request to the server with the client's phone number as a path parameter. The server processes the request by querying the database for the client with the specified phone number.
+- Authentication and Authorization:  This endpoint requires admin-level authentication. Only users with admin privileges can perform this operation.
+
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- phoneNumber: The phone number (a unique value) of the client to retrieve.
+
+**Example Request**
+
+Description: A `GET` request to retrieve a specific client associated with a phoneNumber
+
+```
+
+curl -X GET http://localhost:8080/api/v1/clients/phone/+1(456)555-0123
+
+```
+
+**Example Responses**
+
+Status code: **200 OK**
+
+Description: The server successfully retrieves the client's information.
+
+```
+{
+    "message": "Client retrieved successfully.",
+    "data": {
+        "firstName": "Carlos",
+        "lastName": "Gonzalez",
+        "phoneNumber": "+1(456)555-0123",
+        "email": "gonzalez@example.com",
+        "password": "$2b$10$Gj4xELvuBVqHkGIakaBAP.VLG4zSezU4u5",
+        "role": "PATIENT",
+        "clientId": 123,
+        "deletedAt": null
+    }
+}
+```
+
+Status code: **400 Bad Request**
+
+Description: The provided phone number is invalid.
+
+```
+{
+    "message": "Invalid phone number."
+}
+```
+
+Status Code: **401 Unauthorized**
+
+Description: The request lacks proper authentication credentials or the provided token is invalid. Ensure that the correct authentication token is provided.
+
+```
+{
+    "message": "Authentication required."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The user does not have the required admin privileges to perform this operation.
+
+```
+{ 
+    "message": "Access denied. Admin privileges required."
+}
+```
+
+Status code: **404 Not Found**
+
+Description: No client with the specified phone number exists in the database.
+
+```
+{
+    "message": "Client not found."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+    "message": "Failed to retrieve client."
+}
+```
+
+#### 8. Retrieve a specific client by email
+
+Endpoint
+
+- URL Path: **_/api/v1/clients/email/:email_**
+- Description: This endpoint retrieves information about a specific client based on their email address. The admin-client sends a GET request to the server with the client's email as a path parameter. The server processes the request by querying the database for the client with the specified email address.
+- Authentication and Authorization:  This endpoint requires admin-level authentication. Only users with admin privileges can perform this operation.
+
+**Request Parameter**
+
+The request should include the following path parameter:
+
+- email: The email address (a unique value) of the client to retrieve.
+
+**Example Request**
+
+Description: A `GET` request to retrieve a specific client associated with an email address
+
+```
+
+curl -X GET http://localhost:8080/api/v1/clients/email/gonzalez@example.com
+
+```
+
+**Example Responses**
+
+Status code: **200 OK**
+
+Description: The server successfully retrieves the client's information.
+
+```
+{
+    "message": "Client retrieved successfully.",
+    "data": {
+        "firstName": "Carlos",
+        "lastName": "Gonzalez",
+        "phoneNumber": "+1(456)555-0123",
+        "email": "gonzalez@example.com",
+        "password": "$2b$10$Gj4xELvuBVqHkGIakaBAP.VLG4zSezU4u5",
+        "role": "PATIENT",
+        "clientId": 123,
+        "deletedAt": null
+    }
+}
+```
+
+Status code: **400 Bad Request**
+
+Description: The provided email address is invalid.
+
+```
+{
+    "message": "Invalid email address."
+}
+```
+
+Status Code: **401 Unauthorized**
+
+Description: The request lacks proper authentication credentials or the provided token is invalid. Ensure that the correct authentication token is provided.
+
+```
+{
+    "message": "Authentication required."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The user does not have the required admin privileges to perform this operation.
+
+```
+{ 
+    "message": "Access denied. Admin privileges required."
+}
+```
+
+Status code: **404 Not Found**
+
+Description: No client with the specified email address exists in the database.
+
+```
+{
+    "message": "Client not found."
+}
+```
+
+Status Code: **500 Internal Server Error**
+
+Description: An unexpected error occurred on the server while processing the request.
+
+```
+{
+    "message": "Failed to retrieve client."
 }
 ```
 

@@ -76,7 +76,7 @@ exports.postRegister = async (req, res, next) => {
 			email,
 			password
 		);
-
+		
 		const hashedPassword = await hashPassword(password);
 		const client = new Client(
 			firstName,
