@@ -119,6 +119,7 @@ module.exports = class Client {
 			'password',
 			'role',
 			'clientId',
+			'deletedAt',
 		];
 		const query = `SELECT ${columns.join(',')} FROM client WHERE email = ?`;
 
@@ -135,7 +136,8 @@ module.exports = class Client {
 				clientData.email,
 				clientData.password,
 				clientData.role,
-				clientData.clientId
+				clientData.clientId,
+				clientData.deletedAt
 			);
 		} catch (error) {
 			// console.error('Error finding client by email:', error);
@@ -158,6 +160,7 @@ module.exports = class Client {
 			'password',
 			'role',
 			'clientId',
+			'deletedAt',
 		];
 		const query = `SELECT ${columns.join(',')} FROM client WHERE clientId = ?`;
 
@@ -174,7 +177,8 @@ module.exports = class Client {
 				clientData.email,
 				clientData.password,
 				clientData.role,
-				clientData.clientId
+				clientData.clientId,
+				clientData.deletedAt
 			);
 		} catch (error) {
 			// console.error('Error finding client by id:', error);
@@ -299,6 +303,7 @@ module.exports = class Client {
 			'password',
 			'role',
 			'clientId',
+			'deletedAt',
 		];
 		const query = `SELECT ${columns.join(
 			','
@@ -317,7 +322,8 @@ module.exports = class Client {
 				clientData.email,
 				clientData.password,
 				clientData.role,
-				clientData.clientId
+				clientData.clientId,
+				clientData.deletedAt
 			);
 		} catch (error) {
 			// console.error('Error finding client by phone number:', error);

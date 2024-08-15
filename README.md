@@ -381,6 +381,26 @@ Description: The server successfully retrieves the list of clients.
 }
 ```
 
+Status Code: **401 Unauthorized**
+
+Description: The request lacks proper authentication credentials or the provided token is invalid. Ensure that the correct authentication token is provided.
+
+```
+{
+    "message": "Authentication required."
+}
+```
+
+Status Code: **403 Forbidden**
+
+Description: The user does not have the required admin privileges to perform this operation.
+
+```
+{ 
+    "message": "Access denied. Admin privileges required."
+}
+```
+
 Status Code: **404 Not Found**
 
 Description: The server cannot find any clients in the database.
@@ -461,6 +481,11 @@ Status Code: **400 Bad Request**
 
 Description: The provided client ID is invalid or missing.
 
+```
+{ 
+    "message": "Client ID is required."
+}
+```
 ```
 { 
     "message": "Invalid client ID."
@@ -569,8 +594,13 @@ Description: The server successfully retrieves the client's information.
 
 Status code: **400 Bad Request**
 
-Description: The provided client ID is invalid (not a number).
+Description: The client ID is missing from the request. A valid client ID must be provided to proceed.
 
+```
+{
+    "message": "Client ID is required."
+}
+```
 ```
 {
     "message": "Invalid client ID."
@@ -665,8 +695,13 @@ Description: The server successfully retrieves the client's information.
 
 Status code: **400 Bad Request**
 
-Description: The provided phone number is invalid.
+Description: The provided phone number is missing or invalid.
 
+```
+{
+    "message": "Phone number is required."
+}
+```
 ```
 {
     "message": "Invalid phone number."
@@ -761,8 +796,13 @@ Description: The server successfully retrieves the client's information.
 
 Status code: **400 Bad Request**
 
-Description: The provided email address is invalid.
+Description: The provided email address is missing or invalid.
 
+```
+{
+    "message": "Email address is required."
+}
+```
 ```
 {
     "message": "Invalid email address."
