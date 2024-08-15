@@ -203,7 +203,7 @@ module.exports = class Client {
 
 		try {
 			const [results] = await pool.execute(querySelectClients);
-			return results.length > 0 ? results : null;
+			return results.length > 0 ? results : [];
 		} catch (error) {
 			// console.error('Error retrieving clients:', error);
 			throw new DatabaseError('Failed to retrieve clients.');

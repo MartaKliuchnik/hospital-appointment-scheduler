@@ -274,7 +274,7 @@ describe('Client Model', () => {
 
 			const result = await Client.getAll();
 			// Expect a null to be returned when no clients are found
-			expect(result).toBeNull();
+			expect(result).toEqual([]);
 		});
 
 		it('should throw DatabaseError on getAll failure', async () => {

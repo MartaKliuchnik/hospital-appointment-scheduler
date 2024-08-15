@@ -211,11 +211,10 @@ const validateScheduleId = (scheduleId) => {
 	}
 };
 
-const validateClientId = async (clientId) => {
-	// If we have a clientId
-	const client = await Client.findById(clientId);
-	if (!client) {
-		throw new ValidationError('Client not found.');
+const validateClientId = (clientId) => {
+	// Check if the clientId is provided and is a valid number
+	if (!clientId || isNaN(clientId)) {
+		throw new ValidationError('Invalid client ID.');
 	}
 };
 
