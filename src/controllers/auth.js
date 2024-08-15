@@ -12,7 +12,6 @@ const {
 } = require('../utils/customErrors');
 const { sendSuccessResponse } = require('../utils/responseHandlers');
 
-
 /**
  * Handle login requests.
  * @param {object} req - The request object, containing the email and password in the body.
@@ -76,7 +75,7 @@ exports.postRegister = async (req, res, next) => {
 			email,
 			password
 		);
-		
+
 		const hashedPassword = await hashPassword(password);
 		const client = new Client(
 			firstName,
@@ -90,7 +89,7 @@ exports.postRegister = async (req, res, next) => {
 
 		sendSuccessResponse(res, 200, 'User registered successfully', { clientId });
 	} catch (error) {
-		console.error('Registration error:', error);
+		// console.error('Registration error:', error);
 
 		if (error instanceof ConflictError) {
 			next(error);

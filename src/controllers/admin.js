@@ -30,7 +30,6 @@ exports.updateUserRole = async (req, res, next) => {
 
 	try {
 		const client = await validateUserRoleUpdate(clientId, newRole);
-
 		const isUpdatedRole = await client.updateUserRole(newRole);
 
 		if (!isUpdatedRole) {
