@@ -5,10 +5,7 @@ const { createTestClient } = require('../../src/utils/testHelpers');
 const Client = require('../../src/models/client');
 const Appointment = require('../../src/models/appointment');
 const { pool } = require('../../src/utils/database');
-const {
-	DatabaseError,
-	ValidationError,
-} = require('../../src/utils/customErrors');
+const { DatabaseError } = require('../../src/utils/customErrors');
 
 // Mock dependencies to isolate unit tests
 jest.mock('../../src/utils/responseHandlers'); // Controls response handling

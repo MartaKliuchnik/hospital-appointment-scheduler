@@ -39,7 +39,7 @@ describe('Doctor Model', () => {
 
 	// Doctor constructor tests
 	describe('Constructor', () => {
-		it('should create a new Docotr instance with default values', () => {
+		it('should create a new Doctor instance with default values', () => {
 			const doctor = createTestDoctor(mockDoctorData);
 
 			// Verify that the properties of the Doctor instance are correctly set
@@ -85,10 +85,7 @@ describe('Doctor Model', () => {
 	// Retrieve a list of all doctors tests
 	describe('Retrieve all doctors', () => {
 		it('should return a list of all active doctors for non-admin roles', async () => {
-			const mockListDoctors = [
-				mockDoctorData,
-				{ ...mockDoctorData, doctorId: 2 },
-			];
+			const mockListDoctors = [mockDoctorData, { doctorId: 2 }];
 			pool.execute.mockResolvedValue([mockListDoctors]); // Only active doctors
 
 			const result = await Doctor.getAll(Role.PATIENT);
@@ -104,10 +101,7 @@ describe('Doctor Model', () => {
 		});
 
 		it('should return a list of all doctors for admin roles', async () => {
-			const mockListDoctors = [
-				mockDoctorData,
-				{ ...mockDoctorData, doctorId: 2, isActive: 0 },
-			];
+			const mockListDoctors = [mockDoctorData, { doctorId: 2, isActive: 0 }];
 			pool.execute.mockResolvedValue([mockListDoctors]);
 
 			const result = await Doctor.getAll(Role.ADMIN);
