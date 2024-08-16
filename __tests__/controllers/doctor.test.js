@@ -249,4 +249,98 @@ describe('Doctor controller', () => {
 			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
 		});
 	});
+
+	// Tests for deleting a doctor
+	describe('Deletion a doctor', () => {
+		it('should delete a doctor successfully', async () => {
+			req.params.doctorId = 1;
+			req.client.role = Role.ADMIN;
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
+			Doctor.hasAppointments.mockResolvedValue(null); // Mock no appointments
+			Doctor.deleteById.mockResolvedValue({ affectedRows: 1 }); // Mock successful deletion
+
+			await doctorController.deleteDoctor(req, res, next);
+
+			// Verify that the doctor was deleted and a success response was sent
+			expect(Doctor.getById).toHaveBeenCalledWith(1, Role.ADMIN);
+			expect(Doctor.hasAppointments).toHaveBeenCalledWith(1);
+			expect(Doctor.deleteById).toHaveBeenCalledWith(1);
+			expect(responseHandlers.sendSuccessResponse).toHaveBeenCalledWith(
+				res,
+				200,
+				'Doctor deleted successfully.'
+			);
+		});
+
+		it('should handle invalid doctor ID', async () => {
+			req.params.doctorId = 'invalid';
+
+			// Mock validation error for invalid ID
+			validations.validateDoctorId.mockImplementation(() => {
+				throw new ValidationError('Invalid doctor ID.');
+			});
+
+			await doctorController.deleteDoctor(req, res, next);
+
+			// Verify that an error response is sent for the invalid doctor ID
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'Invalid doctor ID.'
+			);
+		});
+
+		it('should handle non-existent doctor', async () => {
+			req.params.doctorId = 999; // Sets a non-existent doctor ID
+			req.client.role = Role.ADMIN;
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Doctor.getById.mockResolvedValue(null); // Mock scenario where no doctor is found
+
+			await doctorController.deleteDoctor(req, res, next);
+
+			// Verify that an error response is sent when the doctor is not found
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				404,
+				'Doctor not found.'
+			);
+		});
+
+		it('should prevent deletion of doctor with appointments', async () => {
+			// Scenario: Doctor with valid doctor ID, and associated appointments
+			req.params.doctorId = 1;
+			req.client.role = Role.ADMIN;
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
+			Doctor.hasAppointments.mockResolvedValue({ count: 1 }); // Mock scenario where doctor has appointment
+
+			await doctorController.deleteDoctor(req, res, next);
+
+			// Verify that deletion is prevented if the doctor has existing appointments
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'This doctor has appointment(s). Deletion is forbidden.'
+			);
+		});
+
+		it('should handle database error during deletion', async () => {
+			req.params.doctorId = 1;
+			req.client.role = Role.ADMIN;
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
+			Doctor.hasAppointments.mockResolvedValue(null); // Mock no appointments
+			Doctor.deleteById.mockRejectedValue(new Error('Database error')); // Mock deletion error
+
+			await doctorController.deleteDoctor(req, res, next);
+
+			// Ensures the next middleware is called with the database error
+			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
+		});
+	});
 });
