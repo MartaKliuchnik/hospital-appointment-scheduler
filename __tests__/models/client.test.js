@@ -8,6 +8,7 @@ const {
 } = require('../../src/utils/customErrors');
 const { pool } = require('../../src/utils/database');
 const { createJWT } = require('../../src/utils/jwt');
+const { createTestClient } = require('../../src/utils/testHelpers');
 
 // Mocked 'database' module to avoid real database queries during tests.
 jest.mock('../../src/utils/database', () => ({
@@ -23,24 +24,6 @@ jest.mock('../../src/utils/auth', () => ({
 jest.mock('../../src/utils/jwt', () => ({
 	createJWT: jest.fn(),
 }));
-
-/**
- * Utility function for creating test clients.
- * @param {Object} mockClientData - Default values for client attributes.
- * @param {Object} [overrides={}] - Optional values to override the default attributes.
- * @returns {Client} - A new instance of the Client class.
- */
-const createTestClient = (mockClientData, overrides = {}) => {
-	return new Client(
-		overrides.firstName || mockClientData.firstName,
-		overrides.lastName || mockClientData.lastName,
-		overrides.phoneNumber || mockClientData.phoneNumber,
-		overrides.email || mockClientData.email,
-		overrides.password || mockClientData.password,
-		overrides.role || mockClientData.role,
-		overrides.clientId || mockClientData.clientId
-	);
-};
 
 /**
  * Test suite for Client Model implementation.
@@ -142,7 +125,8 @@ describe('Client Model', () => {
 		it('should create a new Client instance with default values', () => {
 			const client = createTestClient(mockClientData);
 
-			// Verify that the properties of the client instance are correctly set
+			// Verify that the properties of the Client instance are correctly set
+			expect(client).toBeInstanceOf(Client);
 			expect(client.firstName).toBe('Carlos');
 			expect(client.lastName).toBe('Gonzalez');
 			expect(client.phoneNumber).toBe('+1(456)555-0123');
@@ -254,6 +238,7 @@ describe('Client Model', () => {
 			const mockListClients = [
 				mockClientData,
 				{
+					...mockClientData,
 					clientId: 2,
 					email: 'jane@example.com',
 					phoneNumber: '+1(123)444-7890',
@@ -269,7 +254,7 @@ describe('Client Model', () => {
 			expect(result[1].email).toBe(mockListClients[1].email);
 		});
 
-		it('should return null when no clients are found', async () => {
+		it('should return empty array when no clients are found', async () => {
 			pool.execute.mockResolvedValue([[]]);
 
 			const result = await Client.getAll();
@@ -359,7 +344,7 @@ describe('Client Model', () => {
 			const client = createTestClient(mockClientData);
 
 			pool.execute.mockRejectedValue(new Error('Database error'));
-			// Expect a DatabaseError to be thrown with a specific message
+			// Expect a DatabaseError if the database operation fails during the update
 			await expect(client.updateUserRole(Role.ADMIN)).rejects.toThrow(
 				new DatabaseError('Failed to update user role.')
 			);

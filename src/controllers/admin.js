@@ -173,7 +173,6 @@ exports.getClientById = async (req, res, next) => {
  */
 exports.getClientByPhoneNumber = async (req, res, next) => {
 	const phoneNumber = req.params.phoneNumber;
-	console.log(phoneNumber);
 
 	try {
 		// Validate phone number

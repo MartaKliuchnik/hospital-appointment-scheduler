@@ -4,6 +4,7 @@ const {
 	NotFoundError,
 	ValidationError,
 } = require('../utils/customErrors');
+const Role = require('../enums/Role');
 
 module.exports = class Doctor {
 	/**
@@ -47,7 +48,7 @@ module.exports = class Doctor {
 			this.doctorId = result.insertId;
 			return this.doctorId;
 		} catch (error) {
-			console.error('Error inserting doctor:', error);
+			// console.error('Error inserting doctor:', error);
 			throw new DatabaseError('Failed to insert doctor.');
 		}
 	}
@@ -59,22 +60,20 @@ module.exports = class Doctor {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getAll(clientRole) {
-		const querySelectActiveDoctors = 'SELECT * FROM doctor WHERE isActive = 1';
-		const querySelectDoctors = 'SELECT * FROM doctor';
+		const columns = ['doctorId', 'firstName', 'lastName', 'specialization'];
+		const isAdmin = clientRole === Role.ADMIN;
+		const querySelectDoctors = `SELECT ${[
+			...columns,
+			isAdmin ? 'isActive' : null,
+		]
+			.filter(Boolean)
+			.join(', ')} FROM doctor ${isAdmin ? '' : 'WHERE isActive = 1'}`;
 
-
-		console.log(`clientRole =`, clientRole);
-		let results;
 		try {
-			if (clientRole === 'ADMIN') {
-				[results] = await pool.execute(querySelectDoctors);
-			} else {
-				[results] = await pool.execute(querySelectActiveDoctors);
-			}
-
-			return results.length > 0 ? results : null;
+			const [results] = await pool.execute(querySelectDoctors);
+			return results.length > 0 ? results : [];
 		} catch (error) {
-			console.error('Error retrieving doctors:', error);
+			// console.error('Error retrieving doctors:', error);
 			throw new DatabaseError('Failed to retrieve doctors.');
 		}
 	}
@@ -87,21 +86,17 @@ module.exports = class Doctor {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getById(doctorId, clientRole) {
-		const querySelectActiveDoctorById =
-			'SELECT * FROM doctor WHERE doctorId = ? AND isActive = 1';
-		const querySelectDoctorById = 'SELECT * FROM doctor WHERE doctorId = ?';
+		const columns = ['doctorId', 'firstName', 'lastName', 'specialization'];
+		const isAdmin = clientRole === Role.ADMIN;
+		const querySelectDoctorById = `SELECT ${[
+			[...columns, isAdmin ? 'isActive' : null].filter(Boolean).join(', '),
+		]} FROM doctor WHERE doctorId = ? ${isAdmin ? '' : 'AND isActive = 1'}`;
 
-		let results;
 		try {
-			if (clientRole === 'ADMIN') {
-				[results] = await pool.execute(querySelectDoctorById, [doctorId]);
-			} else {
-				[results] = await pool.execute(querySelectActiveDoctorById, [doctorId]);
-			}
-
+			const [results] = await pool.execute(querySelectDoctorById, [doctorId]);
 			return results.length > 0 ? results[0] : null;
 		} catch (error) {
-			console.error('Error retrieving doctor:', error);
+			// console.error('Error retrieving doctor:', error);
 			throw new DatabaseError('Failed to retrieve doctor.');
 		}
 	}
@@ -114,23 +109,25 @@ module.exports = class Doctor {
 	 */
 	static async deleteById(doctorId) {
 		const querySoftDeleteDoctor =
-			'UPDATE doctor SET isActive = false WHERE doctorId = ?';
+			'UPDATE doctor SET isActive = 0 WHERE doctorId = ?';
 
 		try {
 			const [result] = await pool.execute(querySoftDeleteDoctor, [doctorId]);
 
-			if ((result.affectedRows = 0)) {
+			if (result.affectedRows === 0) {
 				throw new NotFoundError('Doctor not found.');
 			}
 		} catch (error) {
-			console.error('Error deleting doctor:', error);
-
+			// console.error('Error deleting doctor:', error);
 			if (error.code === 'ER_ROW_IS_REFERENCED_2') {
 				throw new ValidationError(
 					'This doctor has appointments. Deletion is forbidden.'
 				);
+			} else if (error instanceof NotFoundError) {
+				throw error;
+			} else {
+				throw new DatabaseError('Failed to delete doctor.');
 			}
-			throw new DatabaseError('Failed to delete doctor.');
 		}
 	}
 
@@ -172,8 +169,12 @@ module.exports = class Doctor {
 
 			return this.getById(doctorId);
 		} catch (error) {
-			console.error('Error updating doctor:', error);
-			throw new DatabaseError('Failed to update doctor.');
+			// console.error('Error updating doctor:', error);
+			if (error instanceof ValidationError) {
+				throw error;
+			} else {
+				throw new DatabaseError('Failed to update doctor.');
+			}
 		}
 	}
 
@@ -190,7 +191,7 @@ module.exports = class Doctor {
 			const [results] = await pool.execute(query, [doctorId]);
 			return results[0].count > 0 ? results[0] : null;
 		} catch (error) {
-			console.error('Error checking doctor appointments:', error);
+			// console.error('Error checking doctor appointments:', error);
 			throw new DatabaseError('Failed to check doctor appointments.');
 		}
 	}
