@@ -594,13 +594,8 @@ Description: The server successfully retrieves the client's information.
 
 Status code: **400 Bad Request**
 
-Description: The client ID is missing from the request. A valid client ID must be provided to proceed.
+Description: The valid client ID must be provided to proceed.
 
-```
-{
-    "message": "Client ID is required."
-}
-```
 ```
 {
     "message": "Invalid client ID."
@@ -879,7 +874,7 @@ Endpoint
 
 **Example Request**
 
-Description: A `GET` request to retrieve a list of all doctors. This endpoint retrieves a list of all doctors. The visibility of the doctors' data depends on the role of the client making the request: if the client has an ADMIN role, they can see all doctors, both active and inactive; if the client has a PATIENT role (non-admin role), they can only see active doctors.
+Description: This `GET` endpoint retrieves a list of doctors. The visibility of doctor data depends on the client's role. **ADMIN role**: The response includes both active and inactive doctors, along with the 'isActive' property. **NON-ADMIN role**: The response includes only active doctors, and the 'isActive' property is excluded.
 
 ```
 
@@ -903,7 +898,7 @@ Description: The server successfully retrieves the list of doctors.
             "firstName": "Jane",
             "lastName": "Doe",
             "specialization": "NEUROLOGY",
-            "isActive": 1, 
+            "isActive": 1, // Excluded for non-admin roles
           },
           ...
         ]
@@ -974,7 +969,8 @@ Description: The server successfully retrieves the doctor's information.
             "doctorId": 1,
             "firstName": "John",
             "lastName": "Doe",
-            "specialization": "CARDIOLOGY"
+            "specialization": "CARDIOLOGY",
+            "isActive": 1 // Excluded for non-admin roles
         }
     ]
 }
@@ -1155,8 +1151,13 @@ Description: The server successfully deletes the doctor.
 
 Status Code: **400 Bad Request**
 
-Description: The provided doctor ID is invalid (not a number).
+Description: The client ID is missing from the request.  The provided doctor ID is invalid (not a number).
 
+```
+{
+    "message": "Client ID is required."
+}
+```
 ```
 {
     "message": "Invalid doctor ID."
@@ -1274,8 +1275,13 @@ Description: The server successfully updates the doctor's information.
 
 Status Code: **400 Bad Request**
 
-Description: The provided doctor ID is invalid (not a number).
+Description: The provided doctor ID is missing or invalid (not a number).
 
+```
+{
+    "message": "Client ID is required."
+}
+```
 ```
 {
     "message": "Invalid doctor ID."

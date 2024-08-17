@@ -1,9 +1,11 @@
 const { Router } = require('express');
-const doctortsController = require('../controllers/doctors');
+const doctorsController = require('../controllers/doctors');
 const checkPermission = require('../middleware/permission');
 const Permission = require('../enums/Permission');
+const { requireParam } = require('../middleware/admin');
 
 const router = Router();
+
 
 /**
  * @route GET /api/v1/doctors
@@ -13,7 +15,7 @@ const router = Router();
 router.get(
 	'/',
 	checkPermission(Permission.READ_DOCTOR, true),
-	doctortsController.listDoctors
+	doctorsController.listDoctors
 );
 
 /**
@@ -23,8 +25,7 @@ router.get(
  */
 router.get(
 	'/:doctorId',
-	checkPermission(Permission.READ_DOCTOR, true),
-	doctortsController.getDoctor
+	doctorsController.getDoctor
 );
 
 /**
@@ -35,7 +36,7 @@ router.get(
 router.post(
 	'/',
 	checkPermission(Permission.CREATE_DOCTOR),
-	doctortsController.createDoctor
+	doctorsController.createDoctor
 );
 
 /**
@@ -44,9 +45,10 @@ router.post(
  * @access Private
  */
 router.delete(
-	'/:doctorId',
+	'/:doctorId?',
 	checkPermission(Permission.DELETE_DOCTOR),
-	doctortsController.deleteDoctor
+	requireParam('doctorId', 'Doctor ID is required.'),
+	doctorsController.deleteDoctor
 );
 
 /**
@@ -55,9 +57,10 @@ router.delete(
  * @access Private
  */
 router.put(
-	'/:doctorId',
+	'/:doctorId?',
 	checkPermission(Permission.UPDATE_DOCTOR),
-	doctortsController.updateDoctor
+	requireParam('doctorId', 'Doctor ID is required.'),
+	doctorsController.updateDoctor
 );
 
 module.exports = router;

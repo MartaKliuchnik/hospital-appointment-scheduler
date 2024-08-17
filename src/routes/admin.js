@@ -36,9 +36,8 @@ router.get(
  * @access Private
  */
 router.get(
-	'/:clientId?',
+	'/:clientId',
 	checkPermission(Permission.READ_CLIENT),
-	requireParam('clientId', 'Client ID is required.'),
 	clientsController.getClientById
 );
 

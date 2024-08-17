@@ -188,7 +188,7 @@ exports.updateDoctor = async (req, res, next) => {
 
 		if (
 			!Object.keys(MedicalSpecializations).includes(
-				req.body.specialization.toUpperCase()
+				req.body.specialization?.toUpperCase()
 			)
 		) {
 			throw new ValidationError(
