@@ -23,7 +23,7 @@ module.exports = class Doctor {
 	) {
 		this.firstName = firstName;
 		this.lastName = lastName;
-		this.specialization = specialization.toUpperCase();
+		this.specialization = specialization?.toUpperCase();
 		this.doctorId = doctorId;
 		this.isActive = isActive;
 	}
