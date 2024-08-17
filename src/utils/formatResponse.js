@@ -51,4 +51,5 @@ const formatSingleSchedule = (schedule) => {
 module.exports = {
 	formatClientAppointmentsResponse,
 	formatDoctorScheduleResponse,
+	formatSingleAppointment,
 };

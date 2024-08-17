@@ -60,14 +60,16 @@ module.exports = class Doctor {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getAll(clientRole) {
-		const columns = ['doctorId', 'firstName', 'lastName', 'specialization'];
-		const isAdmin = clientRole === Role.ADMIN;
-		const querySelectDoctors = `SELECT ${[
-			...columns,
-			isAdmin ? 'isActive' : null,
-		]
-			.filter(Boolean)
-			.join(', ')} FROM doctor ${isAdmin ? '' : 'WHERE isActive = 1'}`;
+		const columns = [
+			'doctorId',
+			'firstName',
+			'lastName',
+			'specialization',
+			...(clientRole === Role.ADMIN ? ['isActive'] : []),
+		];
+		const querySelectDoctors = `SELECT ${columns.join(', ')} FROM doctor ${
+			clientRole === Role.ADMIN ? '' : 'WHERE isActive = 1'
+		}`;
 
 		try {
 			const [results] = await pool.execute(querySelectDoctors);
@@ -86,11 +88,18 @@ module.exports = class Doctor {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getById(doctorId, clientRole) {
-		const columns = ['doctorId', 'firstName', 'lastName', 'specialization'];
-		const isAdmin = clientRole === Role.ADMIN;
-		const querySelectDoctorById = `SELECT ${[
-			[...columns, isAdmin ? 'isActive' : null].filter(Boolean).join(', '),
-		]} FROM doctor WHERE doctorId = ? ${isAdmin ? '' : 'AND isActive = 1'}`;
+		const columns = [
+			'doctorId',
+			'firstName',
+			'lastName',
+			'specialization',
+			...(clientRole === Role.ADMIN ? ['isActive'] : []),
+		];
+		const querySelectDoctorById = `SELECT ${columns.join(
+			', '
+		)} FROM doctor WHERE doctorId = ? ${
+			clientRole === Role.ADMIN ? '' : 'AND isActive = 1'
+		}`;
 
 		try {
 			const [results] = await pool.execute(querySelectDoctorById, [doctorId]);

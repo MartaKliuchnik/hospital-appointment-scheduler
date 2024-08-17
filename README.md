@@ -874,7 +874,9 @@ Endpoint
 
 **Example Request**
 
-Description: This `GET` endpoint retrieves a list of doctors. The visibility of doctor data depends on the client's role. **ADMIN role**: The response includes both active and inactive doctors, along with the 'isActive' property. **NON-ADMIN role**: The response includes only active doctors, and the 'isActive' property is excluded.
+Description: This `GET` endpoint retrieves a list of doctors. The visibility of doctor data depends on the client's role: 
+- **ADMIN role**: The response includes both active and inactive doctors, along with the 'isActive' property.
+- **NON-ADMIN role**: The response includes only active doctors, and the 'isActive' property is excluded.
 
 ```
 
@@ -970,7 +972,7 @@ Description: The server successfully retrieves the doctor's information.
             "firstName": "John",
             "lastName": "Doe",
             "specialization": "CARDIOLOGY",
-            "isActive": 1 // Excluded for non-admin roles
+            "isActive": 1, // Excluded for non-admin roles
         }
     ]
 }
@@ -1051,7 +1053,7 @@ Description: The doctor was successfully created.
             "firstName": "Mike",
             "lastName": "Jonson",
             "specialization": "CARDIOLOGY",
-            "isActive": 1
+            "isActive": 1,
         }
     ]
 }
@@ -1151,11 +1153,11 @@ Description: The server successfully deletes the doctor.
 
 Status Code: **400 Bad Request**
 
-Description: The client ID is missing from the request.  The provided doctor ID is invalid (not a number).
+Description: The doctor ID is missing from the request.  The provided doctor ID is invalid (not a number).
 
 ```
 {
-    "message": "Client ID is required."
+    "message": "Doctor ID is required."
 }
 ```
 ```
@@ -1267,7 +1269,7 @@ Description: The server successfully updates the doctor's information.
             "doctorId": 123,
             "firstName": "John",
             "lastName": "Doe",
-            "specialization": "CARDIOLOGY"
+            "specialization": "CARDIOLOGY",
         }
     ]
 ]
@@ -1279,7 +1281,7 @@ Description: The provided doctor ID is missing or invalid (not a number).
 
 ```
 {
-    "message": "Client ID is required."
+    "message": "Doctor ID is required."
 }
 ```
 ```

@@ -85,7 +85,7 @@ exports.getClientAppointments = async (req, res, next) => {
 
 	try {
 		validateClientAppointmentAccess(clientId, currentClient, req.client.role);
-		await validateClientId(clientId);
+		validateClientId(clientId);
 
 		const result = await Appointment.getAppointmentsByClientId(
 			clientId,

@@ -6,6 +6,7 @@ const {
 	NotFoundError,
 	DatabaseError,
 } = require('../utils/customErrors');
+const Role = require('../enums/Role');
 
 module.exports = class Appointment {
 	/**
@@ -65,7 +66,7 @@ module.exports = class Appointment {
 		} catch (error) {
 			// If there's an error, roll back the transaction
 			await connection.rollback();
-			console.error('Error inserting appointment:', error);
+			// console.error('Error inserting appointment:', error);
 			throw error;
 		} finally {
 			connection.release();
@@ -79,8 +80,17 @@ module.exports = class Appointment {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getAppointmentById(appointmentId) {
-		const querySelectAppointment =
-			'SELECT * FROM appointment WHERE appointmentId = ?';
+		const columns = [
+			'clientId',
+			'doctorId',
+			'appointmentTime',
+			'appointmentStatus',
+			'deletedAt',
+			'appointmentId',
+		];
+		const querySelectAppointment = `SELECT ${columns.join(
+			', '
+		)} FROM appointment WHERE appointmentId = ?`;
 
 		try {
 			const [results] = await pool.execute(querySelectAppointment, [
@@ -89,7 +99,7 @@ module.exports = class Appointment {
 
 			return results.length > 0 ? results[0] : null;
 		} catch (error) {
-			console.error('Error retrieving appointment:', error);
+			// console.error('Error retrieving appointment:', error);
 			throw error;
 		}
 	}
@@ -127,28 +137,30 @@ module.exports = class Appointment {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getAppointmentsByClientId(clientId, clientRole) {
-		const queryAllClientAppointments =
-			'SELECT * FROM appointment WHERE clientId = ? ORDER BY appointmentTime ASC';
+		const columns = [
+			'clientId',
+			'doctorId',
+			'appointmentTime',
+			'appointmentStatus',
+			...(clientRole === Role.ADMIN ? ['deletedAt'] : []),
+		];
+		const queryAllClientAppointments = `SELECT ${columns.join(
+			', '
+		)} FROM appointment WHERE clientId = ? ${
+			clientRole === Role.ADMIN ? '' : 'AND deletedAt IS NULL'
+		} ORDER BY appointmentTime ASC`;
 
-		const queryAvailableClientAppointments =
-			'SELECT * FROM appointment WHERE clientId = ? AND deletedAt IS NULL ORDER BY appointmentTime ASC';
-
-		let results;
 		try {
-			if (clientRole === 'PATIENT') {
-				[results] = await pool.execute(queryAvailableClientAppointments, [
-					clientId,
-				]);
-			} else {
-				[results] = await pool.execute(queryAllClientAppointments, [clientId]);
-			}
+			const [results] = await pool.execute(queryAllClientAppointments, [
+				clientId,
+			]);
 
 			return {
 				clientId: clientId,
 				appointments: results,
 			};
 		} catch (error) {
-			console.error('Error retrieving client appointments:', error);
+			// console.error('Error retrieving client appointments:', error);
 			throw error;
 		}
 	}
@@ -173,8 +185,12 @@ module.exports = class Appointment {
 				throw new NotFoundError('Appointment not found.');
 			}
 		} catch (error) {
-			console.error('Error soft deleting appointment:', error);
-			throw new DatabaseError('Failed to soft delete appointment.', error);
+			// console.error('Error soft deleting appointment:', error);
+			if (error instanceof NotFoundError) {
+				throw error;
+			} else {
+				throw new DatabaseError('Failed to soft delete appointment.', error);
+			}
 		}
 	}
 
@@ -199,8 +215,12 @@ module.exports = class Appointment {
 				throw new NotFoundError('Appointment not found.');
 			}
 		} catch (error) {
-			console.error('Error updating appointment status:', error);
-			throw new DatabaseError('Failed to update appointment status.', error);
+			// console.error('Error updating appointment status:', error);
+			if (error instanceof NotFoundError) {
+				throw error;
+			} else {
+				throw new DatabaseError('Failed to update appointment status.', error);
+			}
 		}
 	}
 

@@ -1,5 +1,6 @@
 const Client = require('../models/client');
 const Doctor = require('../models/doctor');
+const Appointment = require('../models/appointment');
 
 /**
  * Utility function for creating test clients.
@@ -25,12 +26,29 @@ exports.createTestClient = (mockClientData, overrides = {}) => {
  * @param {Object} [overrides={}] - Optional values to override the default attributes.
  * @returns {Doctor} - A new instance of the Doctor class.
  */
-exports.createTestDoctor = (mockClientData, overrides = {}) => {
+exports.createTestDoctor = (mockDoctorData, overrides = {}) => {
 	return new Doctor(
-		overrides.firstName || mockClientData.firstName,
-		overrides.lastName || mockClientData.lastName,
-		overrides.specialization || mockClientData.specialization,
-		overrides.isActive || mockClientData.isActive,
-		overrides.doctorId || mockClientData.doctorId
+		overrides.firstName || mockDoctorData.firstName,
+		overrides.lastName || mockDoctorData.lastName,
+		overrides.specialization || mockDoctorData.specialization,
+		overrides.isActive || mockDoctorData.isActive,
+		overrides.doctorId || mockDoctorData.doctorId
+	);
+};
+
+/**
+ * Utility function for creating test appointments.
+ * @param {Object} mockClientData - Default values for appointment attributes.
+ * @param {Object} [overrides={}] - Optional values to override the default attributes.
+ * @returns {Appointment} - A new instance of the Appointment class.
+ */
+exports.createTestAppointment = (mockAppointmentData, overrides = {}) => {
+	return new Appointment(
+		overrides.clientId || mockAppointmentData.clientId,
+		overrides.doctorId || mockAppointmentData.doctorId,
+		overrides.appointmentTime || mockAppointmentData.appointmentTime,
+		overrides.appointmentStatus || mockAppointmentData.appointmentStatus,
+		overrides.deletedAt || mockAppointmentData.deletedAt,
+		overrides.appointmentId || mockAppointmentData.appointmentId
 	);
 };

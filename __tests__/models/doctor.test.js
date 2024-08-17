@@ -32,9 +32,8 @@ describe('Doctor Model', () => {
 		};
 	});
 
-	// Clear any mocks after each test to avoid interference between tests.
 	afterEach(() => {
-		jest.clearAllMocks();
+		jest.clearAllMocks(); // Clears all mocks after each test
 	});
 
 	// Doctor constructor tests
