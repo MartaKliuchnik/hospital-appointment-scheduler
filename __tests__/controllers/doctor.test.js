@@ -343,4 +343,129 @@ describe('Doctor controller', () => {
 			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
 		});
 	});
+
+	// Tests for updating a doctor's information
+	describe("Updation a doctor's information", () => {
+		const mockUpdateData = {
+			firstName: 'Alex',
+			lastName: 'Smith',
+			specialization: MedicalSpecializations.DERMATOLOGY,
+		};
+
+		it('should update a doctor successfully', async () => {
+			req.params.doctorId = 1;
+			req.client.role = Role.ADMIN;
+			req.body = mockUpdateData;
+			const updatedDoctor = createTestDoctor({
+				...mockDoctorData,
+				...req.body,
+			});
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
+			Doctor.hasAppointments.mockResolvedValue(null); // Mock no appointments
+			Doctor.updateById.mockResolvedValue(updatedDoctor); // Mock successful doctor update
+
+			await doctorController.updateDoctor(req, res, next);
+
+			// Verify that the doctor was updated and a success response was sent
+			expect(Doctor.getById).toHaveBeenCalledWith(1, Role.ADMIN);
+			expect(Doctor.hasAppointments).toHaveBeenCalledWith(1);
+			expect(Doctor.updateById).toHaveBeenCalledWith(1, req.body);
+			expect(responseHandlers.sendSuccessResponse).toHaveBeenCalledWith(
+				res,
+				200,
+				'Doctor updated successfully.',
+				updatedDoctor
+			);
+		});
+
+		it('should handle invalid doctor ID', async () => {
+			req.params.doctorId = 'invalid'; // Mock validation error for invalid ID
+
+			validations.validateDoctorId.mockImplementation(() => {
+				throw new ValidationError('Invalid doctor ID.');
+			});
+
+			await doctorController.updateDoctor(req, res, next);
+
+			// Verify that an error response is sent for the invalid doctor ID
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'Invalid doctor ID.'
+			);
+		});
+
+		it('should handle non-existent doctor', async () => {
+			req.params.doctorId = 999; // Sets a non-existent doctor ID
+			req.client.role = Role.ADMIN;
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Doctor.getById.mockResolvedValue(null); // Mock scenario where no doctor is found
+
+			await doctorController.updateDoctor(req, res, next);
+
+			// Verify that an error response is sent when the doctor is not found
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				404,
+				'Doctor not found.'
+			);
+		});
+
+		it('should prevent updating a doctor with appointments', async () => {
+			// Scenario: Doctor with valid doctor ID, and associated appointments
+			req.params.doctorId = 1;
+			req.client.role = Role.ADMIN;
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
+			Doctor.hasAppointments.mockResolvedValue({ count: 1 }); // Mock doctor has appointment
+
+			await doctorController.updateDoctor(req, res, next);
+
+			// Verify that updation is prevented if the doctor has existing appointments
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'This doctor has appointment(s). Update is forbidden.'
+			);
+		});
+
+		it('should handle invalid specialization', async () => {
+			req.params.doctorId = 1;
+			req.client.role = Role.ADMIN;
+			req.body = { specialization: 'INVALID_SPECIALIZATION' };
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
+			Doctor.hasAppointments.mockResolvedValue(null); // Mock no appointments
+
+			await doctorController.updateDoctor(req, res, next);
+
+			// Verify that an error response is sent for an invalid specialization
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'Invalid specialization. Please provide a valid specialization from the allowed list.'
+			);
+		});
+
+		it('should handle database error during update', async () => {
+			req.params.doctorId = 1;
+			req.client.role = Role.ADMIN;
+			req.body = mockUpdateData;
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
+			Doctor.hasAppointments.mockResolvedValue(null); // Mock no appointments
+			Doctor.updateById.mockRejectedValue(new Error('Database error')); // Mock update error
+
+			await doctorController.updateDoctor(req, res, next);
+
+			// Ensures the next middleware is called with the database error
+			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
+		});
+	});
 });
