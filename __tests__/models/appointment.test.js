@@ -5,6 +5,7 @@ const Schedule = require('../../src/models/schedule');
 const {
 	ValidationError,
 	NotFoundError,
+	DatabaseError,
 } = require('../../src/utils/customErrors');
 const { pool } = require('../../src/utils/database');
 const { createTestAppointment } = require('../../src/utils/testHelpers');
@@ -335,6 +336,86 @@ describe('Appointment Model', () => {
 				new ValidationError('No changes were made to the appointment.')
 			);
 			expect(mockConnection.rollback).toHaveBeenCalled();
+		});
+	});
+
+	// Tests for retrieving appointments for a specific doctor and date
+	describe('Retrieve appointments for a specific doctor and date', () => {
+		it('should return appointments for a doctor on a specific date', async () => {
+			const mockDoctorId = 1;
+			const mockDate = '2024-08-28 11:00:00';
+			const mockListAppointments = [
+				createTestAppointment(mockAppointmentData),
+				createTestAppointment({ ...mockAppointmentData, appointmentId: 2 }),
+			];
+			pool.execute.mockResolvedValue([mockListAppointments]); // Mock the database query to return the mock appointments
+
+			const results = await Appointment.getAppointmentsByDoctorAndDate(
+				mockDoctorId,
+				mockDate
+			);
+
+			const expectedQuery = `SELECT clientId, doctorId, appointmentTime, appointmentStatus, appointmentId, deletedAt FROM appointment`;
+
+			// Verify that the correct appointment data is returned
+			expect(results).toEqual(mockListAppointments);
+			expect(results[0]).toBeInstanceOf(Appointment);
+
+			// Verify that the query executed contains the expected SQL and parameters
+			expect(pool.execute).toHaveBeenCalledWith(
+				expect.stringContaining(expectedQuery),
+				[mockDoctorId, mockDate, Status.CANCELED]
+			);
+		});
+
+		it('should throw a DatabaseError if the database query fails', async () => {
+			const mockDoctorId = 1;
+			const mockDate = '2024-08-28 11:00:00';
+
+			pool.execute.mockRejectedValue(new Error('DatabaseError')); // Mock the database query to reject with an error
+
+			// Expect the method to throw a DatabaseError
+			await expect(
+				Appointment.getAppointmentsByDoctorAndDate(mockDoctorId, mockDate)
+			).rejects.toThrow(DatabaseError);
+			await expect(
+				Appointment.getAppointmentsByDoctorAndDate(mockDoctorId, mockDate)
+			).rejects.toThrow('Failed to retrieve appointments.');
+		});
+	});
+
+	// Tests for checking a time slot availability
+	describe('Check if a time slot is available', () => {
+		const mockDate = '2024-08-28 11:00:00';
+
+		it('should return true if time slot is available', async () => {
+			mockConnection.execute.mockResolvedValueOnce([[{ count: 0 }]]); // Mocking no conflicts with existing appointments
+			// Mocking an available time slot
+			Schedule.getAvailableTimeSlots.mockResolvedValueOnce([
+				new Date(mockDate),
+			]);
+
+			const result = await Appointment.isTimeSlotAvailable(
+				2,
+				new Date(mockDate),
+				mockConnection
+			);
+
+			// Assert that the time slot is available
+			expect(result).toBe(true);
+		});
+
+		it('should return false if time slot is not available', async () => {
+			mockConnection.execute.mockResolvedValueOnce([[{ count: 1 }]]); // Mocking conflicts with existing appointments
+
+			const result = await Appointment.isTimeSlotAvailable(
+				2,
+				new Date(mockDate),
+				mockConnection
+			);
+
+			// Assert that the time slot is not available
+			expect(result).toBe(false);
 		});
 	});
 });

@@ -85,8 +85,8 @@ module.exports = class Appointment {
 			'doctorId',
 			'appointmentTime',
 			'appointmentStatus',
-			'deletedAt',
 			'appointmentId',
+			'deletedAt',
 		];
 		const querySelectAppointment = `SELECT ${columns.join(
 			', '
@@ -287,7 +287,17 @@ module.exports = class Appointment {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getAppointmentsByDoctorAndDate(doctorId, date) {
-		const queryGetAppointments = `SELECT * FROM appointment WHERE doctorId = ? AND DATE(appointmentTime) = DATE(?) AND appointmentStatus NOT IN (?)
+		const columns = [
+			'clientId',
+			'doctorId',
+			'appointmentTime',
+			'appointmentStatus',
+			'appointmentId',
+			'deletedAt',
+		];
+		const queryGetAppointments = `SELECT ${columns.join(
+			', '
+		)} FROM appointment WHERE doctorId = ? AND DATE(appointmentTime) = DATE(?) AND appointmentStatus NOT IN (?)
 			AND deletedAt IS NULL `;
 
 		try {
@@ -299,7 +309,7 @@ module.exports = class Appointment {
 
 			return results;
 		} catch (error) {
-			console.error('Error retrieving appointments:', error);
+			// 	console.error('Error retrieving appointments:', error);
 			throw new DatabaseError('Failed to retrieve appointments.', error);
 		}
 	}
@@ -352,7 +362,7 @@ module.exports = class Appointment {
 				(slot) => Math.abs(slot.getTime() - appointmentTime.getTime()) < 1000
 			);
 		} catch (error) {
-			console.error('Error checking time slot availability:', error);
+			// console.error('Error checking time slot availability:', error);
 			throw error;
 		}
 	}
