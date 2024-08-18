@@ -265,14 +265,14 @@ module.exports = class Appointment {
 			]);
 
 			if (result.changedRows === 0) {
-				throw new Error('No changes were made to the appointment.');
+				throw new ValidationError('No changes were made to the appointment.');
 			}
 
 			await connection.commit();
 			return await this.getAppointmentById(appointmentId);
 		} catch (error) {
 			await connection.rollback();
-			console.error('Error changing client appointment:', error);
+			// console.error('Error changing client appointment:', error);
 			throw error;
 		} finally {
 			connection.release();
