@@ -656,4 +656,3 @@ describe('Appointment controller', () => {
 		});
 	});
 });
-

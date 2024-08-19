@@ -42,7 +42,7 @@ module.exports = class Schedule {
 			this.scheduleId = result.insertId;
 			return this.scheduleId;
 		} catch (error) {
-			console.error('Error inserting schedule:', error);
+			// console.error('Error inserting schedule:', error);
 			throw new DatabaseError('Failed to create schedule.', error);
 		}
 	}
@@ -54,7 +54,16 @@ module.exports = class Schedule {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getById(scheduleId) {
-		const querySelectSchedule = 'SELECT * FROM schedule WHERE scheduleId = ?';
+		const columns = [
+			'doctorId',
+			'scheduleDay',
+			'startTime',
+			'endTime',
+			'scheduleId',
+		];
+		const querySelectSchedule = `SELECT ${columns.join(
+			', '
+		)} FROM schedule WHERE scheduleId = ?`;
 
 		try {
 			const [results] = await pool.execute(querySelectSchedule, [scheduleId]);
@@ -69,7 +78,7 @@ module.exports = class Schedule {
 				row.scheduleId
 			);
 		} catch (error) {
-			console.error('Error retrieving schedule:', error);
+			// console.error('Error retrieving schedule:', error);
 			throw new DatabaseError('Failed to retrieve schedule.', error);
 		}
 	}
@@ -81,7 +90,16 @@ module.exports = class Schedule {
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
 	static async getByDoctorId(doctorId) {
-		const querySelectSchedule = 'SELECT * FROM schedule WHERE doctorId = ?';
+		const columns = [
+			'doctorId',
+			'scheduleDay',
+			'startTime',
+			'endTime',
+			'scheduleId',
+		];
+		const querySelectSchedule = `SELECT ${columns.join(
+			', '
+		)} FROM schedule WHERE doctorId = ?`;
 
 		try {
 			const [schedules] = await pool.execute(querySelectSchedule, [doctorId]);
@@ -89,7 +107,7 @@ module.exports = class Schedule {
 			if (schedules.length === 0) return null;
 			return schedules.map(Schedule.fromDatabaseResult);
 		} catch (error) {
-			console.error('Error retrieving schedules by doctor ID:', error);
+			// console.error('Error retrieving schedules by doctor ID:', error);
 			throw new DatabaseError('Failed to retrieve schedule.', error);
 		}
 	}
@@ -120,11 +138,11 @@ module.exports = class Schedule {
 
 		try {
 			const [result] = await pool.execute(queryDeleteSchedule, [scheduleId]);
-			if ((result.affectedRows = 0)) {
+			if (result.affectedRows === 0) {
 				throw new NotFoundError('Schedule not found.');
 			}
 		} catch (error) {
-			console.error('Error deleting schedule:', error);
+			// console.error('Error deleting schedule:', error);
 			if (error instanceof NotFoundError) {
 				throw error;
 			}

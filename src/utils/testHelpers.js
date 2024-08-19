@@ -1,6 +1,7 @@
 const Client = require('../models/client');
 const Doctor = require('../models/doctor');
 const Appointment = require('../models/appointment');
+const Schedule = require('../models/schedule');
 
 /**
  * Utility function to create test data instances with default values.
@@ -38,6 +39,14 @@ function createTestInstance(Model, mockData, overrides = {}) {
 			data.appointmentStatus,
 			data.deletedAt
 		);
+	} else if (Model === Schedule) {
+		return new Schedule(
+			data.doctorId,
+			data.scheduleDay,
+			data.startTime,
+			data.endTime,
+			data.scheduleId
+		);
 	} else {
 		throw new Error('Unsupported model type.');
 	}
@@ -71,4 +80,14 @@ exports.createTestDoctor = (mockDoctorData, overrides = {}) => {
  */
 exports.createTestAppointment = (mockAppointmentData, overrides = {}) => {
 	return createTestInstance(Appointment, mockAppointmentData, overrides);
+};
+
+/**
+ * Utility function for creating test schedules.
+ * @param {Object} mockClientData - Default values for schedule attributes.
+ * @param {Object} [overrides={}] - Optional values to override the default attributes.
+ * @returns {Appointment} - A new instance of the Schedule class.
+ */
+exports.createTestScheduler = (mockAppointmentData, overrides = {}) => {
+	return createTestInstance(Schedule, mockAppointmentData, overrides);
 };
