@@ -216,4 +216,122 @@ describe('Appointment controller', () => {
 			);
 		});
 	});
+
+	// Tests for retrieving appointments for a specific client
+	describe('Retrieve appointments for a specific client', () => {
+		it('should retrieve appointments successfully', async () => {
+			req.params.clientId = 1;
+			req.client = { clientId: 1, role: Role.PATIENT };
+			const mockListAppointments = [
+				mockAppointmentData,
+				{ ...mockAppointmentData, appointmentId: 4 },
+			];
+
+			// Mock the validation functions to bypass actual validation logic
+			validations.validateClientAppointmentAccess.mockImplementation(() => {});
+			validations.validateClientId.mockImplementation(() => {});
+			// Mock the Appointment.getAppointmentsByClientId method to return mock data
+			Appointment.getAppointmentsByClientId.mockResolvedValue({
+				appointments: mockListAppointments,
+			});
+
+			await appointmentController.getClientAppointments(req, res, next);
+
+			// Verify that the validation function was called with the correct arguments and a success response is sent with the appointments data
+			expect(Appointment.getAppointmentsByClientId).toHaveBeenCalledWith(
+				1,
+				'PATIENT'
+			);
+
+			expect(responseHandlers.sendSuccessResponse).toHaveBeenCalledWith(
+				res,
+				200,
+				'Appointments retrieved successfully.',
+				expect.anything()
+			);
+		});
+
+		it('should handle case when no appointments are found', async () => {
+			req.params.clientId = 1;
+			req.client = { clientId: 1, role: Role.PATIENT };
+
+			// Mock the validation functions to bypass actual validation logic
+			validations.validateClientAppointmentAccess.mockImplementation(() => {});
+			validations.validateClientId.mockImplementation(() => {});
+			// Mock scenario where no appointments are found
+			Appointment.getAppointmentsByClientId.mockResolvedValue({
+				appointments: [],
+			});
+
+			await appointmentController.getClientAppointments(req, res, next);
+
+			// Ensures an error response is sent indicating the appointment was not found
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				404,
+				'No appointments found for this client.'
+			);
+		});
+
+		it('should handle authentication error', async () => {
+			req.params.clientId = 1;
+			req.client = { clientId: 4, role: Role.PATIENT };
+
+			// Mock the validation function to reject with an AuthenticationError due to the missing clientId
+			validations.validateAppointmentCreation.mockRejectedValue(
+				new AuthenticationError(
+					'You have permission to view only your own appointments.'
+				)
+			);
+
+			await appointmentController.createAppointment(req, res, next);
+
+			// Expect the sendErrorResponse to be called with status 401 (Unauthorized) and the appropriate error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				401,
+				'You have permission to view only your own appointments.'
+			);
+		});
+
+		it('should handle validation error if the client ID is invalid', async () => {
+			req.params.clientId = 1;
+			req.client = { clientId: 'invalid', role: Role.PATIENT };
+
+			// Mock the validation to throw a ValidationError for invalid clientId
+			validations.validateAppointmentCreation.mockRejectedValue(
+				new NotFoundError('Invalid client ID.')
+			);
+
+			await appointmentController.createAppointment(req, res, next);
+
+			// Expect the sendErrorResponse to be called with the appropriate error message and status
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				404,
+				'Invalid client ID.'
+			);
+		});
+
+		it('should handle database error', async () => {
+			req.params.clientId = 1;
+			req.client = { clientId: 1, role: Role.PATIENT };
+
+			// Mock the validation functions to bypass actual validation logic
+			validations.validateClientAppointmentAccess.mockImplementation(() => {});
+			validations.validateClientId.mockImplementation(() => {});
+			Appointment.getAppointmentsByClientId.mockRejectedValue(
+				new Error('Database error')
+			);
+			// Mock database error
+
+			await appointmentController.getClientAppointments(req, res, next);
+
+			// Ensures the next middleware is called with a database error for proper error handling
+			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
+			expect(next.mock.calls[0][0].message).toBe(
+				'Failed to retrieve client appointments.'
+			);
+		});
+	});
 });
