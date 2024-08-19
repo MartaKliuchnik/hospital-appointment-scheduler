@@ -47,7 +47,8 @@ exports.createAppointment = async (req, res, next) => {
 		const appointmentId = await appointment.insertAppointment();
 
 		const appointmentDetails = await Appointment.getAppointmentById(
-			appointmentId
+			appointmentId,
+			clientRole
 		);
 		const formattedAppointment =
 			Appointment.formatAppointmentResponse(appointmentDetails);
@@ -84,8 +85,12 @@ exports.getClientAppointments = async (req, res, next) => {
 	const currentClient = req.client.clientId;
 
 	try {
-		validateClientAppointmentAccess(clientId, currentClient, req.client.role);
 		validateClientId(clientId);
+		await validateClientAppointmentAccess(
+			clientId,
+			currentClient,
+			req.client.role
+		);
 
 		const result = await Appointment.getAppointmentsByClientId(
 			clientId,

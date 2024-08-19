@@ -109,7 +109,7 @@ const validateAppointmentCreation = async (
 
 	// Check if the doctor exists
 	const doctor = await Doctor.getById(doctorId, clientRole);
-	if (!doctor || !doctor.isActive) {
+	if (!doctor) {
 		throw new NotFoundError('Doctor not found.');
 	}
 
@@ -121,17 +121,22 @@ const validateAppointmentCreation = async (
 	}
 };
 
-const validateClientAppointmentAccess = (clientId, currentClient, role) => {
+const validateClientAppointmentAccess = async (
+	clientId,
+	currentClient,
+	role
+) => {
+	// Check if the client exists
+	const clientExists = await Client.findById(clientId);
+	if (!clientExists) {
+		throw new NotFoundError('Client not found.');
+	}
+
 	// Check if the appointment belongs to the client
 	if (currentClient !== clientId && role !== 'ADMIN') {
 		throw new AuthorizationError(
 			'You have permission to view only your own appointments.'
 		);
-	}
-
-	// Check if the clientId is provided and is a valid number
-	if (isNaN(clientId)) {
-		throw new ValidationError('Invalid client ID.');
 	}
 };
 
@@ -146,7 +151,7 @@ const validateAppointmentDeletion = async (appointmentId, clientId, role) => {
 		throw new ValidationError('Invalid appointment ID.');
 	}
 
-	const appointment = await Appointment.getAppointmentById(appointmentId);
+	const appointment = await Appointment.getAppointmentById(appointmentId, role);
 	// Check if the appointment exists
 	if (!appointment) {
 		throw new NotFoundError('Appointment not found.');
@@ -176,7 +181,7 @@ const validateAppointmentUpdate = async (
 		throw new ValidationError('Invalid appointment ID.');
 	}
 
-	const appointment = await Appointment.getAppointmentById(appointmentId);
+	const appointment = await Appointment.getAppointmentById(appointmentId, role);
 	// Check if the appointment exists
 	if (!appointment) {
 		throw new NotFoundError("Appointment doesn't exist.");

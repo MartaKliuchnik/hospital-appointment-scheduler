@@ -2,9 +2,9 @@ const { Router } = require('express');
 const appointmentsController = require('../controllers/appointments');
 const checkPermission = require('../middleware/permission');
 const Permission = require('../enums/Permission');
+const { requireParam } = require('../middleware/admin');
 
 const router = Router();
-
 
 /**
  * @route POST /api/v1/appointments
@@ -23,8 +23,9 @@ router.post(
  * @access Private
  */
 router.get(
-	'/clients/:clientId',
+	'/clients/:clientId?',
 	checkPermission(Permission.READ_APPOINTMENT),
+	requireParam('clientId', 'Client ID is required.'),
 	appointmentsController.getClientAppointments
 );
 
@@ -32,10 +33,11 @@ router.get(
  * @route DELETE /api/v1/appointments/:appointmentId
  * @description Delete the specified appointment
  * @access Private
- */
+*/
 router.delete(
-	'/:appointmentId',
+	'/:appointmentId?',
 	checkPermission(Permission.DELETE_APPOINTMENT),
+	requireParam('appointmentId', 'Appointment ID is required.'),
 	appointmentsController.deleteAppointment
 );
 
@@ -43,10 +45,11 @@ router.delete(
  * @route PUT /api/v1/appointments/:appointmentId
  * @description Update the specified appointment
  * @access Private
- */
+*/
 router.put(
-	'/:appointmentId',
+	'/:appointmentId?',
 	checkPermission(Permission.UPDATE_APPOINTMENT),
+	requireParam('appointmentId', 'Appointment ID is required.'),
 	appointmentsController.updateAppointment
 );
 

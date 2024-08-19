@@ -79,14 +79,14 @@ module.exports = class Appointment {
 	 * @returns {Promise<Object|null>} - A promise that resolves to the retrieved appointment, or null if not found.
 	 * @throws {Error} - If there's an error during the database operation.
 	 */
-	static async getAppointmentById(appointmentId) {
+	static async getAppointmentById(appointmentId, clientRole) {
 		const columns = [
 			'clientId',
 			'doctorId',
 			'appointmentTime',
 			'appointmentStatus',
 			'appointmentId',
-			'deletedAt',
+			...(clientRole === Role.ADMIN ? ['deletedAt'] : []),
 		];
 		const querySelectAppointment = `SELECT ${columns.join(
 			', '
@@ -142,6 +142,7 @@ module.exports = class Appointment {
 			'doctorId',
 			'appointmentTime',
 			'appointmentStatus',
+			'appointmentId',
 			...(clientRole === Role.ADMIN ? ['deletedAt'] : []),
 		];
 		const queryAllClientAppointments = `SELECT ${columns.join(

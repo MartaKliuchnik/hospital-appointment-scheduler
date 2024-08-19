@@ -109,7 +109,7 @@ describe('Appointment Model', () => {
 		it('should return an appointment when found', async () => {
 			pool.execute.mockResolvedValue([[mockAppointmentData]]);
 
-			const result = await Appointment.getAppointmentById(1);
+			const result = await Appointment.getAppointmentById(1, Role.PATIENT);
 
 			// Expect the result to match the mock appointment data
 			expect(result).toEqual(mockAppointmentData);
@@ -118,7 +118,7 @@ describe('Appointment Model', () => {
 		it('should return null when appointment is not found', async () => {
 			pool.execute.mockResolvedValue([[]]);
 
-			const result = await Appointment.getAppointmentById(999);
+			const result = await Appointment.getAppointmentById(999, Role.PATIENT);
 
 			// Expect the result to be null when no appointment is found
 			expect(result).toBeNull();
@@ -180,7 +180,7 @@ describe('Appointment Model', () => {
 			await Appointment.getAppointmentsByClientId(1, Role.ADMIN);
 
 			const expectedQuery =
-				'SELECT clientId, doctorId, appointmentTime, appointmentStatus, deletedAt FROM appointment WHERE clientId = ?  ORDER BY appointmentTime ASC';
+				'SELECT clientId, doctorId, appointmentTime, appointmentStatus, appointmentId, deletedAt FROM appointment WHERE clientId = ?  ORDER BY appointmentTime ASC';
 
 			// Ensure that the correct query was executed with the expected client ID
 			expect(pool.execute).toHaveBeenCalledWith(

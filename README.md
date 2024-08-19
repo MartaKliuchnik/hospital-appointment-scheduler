@@ -1153,7 +1153,7 @@ Description: The server successfully deletes the doctor.
 
 Status Code: **400 Bad Request**
 
-Description: The doctor ID is missing from the request.  The provided doctor ID is invalid (not a number).
+Description: The doctor ID is missing from the request. The provided doctor ID is invalid (not a number).
 
 ```
 {
@@ -1555,7 +1555,10 @@ The request body should contain the following parameters:
 Description: A `POST` request to create a new appointment. It includes an
 Authorization header with a bearer token for authentication and specifies the
 content type as JSON. The request body contains the details of the appointment,
-including the client's ID, the doctor's ID, and the appointment time.
+including the client's ID, the doctor's ID, and the appointment time. The visibility of appointment data depends on the client's role:
+
+ADMIN role: The 'deletedAt' property.
+NON-ADMIN role: The 'deletedAt' property is excluded.
 
 ```
 
@@ -1576,12 +1579,12 @@ Description: The appointment is successfully created.
 {
     "message": "Appointment created successfully.",
     "data": {
-        "appointmentId": 4,
         "clientId": 1,
         "doctorId": 1,
         "appointmentTime": "2024-07-29 10:00:00",
         "appointmentStatus": "SCHEDULED",
-        "deletedAt": null
+        "appointmentId": 4,
+        "deletedAt": null, // Excluded for non-admin roles
     }
 }
 ```
@@ -1678,7 +1681,10 @@ The request should include the following path parameter:
 
 Description: A `GET` request to retrieve all appointments for the client with
 ID 1. It includes an Authorization header with a bearer token for
-authentication. 
+authentication. The visibility of appointment data depends on the client's role:
+
+ADMIN role: The 'deletedAt' property.
+NON-ADMIN role: The 'deletedAt' property is excluded.
 
 ```
 
@@ -1704,7 +1710,7 @@ Description: The server successfully retrieved all appointments for the specifie
           "doctorId": 3,
           "appointmentTime": "2024-08-15 14:30:00",
           "appointmentStatus": "SCHEDULED",
-          "deletedAt": null
+          "deletedAt": null, // Excluded for non-admin roles
         },
         ...
       ]
@@ -1716,6 +1722,11 @@ Status Code: **400 Bad Request**
 
 Description: The request is invalid or missing required client ID parameter.
 
+```
+{ 
+    "message": "Client ID is required."
+}
+```
 ```
 {
     "message": "Invalid client ID."
@@ -1794,7 +1805,10 @@ The request should include the following path parameter:
 
 Description: A `PUT` request to update the appointment for the specified client.
 It includes the necessary authentication token and specifies the updated detail
-of the appointment, such as the new appointment time.
+of the appointment, such as the new appointment time. The visibility of appointment data depends on the client's role:
+
+ADMIN role: The 'deletedAt' property.
+NON-ADMIN role: The 'deletedAt' property is excluded.
 
 ```
 
@@ -1820,7 +1834,7 @@ changes.
           "doctorId": 2,
           "appointmentTime": "2024-08-15 14:30:00",
           "appointmentStatus": "SCHEDULED",
-          "deletedAt": null
+          "deletedAt": null, // Excluded for non-admin roles
     }
 }
 ```
@@ -1830,6 +1844,11 @@ Status Code: **400 Bad Request**
 Description: The request is invalid or missing required appointment ID
 parameter.
 
+```
+{ 
+    "message": "Appointment ID is required."
+}
+```
 ```
 {
     "message": "Invalid appointment ID."
@@ -1955,6 +1974,11 @@ Status Code: **400 Bad Request**
 Description: The request is invalid or missing required appointment ID
 parameter.
 
+```
+{ 
+    "message": "Appointment ID is required."
+}
+```
 ```
 {
     "message": "Invalid appointment ID."

@@ -85,7 +85,7 @@ describe('Appointment controller', () => {
 			// Ensures the insert method is called to create the appointment
 			expect(Appointment.prototype.insertAppointment).toHaveBeenCalled();
 			// Verify that methods was called with the correct data
-			expect(Appointment.getAppointmentById).toHaveBeenCalledWith(3);
+			expect(Appointment.getAppointmentById).toHaveBeenCalledWith(3, 'PATIENT');
 			expect(Appointment.formatAppointmentResponse).toHaveBeenCalledWith(
 				mockAppointmentData
 			);
@@ -656,3 +656,4 @@ describe('Appointment controller', () => {
 		});
 	});
 });
+
