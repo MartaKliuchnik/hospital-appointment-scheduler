@@ -4,7 +4,7 @@ const validations = require('../../src/utils/validations');
 const responseHandlers = require('../../src/utils/responseHandlers');
 const Appointment = require('../../src/models/appointment');
 const Status = require('../../src/enums/Status');
-const { createTestAppointment } = require('../../src/utils/testHelpers');
+const { pool } = require('../../src/utils/database');
 const {
 	ValidationError,
 	NotFoundError,
@@ -16,6 +16,7 @@ const {
 jest.mock('../../src/utils/responseHandlers'); // Controls response handling
 jest.mock('../../src/utils/validations'); // Simulates validation outcomes
 jest.mock('../../src/models/appointment'); // Mocks the Appointment model to prevent database interaction
+jest.mock('../../src/utils/database'); // Mocks the database module
 
 /**
  * Test suite for Appointment controllers.
@@ -25,7 +26,11 @@ describe('Appointment controller', () => {
 	let res, req, next, mockAppointmentData;
 
 	beforeEach(() => {
-		req = { params: {}, body: {}, client: {} };
+		req = {
+			params: { appointmentId: 3 },
+			body: {},
+			client: { clientId: 1, role: 'PATIENT' },
+		};
 		res = { status: jest.fn().mockReturnThis, json: jest.fn() };
 		next = jest.fn();
 		mockAppointmentData = {
@@ -48,7 +53,6 @@ describe('Appointment controller', () => {
 				doctorId: 2,
 				appointmentTime: '2024-08-20T10:00:00Z',
 			};
-			req.client = { clientId: 1, role: Role.PATIENT };
 			req.body = mockInputData;
 
 			validations.validateAppointmentCreation.mockImplementation(() => {}); // Mock validation success
@@ -101,7 +105,6 @@ describe('Appointment controller', () => {
 
 		it('should handle validation error for invalid appointment time', async () => {
 			req.body = { doctorId: 2, appointmentTime: 'invalid' };
-			req.client = { clientId: 1, role: Role.PATIENT };
 
 			// Mock the validation to throw a ValidationError for the invalid appointment time
 			validations.validateAppointmentCreation.mockRejectedValue(
@@ -122,7 +125,6 @@ describe('Appointment controller', () => {
 
 		it("should handle validation error if the doctor doesn't exist", async () => {
 			req.body = { doctorId: 999, appointmentTime: '2024-08-20T10:00:00Z' };
-			req.client = { clientId: 1, role: Role.PATIENT };
 
 			// Mock the validation to throw a NotFoundError for the non-existing doctor
 			validations.validateAppointmentCreation.mockRejectedValue(
@@ -160,7 +162,6 @@ describe('Appointment controller', () => {
 
 		it('should handle validation error if doctorId and appointmentTime are not provided', async () => {
 			req.body = { doctorId: '', appointmentTime: '' };
-			req.client = { clientId: 1, role: Role.PATIENT };
 
 			// Mock the validation to throw a ValidationError for missing parameters
 			validations.validateAppointmentCreation.mockRejectedValue(
@@ -200,7 +201,6 @@ describe('Appointment controller', () => {
 
 		it('should handle database error', async () => {
 			req.body = { doctorId: 2, appointmentTime: '2024-08-20T10:00:00Z' };
-			req.client = { clientId: 1, role: Role.PATIENT };
 
 			validations.validateAppointmentCreation.mockResolvedValue(); // Mock validation success
 			Appointment.prototype.insertAppointment.mockRejectedValue(
@@ -209,7 +209,7 @@ describe('Appointment controller', () => {
 
 			await appointmentController.createAppointment(req, res, next);
 
-			// Ensures the next middleware is called with a database error for proper error handling
+			// Ensure the next middleware is called with a database error
 			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
 			expect(next.mock.calls[0][0].message).toBe(
 				'Failed to create appointment.'
@@ -221,7 +221,7 @@ describe('Appointment controller', () => {
 	describe('Retrieve appointments for a specific client', () => {
 		it('should retrieve appointments successfully', async () => {
 			req.params.clientId = 1;
-			req.client = { clientId: 1, role: Role.PATIENT };
+
 			const mockListAppointments = [
 				mockAppointmentData,
 				{ ...mockAppointmentData, appointmentId: 4 },
@@ -253,7 +253,6 @@ describe('Appointment controller', () => {
 
 		it('should handle case when no appointments are found', async () => {
 			req.params.clientId = 1;
-			req.client = { clientId: 1, role: Role.PATIENT };
 
 			// Mock the validation functions to bypass actual validation logic
 			validations.validateClientAppointmentAccess.mockImplementation(() => {});
@@ -315,22 +314,176 @@ describe('Appointment controller', () => {
 
 		it('should handle database error', async () => {
 			req.params.clientId = 1;
-			req.client = { clientId: 1, role: Role.PATIENT };
 
 			// Mock the validation functions to bypass actual validation logic
 			validations.validateClientAppointmentAccess.mockImplementation(() => {});
 			validations.validateClientId.mockImplementation(() => {});
+			// Mock database error
 			Appointment.getAppointmentsByClientId.mockRejectedValue(
 				new Error('Database error')
 			);
-			// Mock database error
 
 			await appointmentController.getClientAppointments(req, res, next);
 
-			// Ensures the next middleware is called with a database error for proper error handling
+			// Ensure the next middleware is called with a database error
 			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
 			expect(next.mock.calls[0][0].message).toBe(
 				'Failed to retrieve client appointments.'
+			);
+		});
+	});
+
+	// Tests for deleting or canceling an appointment by ID
+	describe('Deleting or canceling an appointment', () => {
+		beforeEach(() => {
+			mockConnection = {
+				beginTransaction: jest.fn(),
+				commit: jest.fn(),
+				rollback: jest.fn(),
+				release: jest.fn(),
+				execute: jest.fn(),
+			};
+			pool.getConnection.mockResolvedValue(mockConnection);
+		});
+
+		it('should successfully cancel an appointment for a patient', async () => {
+			validations.validateAppointmentDeletion.mockResolvedValue(() => {}); // Mock validation success
+			// Mock successful cancellation of appointment status in the database
+			Appointment.updateAppointmentStatus.mockResolvedValue({
+				affectedRows: 1,
+			});
+
+			await appointmentController.deleteAppointment(req, res, next);
+
+			// Verify that the appointment status was updated to CANCELED
+			expect(Appointment.updateAppointmentStatus).toHaveBeenCalledWith(
+				3,
+				Status.CANCELED
+			);
+			// Verify that the success response was sent with a 200 status and success message
+			expect(responseHandlers.sendSuccessResponse).toHaveBeenCalledWith(
+				res,
+				200,
+				'Appointment canceled successfully.'
+			);
+			// Ensure that the transaction was committed
+			expect(mockConnection.commit).toHaveBeenCalled();
+		});
+
+		it('should successfully soft delete an appointment for an admin', async () => {
+			req.client.role = 'ADMIN';
+
+			validations.validateAppointmentDeletion.mockImplementation(() => {}); // Mock validation success
+			// Mock successful soft deletion of appointment in the database
+			Appointment.softDeleteAppointment.mockResolvedValue({
+				affectedRows: 1,
+			});
+
+			await appointmentController.deleteAppointment(req, res, next);
+
+			// Verify that the appointment was soft deleted with the mock connection
+			expect(Appointment.softDeleteAppointment).toHaveBeenCalledWith(
+				3,
+				mockConnection
+			);
+			// Verify that the success response was sent with a 200 status and success message
+			expect(responseHandlers.sendSuccessResponse).toHaveBeenCalledWith(
+				res,
+				200,
+				'Appointment soft deleted successfully.'
+			);
+			// Ensure that the transaction was committed
+			expect(mockConnection.commit).toHaveBeenCalled();
+		});
+
+		it('should handle authentication error due to missing client ID', async () => {
+			req.client = { clientId: null };
+
+			// Mock validation function to reject with an AuthenticationError
+			validations.validateAppointmentDeletion.mockRejectedValue(
+				new AuthenticationError('Authentication failed: Missing client ID.')
+			);
+
+			await appointmentController.deleteAppointment(req, res, next);
+
+			// Expect an error response with status 401 and the authentication error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				401,
+				'Authentication failed: Missing client ID.'
+			);
+		});
+
+		it('should handle validation error for an invalid appointment ID', async () => {
+			req.params.appointmentId = 'invalid';
+
+			// Mock validation function to reject with a ValidationError
+			validations.validateAppointmentDeletion.mockRejectedValue(
+				new ValidationError('Invalid appointment ID.')
+			);
+
+			await appointmentController.deleteAppointment(req, res, next);
+
+			// Expect an error response with status 400 and the validation error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'Invalid appointment ID.'
+			);
+		});
+
+		it('should handle NotFoundError if the appointment does not exist', async () => {
+			req.params.appointmentId = 999;
+
+			// Mock validation function to reject with a NotFoundError
+			validations.validateAppointmentDeletion.mockRejectedValue(
+				new NotFoundError('Appointment not found.')
+			);
+
+			await appointmentController.deleteAppointment(req, res, next);
+
+			// Expect an error response with status 404 and the not found error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				404,
+				'Appointment not found.'
+			);
+		});
+
+		it('should handle authentication error if client lacks permission to delete appointment', async () => {
+			req.params.clientId = 1;
+			req.client = { clientId: 4, role: Role.PATIENT };
+
+			// Mock validation function to reject with an AuthenticationError
+			validations.validateAppointmentDeletion.mockRejectedValue(
+				new AuthenticationError(
+					'You do not have permission to delete this appointment.'
+				)
+			);
+
+			await appointmentController.deleteAppointment(req, res, next);
+
+			// Expect an error response with status 401 and the permission error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				401,
+				'You do not have permission to delete this appointment.'
+			);
+		});
+
+		it('should handle database error during appointment deletion', async () => {
+			validations.validateAppointmentDeletion.mockImplementation(() => {}); // Mock validation success
+			// Mock a database error during appointment status update
+			Appointment.updateAppointmentStatus.mockRejectedValue(
+				new Error('Database error')
+			);
+
+			await appointmentController.deleteAppointment(req, res, next);
+
+			// Ensure the next middleware is called with a database error
+			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
+			expect(next.mock.calls[0][0].message).toBe(
+				'Failed to delete/cancel appointment.'
 			);
 		});
 	});
