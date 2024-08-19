@@ -98,7 +98,7 @@ exports.createDoctor = async (req, res, next) => {
 
 		sendSuccessResponse(
 			res,
-			200,
+			201,
 			'Doctor created successfully.',
 			doctorDetails
 		);

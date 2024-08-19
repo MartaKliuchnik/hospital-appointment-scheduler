@@ -24,7 +24,7 @@ jest.mock('../../src/utils/validations'); // Simulates validation outcomes
  * This suite tests functionalities like updating, deleting, and retrieving doctors.
  */
 describe('Doctor controller', () => {
-	let res, req, next;
+	let res, req, next, mockDoctorData;
 
 	beforeEach(() => {
 		req = { params: {}, body: {}, client: {} };
@@ -183,7 +183,7 @@ describe('Doctor controller', () => {
 			// Ensures a success response is sent with the created doctor's details
 			expect(responseHandlers.sendSuccessResponse).toHaveBeenCalledWith(
 				res,
-				200,
+				201,
 				'Doctor created successfully.',
 				mockDoctorDetails
 			);
