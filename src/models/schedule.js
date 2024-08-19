@@ -145,8 +145,9 @@ module.exports = class Schedule {
 			// console.error('Error deleting schedule:', error);
 			if (error instanceof NotFoundError) {
 				throw error;
+			} else {
+				throw new DatabaseError('Failed to delete schedule.', error);
 			}
-			throw new DatabaseError('Failed to delete schedule.', error);
 		}
 	}
 
@@ -188,11 +189,12 @@ module.exports = class Schedule {
 
 			return this.getById(scheduleId);
 		} catch (error) {
-			console.error('Error updating schedule:', error);
+			// console.error('Error updating schedule:', error);
 			if (error instanceof NotFoundError) {
 				throw error;
+			} else {
+				throw new DatabaseError('Failed to update schedule.', error);
 			}
-			throw new DatabaseError('Failed to update schedule.', error);
 		}
 	}
 
@@ -216,7 +218,7 @@ module.exports = class Schedule {
 			.toUpperCase();
 
 		const schedule = await this.getByDoctorId(doctorId);
-		if (!schedule) {
+		if (!schedule || !Array.isArray(schedule)) {
 			throw new NotFoundError('No schedule found for this doctor.');
 		}
 

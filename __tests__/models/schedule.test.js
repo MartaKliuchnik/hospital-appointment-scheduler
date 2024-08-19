@@ -5,6 +5,7 @@ const { pool } = require('../../src/utils/database');
 const {
 	DatabaseError,
 	NotFoundError,
+	ValidationError,
 } = require('../../src/utils/customErrors');
 
 // Mock the database module
@@ -49,10 +50,12 @@ describe('Schedule Model', () => {
 		});
 	});
 
-	// Tests for inserting a new doctor's schedule
+	// Tests for inserting a new schedule
 	describe('Insert a new schedule', () => {
 		it('should insert a new schedule and return the schedule ID', async () => {
 			const mockInsertId = 1;
+
+			// Mock the database call to return a mock insert ID
 			pool.execute.mockResolvedValue([{ insertId: mockInsertId }]);
 
 			const schedule = createTestScheduler(mockScheduleData);
@@ -61,8 +64,9 @@ describe('Schedule Model', () => {
 			const expectedQuery =
 				'INSERT INTO schedule (doctorId, scheduleDay, startTime, endTime) VALUES (?, ?, ?, ?)';
 
-			// Verify the correct schedule data was passed to the query and the result matches the mockInsertId
+			// Verify the result is the mock insert ID
 			expect(result).toBe(mockInsertId);
+			// Verify that the correct SQL query and parameters were used
 			expect(pool.execute).toHaveBeenCalledWith(expectedQuery, [
 				2,
 				'MONDAY',
@@ -72,6 +76,7 @@ describe('Schedule Model', () => {
 		});
 
 		it('should throw DatabaseError on create failure', async () => {
+			// Mock the database call to simulate a failure
 			pool.execute.mockRejectedValue(new Error('Database error'));
 
 			const schedule = createTestScheduler(mockScheduleData);
@@ -121,7 +126,7 @@ describe('Schedule Model', () => {
 		});
 	});
 
-	// Retrieve a schedules by doctor ID tests
+	// Tests for retrieving schedules by doctor ID
 	describe('Retrieve a schedule by doctor ID', () => {
 		it('should return schedules successfully', async () => {
 			const mockDoctorId = 2;
@@ -129,30 +134,36 @@ describe('Schedule Model', () => {
 				createTestScheduler(mockScheduleData),
 				createTestScheduler({ ...mockScheduleData, scheduleId: 2 }),
 			];
+
+			// Mock the database call to return the mock schedules
 			pool.execute.mockResolvedValue([mockListSchedules]);
 
 			const results = await Schedule.getByDoctorId(mockDoctorId);
 
-			// Verify that the correct schedule data is returned as an instance of the Schedule class
+			// Verify that the returned data is an array of Schedule instances
 			expect(results[0]).toBeInstanceOf(Schedule);
 			expect(results[0].doctorId).toEqual(2);
 
 			const expectedQuery =
 				'SELECT doctorId, scheduleDay, startTime, endTime, scheduleId FROM schedule WHERE doctorId = ?';
+			// Verify the correct SQL query was executed
 			expect(pool.execute).toHaveBeenCalledWith(expectedQuery, [2]);
 		});
 
-		it('should return null when schedule is not found', async () => {
+		it('should return null when no schedule is found', async () => {
 			const mockRetrieveId = 999;
+
+			// Mock the database call to return an empty array
 			pool.execute.mockResolvedValue([[]]);
 
 			const result = await Schedule.getByDoctorId(mockRetrieveId);
 
-			// Verify that null is returned when the doctor is not found
+			// Verify that null is returned when no schedules are found
 			expect(result).toBeNull();
 		});
 
 		it('should throw DatabaseError on retrieve failure', async () => {
+			// Mock the database call to simulate a failure
 			pool.execute.mockRejectedValue(new Error('Database error'));
 
 			// Expect a DatabaseError to be thrown when the retrieve fails
@@ -181,25 +192,185 @@ describe('Schedule Model', () => {
 		});
 	});
 
-	// Tests for deleting the specified schedule
+	// Tests for deleting a specified schedule
 	describe('Delete By ID', () => {
 		it('should delete a schedule successfully', async () => {
 			const mockDeleteId = 1;
+
+			// Mock pool.execute to simulate a successful delete operation
 			pool.execute.mockResolvedValue([{ affectedRows: 1 }]);
 
 			await Schedule.deleteById(mockDeleteId);
 
-			// Verify that the correct SQL query was called to soft delete the doctor by setting isActive to 0
 			const expectedQuery = 'DELETE FROM schedule WHERE scheduleId = ?';
+			// Verify that pool.execute was called with the correct query and parameter
 			expect(pool.execute).toHaveBeenCalledWith(expectedQuery, [1]);
 		});
 
-		it('should throw DatabaseError on retrieve failure', async () => {
+		it('should throw NotFoundError when schedule is not found', async () => {
+			// Mock pool.execute to simulate no rows were affected (schedule not found)
+			pool.execute.mockResolvedValue([{ affectedRows: 0 }]);
+
+			// Test the case where the schedule does not exist
+			await expect(Schedule.deleteById(1)).rejects.toThrow(
+				new NotFoundError('Schedule not found.')
+			);
+		});
+
+		it('should throw DatabaseError on delete failure', async () => {
+			// Mock pool.execute to simulate a database error
 			pool.execute.mockRejectedValue(new Error('Database error'));
 
-			// Expect a DatabaseError to be thrown when the retrieve fails
+			// Test the case where a database error occurs during deletion
 			await expect(Schedule.deleteById()).rejects.toThrow(
 				new DatabaseError('Failed to delete schedule.')
+			);
+		});
+	});
+
+	// Tests for updating the schedule
+	describe("Update schedule's information", () => {
+		it("should update schedule's information successfully", async () => {
+			const mockScheduleId = 1;
+			const updates = {
+				scheduleDay: 'TUESDAY',
+				startTime: '10:00:00',
+				endTime: '18:00:00',
+			};
+			const updatedSchedule = createTestScheduler({
+				...mockScheduleData,
+				...updates,
+			});
+
+			// Mock pool.execute to simulate a successful update operation
+			pool.execute.mockResolvedValue([{ changedRows: 1 }]);
+			// Mock getById to return the updated schedule
+			jest.spyOn(Schedule, 'getById').mockResolvedValue(updatedSchedule);
+
+			const result = await Schedule.updateById(mockScheduleId, updates);
+
+			const expectedQuery =
+				'UPDATE schedule SET scheduleDay = ?, startTime = ?, endTime = ? WHERE scheduleId = ?';
+			// Verify that pool.execute was called with the correct query and parameters
+			expect(pool.execute).toHaveBeenCalledWith(expectedQuery, [
+				'TUESDAY',
+				'10:00:00',
+				'18:00:00',
+				mockScheduleId,
+			]);
+
+			// Verify that getById was called with the correct schedule ID
+			expect(Schedule.getById).toHaveBeenCalledWith(mockScheduleId);
+			// Verify that the result matches the updated schedule
+			expect(result).toEqual(updatedSchedule);
+		});
+
+		it('should throw ValidationError when no valid fields to update', async () => {
+			// Expect a ValidationError if no valid fields are provided for update
+			await expect(Schedule.updateById(1, {})).rejects.toThrow(
+				new ValidationError('No valid fields to update.')
+			);
+		});
+
+		it('should throw NotFoundError when no changes applied to the schedule', async () => {
+			// Mock pool.execute to simulate a scenario where no rows were updated
+			pool.execute.mockResolvedValue([{ changedRows: 0 }]);
+
+			// Expect a NotFoundError if no changes were applied to the schedule
+			await expect(
+				Schedule.updateById(1, { scheduleDay: 'MONDAY' })
+			).rejects.toThrow(
+				new NotFoundError('No changes applied to the schedule.')
+			);
+		});
+
+		it('should throw DatabaseError on updateById failure', async () => {
+			// Mock pool.execute to simulate a database failure
+			pool.execute.mockRejectedValue(new Error('Database error'));
+
+			// Expect a DatabaseError if the database operation fails during the update
+			await expect(
+				Schedule.updateById(1, { scheduleDay: 'TUESDAY' })
+			).rejects.toThrow(new DatabaseError('Failed to update schedule.'));
+		});
+	});
+
+	// Tests for retrieving available time slots for a specific doctor's schedule
+	describe('Retrieve available time slots', () => {
+		it('should return available time slots successfully', async () => {
+			const mockDoctorId = 1;
+			const mockDate = '2024-08-20';
+			const mockSchedule = [
+				{
+					scheduleDay: 'TUESDAY',
+					startTime: '09:00:00',
+					endTime: '11:00:00',
+				},
+			];
+			const mockAppointments = [
+				{ appointmentTime: '2024-08-20T09:20:00Z' },
+				{ appointmentTime: '2024-08-20T10:40:00Z' },
+			];
+
+			// Mock the getByDoctorId method to return the mock schedule
+			jest.spyOn(Schedule, 'getByDoctorId').mockResolvedValue(mockSchedule);
+			// Mock the getAppointmentsByDoctorAndDate function to return the mock appointments
+			const getAppointmentsByDoctorAndDate = jest
+				.fn()
+				.mockResolvedValue(mockAppointments);
+
+			const availableSlots = await Schedule.getAvailableTimeSlots(
+				mockDoctorId,
+				mockDate,
+				getAppointmentsByDoctorAndDate
+			);
+
+			const expectedSlots = [
+				new Date('2024-08-20T09:00:00Z'),
+				new Date('2024-08-20T09:40:00Z'),
+				new Date('2024-08-20T10:00:00Z'),
+				new Date('2024-08-20T10:20:00Z'),
+			];
+
+			// Assert that getByDoctorId was called with the correct doctor ID
+			expect(Schedule.getByDoctorId).toHaveBeenCalledWith(mockDoctorId);
+			// Assert that getAppointmentsByDoctorAndDate was called with the correct arguments
+			expect(getAppointmentsByDoctorAndDate).toHaveBeenCalledWith(
+				mockDoctorId,
+				mockDate
+			);
+			// Assert that the returned available slots match the expected slots
+			expect(availableSlots).toEqual(expectedSlots);
+		});
+
+		it('should throw NotFoundError if no schedule is found for the doctor', async () => {
+			const mockDoctorId = 1;
+			const mockDate = '2024-08-20';
+
+			// Mock getByDoctorId to return null (indicating no schedule found)
+			jest.spyOn(Schedule, 'getByDoctorId').mockResolvedValue(null);
+
+			// Assert that calling getAvailableTimeSlots throws a NotFoundError
+			await expect(
+				Schedule.getAvailableTimeSlots(mockDoctorId, mockDate, jest.fn())
+			).rejects.toThrow(
+				new NotFoundError('No schedule found for this doctor.')
+			);
+		});
+
+		it('should throw NotFoundError if doctor is not available on the specified day', async () => {
+			const mockDoctorId = 1;
+			const mockDate = '2024-08-20';
+			const mockSchedule = [createTestScheduler(mockScheduleData)];
+
+			// Mock getByDoctorId to return the mock schedule
+			jest.spyOn(Schedule, 'getByDoctorId').mockResolvedValue(mockSchedule);
+
+			// Assert that calling getAvailableTimeSlots throws a NotFoundError
+			await expect(
+				Schedule.getAvailableTimeSlots(mockDoctorId, mockDate, jest.fn())
+			).rejects.toThrow(
+				new NotFoundError('Doctor is not available on this day.')
 			);
 		});
 	});

@@ -257,9 +257,9 @@ describe('Doctor Model', () => {
 			pool.execute.mockResolvedValue([{ changedRows: 0 }]);
 
 			// Expect a NotFoundError if the doctor with the specified ID does not exist
-			await expect(Doctor.updateById(1, { firstName: 'Jane' })).rejects.toThrow(
-				new ValidationError('Doctor not found.')
-			);
+			await expect(
+				Doctor.updateById(999, { firstName: 'Jane' })
+			).rejects.toThrow(new ValidationError('Doctor not found.'));
 		});
 
 		it('should throw DatabaseError on updateById failure', async () => {
