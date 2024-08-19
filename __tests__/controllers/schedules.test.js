@@ -222,4 +222,268 @@ describe('Schedule controller', () => {
 			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
 		});
 	});
+
+	// Tests for retrieving a schedule for a specific doctor
+	describe('Retrieve schedule for a specific doctor', () => {
+		it('should return a schedule successfully', async () => {
+			req.params.doctorId = 2;
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getByDoctorId.mockResolvedValue(mockScheduleData); // Mock successful schedule retrieval
+
+			await scheduleController.getDoctorSchedule(req, res, next);
+
+			// Ensures that Schedule.getByDoctorId is called with the correct doctor ID
+			expect(Schedule.getByDoctorId).toHaveBeenCalledWith(2);
+		});
+
+		it('should handle case when no schedules are found for the doctor', async () => {
+			req.params.doctorId = 11;
+
+			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getByDoctorId.mockResolvedValue(null); // Mock that no schedule is found
+
+			await scheduleController.getDoctorSchedule(req, res, next);
+
+			// Ensures that Schedule.getByDoctorId is called with the correct doctor ID
+			expect(Schedule.getByDoctorId).toHaveBeenCalledWith(11);
+			// Ensures an error response is sent indicating that no schedules were found for the doctor
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				404,
+				'No schedules found for this doctor.'
+			);
+		});
+
+		it('should throw ValidationError on invalid doctor ID', async () => {
+			req.params.doctorId = 'invalid';
+
+			// Mock validation error for invalid doctor ID
+			validations.validateDoctorId.mockImplementation(() => {
+				throw new ValidationError('Invalid doctor ID.');
+			});
+
+			await scheduleController.getDoctorSchedule(req, res, next);
+
+			// Ensures that the ValidationError is thrown and passed to the next middleware
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'Invalid doctor ID.'
+			);
+		});
+
+		it('should handle database error during retrieval', async () => {
+			req.params.scheduleId = 1;
+
+			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getById.mockResolvedValue({ scheduleId: 1 }); // Mock retrieving success
+
+			Schedule.deleteById.mockRejectedValue(new Error('Database error')); // Mock a database error
+
+			await scheduleController.deleteSchedule(req, res, next);
+
+			// Ensure the schedule was checked for existence
+			expect(Schedule.getById).toHaveBeenCalledWith(1);
+			// Ensures the next middleware is called with a database error for proper error handling
+			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getByDoctorId.mockRejectedValue(new Error('Database error')); // Mock database error
+
+			await scheduleController.getSchedule(req, res, next);
+
+			// Ensures the next middleware is called with a database error for proper error handling
+			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
+		});
+	});
+
+	// Tests for deleting a schedule
+	describe('Deletion a schedule', () => {
+		it('should delete a schedule successfully', async () => {
+			req.params.scheduleId = 1;
+
+			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getById.mockResolvedValue(mockScheduleData); // Mock successful schedule retrieval
+			Schedule.deleteById.mockResolvedValue(); // Mock successful deletion
+
+			await scheduleController.deleteSchedule(req, res, next);
+
+			// Ensure the schedule was checked for existence and deleted
+			expect(Schedule.getById).toHaveBeenCalledWith(1);
+			expect(Schedule.deleteById).toHaveBeenCalledWith(1);
+			// Ensure a success response is sent
+			expect(responseHandlers.sendSuccessResponse).toHaveBeenCalledWith(
+				res,
+				200,
+				'Schedule deleted successfully.'
+			);
+		});
+
+		it('should handle case when no schedules are found', async () => {
+			req.params.scheduleId = 999;
+
+			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getById.mockResolvedValue(null); // Mock that no schedule is found
+
+			await scheduleController.deleteSchedule(req, res, next);
+
+			// Ensures that Schedule.getById is called with the correct doctor ID
+			expect(Schedule.getById).toHaveBeenCalledWith(999);
+			// Ensures an error response is sent indicating that no schedules were found for the doctor
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				404,
+				'Schedule not found.'
+			);
+		});
+
+		it('should throw ValidationError on invalid schedule ID', async () => {
+			req.params.scheduleId = 'invalid';
+
+			// Mock validation error for invalid schedule ID
+			validations.validateScheduleId.mockImplementation(() => {
+				throw new ValidationError('Invalid schedule ID.');
+			});
+
+			await scheduleController.deleteSchedule(req, res, next);
+
+			// Ensures that the ValidationError is thrown and passed to the next middleware
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'Invalid schedule ID.'
+			);
+		});
+
+		it('should handle database error during deletion', async () => {
+			req.params.scheduleId = 1;
+
+			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getById.mockResolvedValue({ scheduleId: 1 }); // Mock retrieving success
+
+			Schedule.deleteById.mockRejectedValue(new Error('Database error')); // Mock a database error
+
+			await scheduleController.deleteSchedule(req, res, next);
+
+			// Ensure the schedule was checked for existence
+			expect(Schedule.getById).toHaveBeenCalledWith(1);
+			// Ensures the next middleware is called with a database error for proper error handling
+			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
+		});
+	});
+
+	// Tests for updating a schedule
+	describe('Updation a schedule', () => {
+		it('should update the schedule successfully', async () => {
+			req.params.scheduleId = 1;
+			req.body = {
+				scheduleDay: 'TUESDAY',
+				startTime: '10:00:00',
+				endTime: '18:00:00',
+			};
+			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getById.mockResolvedValue({ scheduleId: 1 }); // Mock successful schedule retrieval
+			Schedule.updateById.mockResolvedValue({
+				scheduleId: 1,
+				...req.body,
+			});
+
+			await scheduleController.updateSchedule(req, res, next);
+
+			// Ensure the schedule was checked for existence and deleted
+			expect(Schedule.getById).toHaveBeenCalledWith(1);
+			expect(Schedule.updateById).toHaveBeenCalledWith(1, req.body);
+			// Ensure a success response is sent
+			expect(responseHandlers.sendSuccessResponse).toHaveBeenCalledWith(
+				res,
+				200,
+				'Schedule updated successfully.',
+				{
+					scheduleId: 1,
+					...req.body,
+				}
+			);
+		});
+
+		it('should handle case when no schedules are found', async () => {
+			req.params.scheduleId = 999;
+			req.body = {
+				scheduleDay: 'TUESDAY',
+			};
+
+			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getById.mockResolvedValue(null); // Mock that no schedule is found
+
+			await scheduleController.updateSchedule(req, res, next);
+
+			// Ensure the schedule was checked for existence
+			expect(Schedule.getById).toHaveBeenCalledWith(999);
+			// Ensures an error response is sent indicating that no schedules
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				404,
+				'Schedule not found.'
+			);
+		});
+
+		it('should throw ValidationError on invalid scheduleDay', async () => {
+			req.params.scheduleId = 1;
+			req.body = {
+				scheduleDay: 'INVALID_DAY',
+			};
+
+			// Mock validation error for invalid scheduleDay
+			validations.validateScheduleId.mockImplementation(() => {
+				throw new ValidationError(
+					'Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list.'
+				);
+			});
+
+			await scheduleController.updateSchedule(req, res, next);
+
+			// Ensures that the ValidationError is thrown and passed to the next middleware
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'Invalid scheduleDay. Please provide a valid scheduleDay from the allowed list.'
+			);
+		});
+
+		it('should throw NotFoundError when no changes applied to the schedule', async () => {
+			req.params.scheduleId = 1;
+			req.body = {};
+
+			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getById.mockResolvedValue({ scheduleId: 1 }); // Mock retrieving success
+
+			await scheduleController.updateSchedule(req, res, next);
+
+			// Expect a NotFoundError if no changes were applied to the schedule
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'No changes applied to the schedule.'
+			);
+		});
+
+		it('should handle database error during update', async () => {
+			req.params.scheduleId = 1;
+			req.body = {
+				scheduleDay: 'TUESDAY',
+			};
+
+			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			Schedule.getById.mockResolvedValue({ scheduleId: 1 }); // Mock retrieving success
+
+			Schedule.updateById.mockRejectedValue(new Error('Database error')); // Mock a database error
+
+			await scheduleController.updateSchedule(req, res, next);
+
+			// Ensure the schedule was checked for existence
+			expect(Schedule.getById).toHaveBeenCalledWith(1);
+			// Ensures the next middleware is called with a database error for proper error handling
+			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
+		});
+	});
 });
