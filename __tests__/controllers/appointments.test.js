@@ -11,6 +11,7 @@ const {
 	AuthenticationError,
 	DatabaseError,
 } = require('../../src/utils/customErrors');
+const { createTestAppointment } = require('../../src/utils/testHelpers');
 
 // Mock dependencies to isolate unit tests
 jest.mock('../../src/utils/responseHandlers'); // Controls response handling
@@ -23,7 +24,7 @@ jest.mock('../../src/utils/database'); // Mocks the database module
  * This suite tests functionalities like updating, deleting, and retrieving appointments.
  */
 describe('Appointment controller', () => {
-	let res, req, next, mockAppointmentData;
+	let res, req, next, mockAppointmentData, mockConnection;
 
 	beforeEach(() => {
 		req = {
@@ -484,6 +485,173 @@ describe('Appointment controller', () => {
 			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
 			expect(next.mock.calls[0][0].message).toBe(
 				'Failed to delete/cancel appointment.'
+			);
+		});
+	});
+
+	// Tests for updating the appointment time for a specific appointment
+	describe('Updating an specific appointment', () => {
+		it('should update an appointment successfully', async () => {
+			req.body = { appointmentTime: '2024-08-28T14:00:00Z' };
+			const updateAppointment = {
+				...mockAppointmentData,
+				appointmentTime: '2024-08-28T14:00:00Z',
+			};
+
+			validations.validateAppointmentUpdate.mockImplementation(() => {}); // Mock validation success
+			Appointment.changeAppointmentById.mockResolvedValue(updateAppointment); // Mock changing appointment sucessfully
+			// Mock the database method to change the appointment by ID
+			Appointment.formatAppointmentResponse = jest
+				.fn()
+				.mockImplementation((appointment) => ({
+					...appointment,
+					appointmentTime: new Date(appointment.appointmentTime)
+						.toISOString()
+						.replace('T', ' ')
+						.substring(0, 19),
+				}));
+
+			await appointmentController.updateAppointment(req, res, next);
+
+			// Verify that the validation function was called with the correct parameters
+			expect(validations.validateAppointmentUpdate).toHaveBeenCalledWith(
+				3,
+				1,
+				'2024-08-28T14:00:00Z',
+				'PATIENT'
+			);
+			// Verify that the method to change the appointment was called with the correct parameters
+			expect(Appointment.changeAppointmentById).toHaveBeenCalledWith(
+				'2024-08-28T14:00:00Z',
+				3
+			);
+			// Verify that the formatAppointmentResponse method was called with the updated appointment
+			expect(Appointment.formatAppointmentResponse).toHaveBeenCalledWith(
+				updateAppointment
+			);
+
+			const expectedFormattedAppointment = {
+				...updateAppointment,
+				appointmentTime: '2024-08-28 14:00:00',
+			};
+
+			// Verify that the success response was sent with the correct status and message
+			expect(responseHandlers.sendSuccessResponse).toHaveBeenCalledWith(
+				res,
+				200,
+				'Appointment updated successfully.',
+				expectedFormattedAppointment
+			);
+		});
+
+		it('should handle authentication error due to missing client ID', async () => {
+			req.client = { clientId: null }; // Set client ID to null to simulate authentication failure
+
+			// Mock validation function to reject with an AuthenticationError
+			validations.validateAppointmentUpdate.mockRejectedValue(
+				new AuthenticationError('Authentication failed: Missing client ID.')
+			);
+
+			await appointmentController.updateAppointment(req, res, next);
+
+			// Expect an error response with status 401 and the specific authentication error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				401,
+				'Authentication failed: Missing client ID.'
+			);
+		});
+
+		it('should handle validation error for an invalid appointment ID', async () => {
+			req.params.appointmentId = 'invalid'; // Set invalid appointment ID to simulate validation failure
+
+			// Mock validation function to reject with a ValidationError
+			validations.validateAppointmentUpdate.mockRejectedValue(
+				new ValidationError('Invalid appointment ID.')
+			);
+
+			await appointmentController.updateAppointment(req, res, next);
+
+			// Expect an error response with status 400 and the validation error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'Invalid appointment ID.'
+			);
+		});
+
+		it('should handle validation error for an invalid appointment time', async () => {
+			req.params.appointmentTime = '2022-08-28T14:00:00Z'; // Set invalid appointment time to simulate validation failure
+
+			// Mock validation function to reject with a ValidationError
+			validations.validateAppointmentUpdate.mockRejectedValue(
+				new ValidationError(
+					'Invalid appointment time. Please choose a future date and time.'
+				)
+			);
+
+			await appointmentController.updateAppointment(req, res, next);
+
+			// Expect an error response with status 400 and the validation error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'Invalid appointment time. Please choose a future date and time.'
+			);
+		});
+
+		it('should handle NotFoundError if the appointment does not exist', async () => {
+			req.params.appointmentId = 999; // Set non-existent appointment ID to simulate NotFoundError
+
+			// Mock validation function to reject with a NotFoundError
+			validations.validateAppointmentUpdate.mockRejectedValue(
+				new NotFoundError("Appointment doesn't exist.")
+			);
+
+			await appointmentController.updateAppointment(req, res, next);
+
+			// Expect an error response with status 404 and the not found error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				404,
+				"Appointment doesn't exist."
+			);
+		});
+
+		it('should handle authentication error if client lacks permission to update appointment', async () => {
+			req.params.clientId = 1;
+			req.client = { clientId: 4, role: Role.PATIENT }; // Set client ID and role to simulate lack of permission
+
+			// Mock validation function to reject with an AuthenticationError
+			validations.validateAppointmentUpdate.mockRejectedValue(
+				new AuthenticationError(
+					'You do not have permission to update this appointment.'
+				)
+			);
+
+			await appointmentController.updateAppointment(req, res, next);
+
+			// Expect an error response with status 401 and the permission error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				401,
+				'You do not have permission to update this appointment.'
+			);
+		});
+
+		it('should handle database error during appointment update', async () => {
+			validations.validateAppointmentUpdate.mockImplementation(() => {}); // Mock validation success
+			// Mock a database error during changing an appointment
+			Appointment.changeAppointmentById.mockRejectedValue(
+				new Error('Database error')
+			);
+
+			await appointmentController.updateAppointment(req, res, next);
+
+			// Ensure the next middleware is called with a database error
+			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
+			expect(next.mock.calls[0][0].message).toBe(
+				'Failed to change appointment.'
 			);
 		});
 	});
