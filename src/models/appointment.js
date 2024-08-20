@@ -162,7 +162,7 @@ module.exports = class Appointment {
 			};
 		} catch (error) {
 			// console.error('Error retrieving client appointments:', error);
-			throw error;
+			throw new DatabaseError('Failed to retrieve client appointments.', error);
 		}
 	}
 
@@ -364,7 +364,7 @@ module.exports = class Appointment {
 			);
 		} catch (error) {
 			// console.error('Error checking time slot availability:', error);
-			throw error;
+			throw new DatabaseError('Failed to check time slot.', error);
 		}
 	}
 };

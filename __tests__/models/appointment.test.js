@@ -200,6 +200,35 @@ describe('Appointment Model', () => {
 				expect.stringContaining('deletedAt IS NULL'),
 				[1]
 			);
+			expect(pool.execute).toHaveBeenCalledWith(
+				expect.stringContaining('deletedAt'),
+				[1]
+			);
+		});
+
+		it('should return an empty array if no appointments are found for the client', async () => {
+			const mockEmptyAppointments = []; // Mocking an empty result set
+			pool.execute.mockResolvedValue([mockEmptyAppointments]);
+
+			const result = await Appointment.getAppointmentsByClientId(
+				1,
+				Role.PATIENT
+			);
+
+			// Ensure that the method returns an empty array
+			expect(result.appointments).toEqual([]);
+		});
+
+		it('should throw a DatabaseError if the database query fails', async () => {
+			pool.execute.mockRejectedValue(new Error('DatabaseError')); // Mock the database query to reject with an error
+
+			// Expect the method to throw a DatabaseError
+			await expect(
+				Appointment.getAppointmentsByClientId(1, Role.PATIENT)
+			).rejects.toThrow(DatabaseError);
+			await expect(
+				Appointment.getAppointmentsByClientId(1, Role.PATIENT)
+			).rejects.toThrow('Failed to retrieve client appointments.');
 		});
 	});
 
@@ -224,6 +253,19 @@ describe('Appointment Model', () => {
 			await expect(
 				Appointment.softDeleteAppointment(999, mockConnection)
 			).rejects.toThrow(new NotFoundError('Appointment not found.'));
+		});
+
+		it('should throw a DatabaseError if the database query fails', async () => {
+			mockConnection.execute.mockRejectedValue(new Error('Database error'));
+			const mockAppointmentId = 1;
+
+			// Expect the method to throw a DatabaseError with the correct message
+			await expect(
+				Appointment.softDeleteAppointment(mockAppointmentId, mockConnection)
+			).rejects.toThrow(DatabaseError);
+			await expect(
+				Appointment.softDeleteAppointment(mockAppointmentId, mockConnection)
+			).rejects.toThrow('Failed to soft delete appointment.');
 		});
 	});
 
@@ -416,6 +458,30 @@ describe('Appointment Model', () => {
 
 			// Assert that the time slot is not available
 			expect(result).toBe(false);
+		});
+
+		it('should throw a DatabaseError if the database query fails', async () => {
+			mockConnection.execute.mockRejectedValue(new Error('Database error'));
+
+			const mockDoctorId = 1;
+			const mockAppointmentTime = new Date('2024-08-20T10:00:00Z');
+
+			// Act & Assert: Expect the method to throw a DatabaseError with the correct message
+			await expect(
+				Appointment.isTimeSlotAvailable(
+					mockDoctorId,
+					mockAppointmentTime,
+					mockConnection
+				)
+			).rejects.toThrow(DatabaseError);
+
+			await expect(
+				Appointment.isTimeSlotAvailable(
+					mockDoctorId,
+					mockAppointmentTime,
+					mockConnection
+				)
+			).rejects.toThrow('Failed to check time slot.');
 		});
 	});
 });

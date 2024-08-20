@@ -10,6 +10,7 @@ const {
 	NotFoundError,
 	AuthenticationError,
 	DatabaseError,
+	AuthorizationError,
 } = require('../../src/utils/customErrors');
 const { createTestAppointment } = require('../../src/utils/testHelpers');
 
@@ -273,43 +274,24 @@ describe('Appointment controller', () => {
 			);
 		});
 
-		it('should handle authentication error', async () => {
+		it('should handle authorization error', async () => {
 			req.params.clientId = 1;
 			req.client = { clientId: 4, role: Role.PATIENT };
 
-			// Mock the validation function to reject with an AuthenticationError due to the missing clientId
-			validations.validateAppointmentCreation.mockRejectedValue(
-				new AuthenticationError(
+			// Mock the validation function to reject with an AuthorizationError due to the missing clientId
+			validations.validateClientAppointmentAccess.mockRejectedValue(
+				new AuthorizationError(
 					'You have permission to view only your own appointments.'
 				)
 			);
 
-			await appointmentController.createAppointment(req, res, next);
+			await appointmentController.getClientAppointments(req, res, next);
 
-			// Expect the sendErrorResponse to be called with status 401 (Unauthorized) and the appropriate error message
+			// Expect the sendErrorResponse to be called with status 403 (Unauthorized) and the appropriate error message
 			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
 				res,
-				401,
+				403,
 				'You have permission to view only your own appointments.'
-			);
-		});
-
-		it('should handle validation error if the client ID is invalid', async () => {
-			req.params.clientId = 1;
-			req.client = { clientId: 'invalid', role: Role.PATIENT };
-
-			// Mock the validation to throw a ValidationError for invalid clientId
-			validations.validateAppointmentCreation.mockRejectedValue(
-				new NotFoundError('Invalid client ID.')
-			);
-
-			await appointmentController.createAppointment(req, res, next);
-
-			// Expect the sendErrorResponse to be called with the appropriate error message and status
-			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
-				res,
-				404,
-				'Invalid client ID.'
 			);
 		});
 
@@ -412,6 +394,26 @@ describe('Appointment controller', () => {
 				res,
 				401,
 				'Authentication failed: Missing client ID.'
+			);
+		});
+
+		it('should handle authorization error due to insufficient permissions', async () => {
+			req.client = { clientRole: Role.PATIENT };
+
+			// Mock the validation function to reject with an AuthorizationError
+			validations.validateAppointmentDeletion.mockRejectedValue(
+				new AuthorizationError(
+					'You do not have permission to delete this appointment.'
+				)
+			);
+
+			await appointmentController.deleteAppointment(req, res, next);
+
+			// Expect an error response with status 403 and the authorization error message
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				403,
+				'You do not have permission to delete this appointment.'
 			);
 		});
 
