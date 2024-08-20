@@ -204,4 +204,42 @@ module.exports = class Doctor {
 			throw new DatabaseError('Failed to check doctor appointments.');
 		}
 	}
+
+	/**
+	 * Retrieve a doctor by specified name and specialization from the database.
+	 * @param {string} firstName - The first name of the doctor to search for.
+	 * @param {string} lastName - The last name of the doctor to search for.
+	 * @param {string} specialization - The medical specialization of the doctor to search for.
+	 * @returns {Promise<Array<Object>|null>} - A promise that resolves to a Doctor object if found, or null if no match is found.
+	 * @throws {Error} - If there's an error during the database operation.
+	 */
+	static async findByNameAndSpecialization(
+		firstName,
+		lastName,
+		specialization
+	) {
+		const columns = [
+			'doctorId',
+			'firstName',
+			'lastName',
+			'specialization',
+			'isActive',
+		];
+		const query = `SELECT ${columns.join(
+			', '
+		)} FROM doctor WHERE firstName = ? AND lastName = ? AND specialization = ? AND isActive = 1 LIMIT 1`;
+
+		try {
+			const [result] = await pool.execute(query, [
+				firstName,
+				lastName,
+				specialization,
+			]);
+			return result.length > 0 ? new Doctor(result[0]) : null;
+		} catch (error) {
+			throw new DatabaseError(
+				'Failed to retrieve doctor by name and specialization.'
+			);
+		}
+	}
 };

@@ -1102,6 +1102,16 @@ Description: The user does not have the required admin privileges to perform thi
 }
 ```
 
+Status code: **409 Conflict**
+
+Description: This response indicates that a doctor with the same name and specialization is already in the system, preventing the creation of a duplicate entry.
+
+```
+{
+    "message": "A doctor with the same name and specialization already exists."
+}
+```
+
 Status Code: **500 Internal Server Error**
 
 Description: An unexpected error occurred on the server while processing the request.
@@ -1348,6 +1358,16 @@ Description: No doctor with the specified ID exists in the database.
 ```
 {
     "message": "Doctor not found."
+}
+```
+
+Status code: **409 Conflict**
+
+Description: This response indicates that a doctor with the same name and specialization is already in the system, preventing the creation of a duplicate entry.
+
+```
+{
+    "message": "A doctor with the same name and specialization already exists."
 }
 ```
 

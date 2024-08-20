@@ -362,6 +362,7 @@ describe('Doctor controller', () => {
 			});
 
 			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			validations.validateUpdatingDoctorInput.mockImplementation(() => {}); // Mock validation success
 			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
 			Doctor.hasAppointments.mockResolvedValue(null); // Mock no appointments
 			Doctor.updateById.mockResolvedValue(updatedDoctor); // Mock successful doctor update
@@ -383,6 +384,24 @@ describe('Doctor controller', () => {
 		it('should handle invalid doctor ID', async () => {
 			req.params.doctorId = 'invalid'; // Mock validation error for invalid ID
 
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			validations.validateUpdatingDoctorInput.mockImplementation(() => {
+				throw new ValidationError('All fields are required.');
+			});
+
+			await doctorController.updateDoctor(req, res, next);
+
+			// Verify that an error response is sent for the invalid doctor ID
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'All fields are required.'
+			);
+		});
+
+		it('should handle if doctor already exists', async () => {
+			req.params.doctorId = 1;
+
 			validations.validateDoctorId.mockImplementation(() => {
 				throw new ValidationError('Invalid doctor ID.');
 			});
@@ -397,11 +416,37 @@ describe('Doctor controller', () => {
 			);
 		});
 
+		it('should handle missing parameters', async () => {
+			req.body = {
+				firstName: '',
+				lastName: '',
+				specialization: '',
+			};
+
+			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			// Mock validation error for missing parameters
+			validations.validateUpdatingDoctorInput.mockImplementation(() => {
+				throw new ValidationError(
+					'All fields are required and must be in a valid format.'
+				);
+			});
+
+			await doctorController.updateDoctor(req, res, next);
+
+			// Ensures that an error response is sent indicating missing or invalid parameters
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'All fields are required and must be in a valid format.'
+			);
+		});
+
 		it('should handle non-existent doctor', async () => {
 			req.params.doctorId = 999; // Sets a non-existent doctor ID
 			req.client.role = Role.ADMIN;
 
 			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			validations.validateUpdatingDoctorInput.mockImplementation(() => {}); // Mock validation success
 			Doctor.getById.mockResolvedValue(null); // Mock scenario where no doctor is found
 
 			await doctorController.updateDoctor(req, res, next);
@@ -420,6 +465,7 @@ describe('Doctor controller', () => {
 			req.client.role = Role.ADMIN;
 
 			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			validations.validateUpdatingDoctorInput.mockImplementation(() => {}); // Mock validation success
 			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
 			Doctor.hasAppointments.mockResolvedValue({ count: 1 }); // Mock doctor has appointment
 
@@ -439,6 +485,7 @@ describe('Doctor controller', () => {
 			req.body = { specialization: 'INVALID_SPECIALIZATION' };
 
 			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			validations.validateUpdatingDoctorInput.mockImplementation(() => {}); // Mock validation success
 			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
 			Doctor.hasAppointments.mockResolvedValue(null); // Mock no appointments
 
@@ -458,6 +505,7 @@ describe('Doctor controller', () => {
 			req.body = mockUpdateData;
 
 			validations.validateDoctorId.mockImplementation(() => {}); // Mock validation success
+			validations.validateUpdatingDoctorInput.mockImplementation(() => {}); // Mock validation success
 			Doctor.getById.mockResolvedValue(mockDoctorData); // Mock successful doctor retrieval
 			Doctor.hasAppointments.mockResolvedValue(null); // Mock no appointments
 			Doctor.updateById.mockRejectedValue(new Error('Database error')); // Mock update error
@@ -468,4 +516,5 @@ describe('Doctor controller', () => {
 			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
 		});
 	});
+
 });

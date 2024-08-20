@@ -293,6 +293,17 @@ const validateCreatingDoctorInput = (firstName, lastName, specialization) => {
 	}
 };
 
+const validateUpdatingDoctorInput = (updateData) => {
+	const { firstName, lastName, specialization } = updateData;
+
+	// Check for missing parameters
+	if (!firstName || !lastName || !specialization) {
+		throw new ValidationError(
+			'All fields are required and must be in a valid format.'
+		);
+	}
+};
+
 module.exports = {
 	validateLoginInput,
 	validateUserRoleUpdate,
@@ -308,4 +319,5 @@ module.exports = {
 	validateUpdatingScheduleInput,
 	validateClientDeletion,
 	validateCreatingDoctorInput,
+	validateUpdatingDoctorInput
 };

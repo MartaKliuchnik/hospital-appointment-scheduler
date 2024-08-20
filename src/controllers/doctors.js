@@ -12,6 +12,7 @@ const {
 const {
 	validateDoctorId,
 	validateCreatingDoctorInput,
+	validateUpdatingDoctorInput,
 } = require('../utils/validations');
 
 /**
@@ -91,6 +92,20 @@ exports.createDoctor = async (req, res, next) => {
 	try {
 		validateCreatingDoctorInput(firstName, lastName, specialization);
 
+		// Check if doctor already exists
+		const existingDoctor = await Doctor.findByNameAndSpecialization(
+			firstName,
+			lastName,
+			specialization
+		);
+		if (existingDoctor) {
+			return sendErrorResponse(
+				res,
+				409,
+				'A doctor with the same name and specialization already exists.'
+			);
+		}
+
 		const doctor = new Doctor(firstName, lastName, specialization);
 		const doctorId = await doctor.insert();
 
@@ -166,6 +181,27 @@ exports.updateDoctor = async (req, res, next) => {
 	try {
 		validateDoctorId(doctorId);
 
+		const updateData = {
+			firstName: req.body.firstName,
+			lastName: req.body.lastName,
+			specialization: req.body.specialization,
+		};
+		validateUpdatingDoctorInput(updateData);
+
+		// Check if doctor already exists
+		const existingDoctor = await Doctor.findByNameAndSpecialization(
+			updateData.firstName,
+			updateData.lastName,
+			updateData.specialization
+		);
+		if (existingDoctor) {
+			return sendErrorResponse(
+				res,
+				409,
+				'A doctor with the same name and specialization already exists.'
+			);
+		}
+
 		const doctor = await Doctor.getById(doctorId, req.client.role);
 		// Check if the doctor exists
 		if (!doctor) {
@@ -179,12 +215,6 @@ exports.updateDoctor = async (req, res, next) => {
 				'This doctor has appointment(s). Update is forbidden.'
 			);
 		}
-
-		const updateData = {
-			firstName: req.body.firstName,
-			lastName: req.body.lastName,
-			specialization: req.body.specialization,
-		};
 
 		if (
 			!Object.keys(MedicalSpecializations).includes(

@@ -301,4 +301,56 @@ describe('Doctor Model', () => {
 			);
 		});
 	});
+
+	// Tests for retrieving a doctor by specified name and specialization
+	describe('Retrieve a doctor by specified name and specialization', () => {
+		it('should retrieve doctor successfully when the doctor exists', async () => {
+			const mockDoctor = createTestDoctor(mockDoctorData);
+			pool.execute.mockResolvedValue([[mockDoctor]]);
+
+			const result = await Doctor.findByNameAndSpecialization(
+				mockDoctorData.firstName,
+				mockDoctorData.lastName,
+				mockDoctorData.specialization
+			);
+
+			// Verify the expected query was executed
+			const expectedQuery = `SELECT doctorId, firstName, lastName, specialization, isActive FROM doctor WHERE firstName = ? AND lastName = ? AND specialization = ? AND isActive = 1 LIMIT 1`;
+			expect(pool.execute).toHaveBeenCalledWith(expectedQuery, [
+				'John',
+				'Doe',
+				'CARDIOLOGY',
+			]);
+
+			// Verify the result is correctly instantiated as a Doctor object
+			expect(result).toBeInstanceOf(Doctor);
+		});
+
+		it('should return null when no doctor is found', async () => {
+			pool.execute.mockResolvedValue([[]]);
+
+			// Call the function with a non-existing doctor name and specialization
+			const result = await Doctor.findByNameAndSpecialization(
+				'Jane',
+				'Smith',
+				'NEUROLOGY'
+			);
+
+			// Verify the result is null
+			expect(result).toBeNull();
+		});
+
+		it('should throw DatabaseError on hasAppointments failure', async () => {
+			pool.execute.mockRejectedValue(new Error('Database error'));
+
+			// Expect a DatabaseError to be thrown if the query fails while checking for appointments
+			await expect(
+				Doctor.findByNameAndSpecialization('Jane', 'Smith', 'NEUROLOGY')
+			).rejects.toThrow(
+				new DatabaseError(
+					'Failed to retrieve doctor by name and specialization.'
+				)
+			);
+		});
+	});
 });
