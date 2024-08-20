@@ -16,6 +16,7 @@ const {
 	validateScheduleId,
 	validateDoctorId,
 	validateCreatingScheduleInput,
+	validateUpdatingScheduleInput,
 } = require('../utils/validations');
 
 /**
@@ -115,7 +116,7 @@ exports.getDoctorSchedule = async (req, res, next) => {
 
 	try {
 		validateDoctorId(doctorId);
-
+	
 		const result = await Schedule.getByDoctorId(doctorId);
 		// Check if the schedules exist for this doctor
 		if (!result) {
@@ -186,16 +187,18 @@ exports.updateSchedule = async (req, res, next) => {
 
 	try {
 		validateScheduleId(scheduleId);
-
+		
 		const updateData = {
 			scheduleDay: req.body.scheduleDay,
 			startTime: req.body.startTime,
 			endTime: req.body.endTime,
 		};
+		
+		validateUpdatingScheduleInput(updateData);
 
 		// Remove undefined fields
 		Object.keys(updateData).forEach(
-			(key) => updateData[key] === undefined && delete updateData[key]
+			(key) => (!updateData[key] || updateData[key] === undefined) && delete updateData[key]
 		);
 		if (Object.keys(updateData).length === 0) {
 			throw new ValidationError('No changes applied to the schedule.');

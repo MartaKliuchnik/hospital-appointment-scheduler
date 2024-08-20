@@ -29,10 +29,6 @@ app.use('/api/v1/doctors', doctorRoutes);
 app.use('/api/v1/clients', adminRoutes);
 app.use('/api/v1/schedules', scheduleRoutes);
 
-app.get('/api/v1/welcome-page', (req, res) => {
-	res.sendFile(path.join(rootDir, '../views', 'home-page.html'));
-});
-
 // Global error handling middleware
 app.use(errorHandler);
 

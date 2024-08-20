@@ -249,6 +249,17 @@ const validateCreatingScheduleInput = (
 	}
 };
 
+const validateUpdatingScheduleInput = (updatedData) => {
+	const { scheduleDay, startTime, endTime } = updatedData;
+
+	// Check for missing parameters
+	if (!scheduleDay || !startTime || !endTime) {
+		throw new ValidationError(
+			'All fields are required.'
+		);
+	}
+};
+
 const validateClientDeletion = async (clientId) => {
 	// Check if the clientId is provided and is a valid number
 	if (!clientId || isNaN(clientId)) {
@@ -294,6 +305,7 @@ module.exports = {
 	validateScheduleId,
 	validateClientId,
 	validateCreatingScheduleInput,
+	validateUpdatingScheduleInput,
 	validateClientDeletion,
 	validateCreatingDoctorInput,
 };

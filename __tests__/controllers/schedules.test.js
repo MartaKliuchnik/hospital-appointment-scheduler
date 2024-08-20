@@ -383,6 +383,7 @@ describe('Schedule controller', () => {
 				endTime: '18:00:00',
 			};
 			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			validations.validateUpdatingScheduleInput.mockImplementation(() => {}); // Mock validation success
 			Schedule.getById.mockResolvedValue({ scheduleId: 1 }); // Mock successful schedule retrieval
 			Schedule.updateById.mockResolvedValue({
 				scheduleId: 1,
@@ -413,6 +414,7 @@ describe('Schedule controller', () => {
 			};
 
 			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			validations.validateUpdatingScheduleInput.mockImplementation(() => {}); // Mock validation success
 			Schedule.getById.mockResolvedValue(null); // Mock that no schedule is found
 
 			await scheduleController.updateSchedule(req, res, next);
@@ -450,11 +452,33 @@ describe('Schedule controller', () => {
 			);
 		});
 
+		it('should handle case for missing fields', async () => {
+			req.params.scheduleId = 1;
+			req.body = { scheduleDay: '', startTime: '', endTime: '' };
+
+			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			// Mock validation error for missing fields
+			validations.validateUpdatingScheduleInput.mockImplementation(() => {
+				throw new ValidationError('All fields are required.');
+			});
+
+			await scheduleController.updateSchedule(req, res, next);
+
+			// Ensures an error response is sent indicating that no schedules
+			expect(responseHandlers.sendErrorResponse).toHaveBeenCalledWith(
+				res,
+				400,
+				'All fields are required.'
+			);
+		});
+
+
 		it('should throw NotFoundError when no changes applied to the schedule', async () => {
 			req.params.scheduleId = 1;
 			req.body = {};
 
 			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			validations.validateUpdatingScheduleInput.mockImplementation(() => {}); // Mock validation success
 			Schedule.getById.mockResolvedValue({ scheduleId: 1 }); // Mock retrieving success
 
 			await scheduleController.updateSchedule(req, res, next);
@@ -474,6 +498,7 @@ describe('Schedule controller', () => {
 			};
 
 			validations.validateScheduleId.mockImplementation(() => {}); // Mock validation success
+			validations.validateUpdatingScheduleInput.mockImplementation(() => {}); // Mock validation success
 			Schedule.getById.mockResolvedValue({ scheduleId: 1 }); // Mock retrieving success
 
 			Schedule.updateById.mockRejectedValue(new Error('Database error')); // Mock a database error

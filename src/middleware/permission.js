@@ -13,6 +13,7 @@ const rolePermissions = new RolePermissions();
  */
 const checkPermission = (requiredPermission, allowUnauthenticated = false) => {
 	return async (req, res, next) => {
+		
 		try {
 			// Get the client's ID from the authenticated request
 			const clientId = req.client?.clientId;
@@ -27,10 +28,10 @@ const checkPermission = (requiredPermission, allowUnauthenticated = false) => {
 				);
 			}
 
-			await validateClientId(clientId);
+			validateClientId(clientId);
 
 			// Get the latest client's role from the database, defaulting to ANONYMOUS if not set
-			const clientRole = req.client.role || Role.ANONYMOUS;
+			const clientRole = req.client?.role || Role.ANONYMOUS;
 			// Check if the role includes the required permission
 			if (rolePermissions.hasPermissions(clientRole, requiredPermission)) {
 				return next();

@@ -2103,8 +2103,13 @@ Description: The schedules are successfully retrieved.
 
 Status Code: **400 Bad Request**
 
-Description: The doctor ID provided is invalid.
+Description: The doctor ID provided is invalid or missing.
 
+```
+{ 
+    "message": "Doctor ID is required."
+}
+```
 ```
 {
     "message": "Invalid doctor ID."
@@ -2179,8 +2184,13 @@ Description: The schedule is successfully retrieved.
 
 Status Code: **400 Bad Request**
 
-Description: The schedule ID provided is invalid.
+Description: The schedule ID provided is invalid or missing.
 
+```
+{ 
+    "message": "Schedule ID is required."
+}
+```
 ```
 {
     "message": "Invalid schedule ID."
@@ -2383,8 +2393,13 @@ Description: The server successfully deletes the schedule.
 
 Status Code: **400 Bad Request**
 
-Description: The provided schedule ID is invalid.
+Description: The provided schedule ID is invalid or missing.
 
+```
+{ 
+    "message": "Schedule ID is required."
+}
+```
 ```
 { 
     "message": "Invalid schedule ID."
@@ -2453,7 +2468,7 @@ and the updated schedule information in the request body.
 curl -X PUT http://localhost:8080/api/v1/schedules/123 \
 -H "Authorization: Bearer <your-jwt-token>" \
 -H "Content-Type: application/json" \
--d '{ "scheduleDay": "FRIDAY", "startTime": "13:00:00", "endTime": "17:00:00", }'
+-d '{ "scheduleDay": "FRIDAY", "startTime": "13:00:00", "endTime": "17:00:00" }'
 
 ```
 
@@ -2478,8 +2493,13 @@ Description: The server successfully updates the schedule.
 
 Status Code: **400 Bad Request**
 
-Description: The provided schedule ID is invalid.
+Description: The provided schedule ID is invalid or missing.
 
+```
+{ 
+    "message": "Schedule ID is required."
+}
+```
 ```
 { 
     "message": "Invalid schedule ID." 
@@ -2494,11 +2514,11 @@ Description: The request did not include any valid data for updating the schedul
 }
 ```
 
-Description: The request did not include any valid fields for updating the schedule. All fields provided in the request were either undefined or missing, resulting in no changes being applied to the schedule.
+Description: The request did not include any valid fields for updating the schedule. All fields provided in the request were either undefined or missing.
 
 ```
 { 
-    "message": "No changes applied to the schedule." 
+    "message": "All fields are required."
 }
 ```
 
