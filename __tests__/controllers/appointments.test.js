@@ -33,7 +33,7 @@ describe('Appointment controller', () => {
 			body: {},
 			client: { clientId: 1, role: 'PATIENT' },
 		};
-		res = { status: jest.fn().mockReturnThis, json: jest.fn() };
+		res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 		next = jest.fn();
 		mockAppointmentData = {
 			clientId: 1,
