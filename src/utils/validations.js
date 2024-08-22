@@ -254,9 +254,7 @@ const validateUpdatingScheduleInput = (updatedData) => {
 
 	// Check for missing parameters
 	if (!scheduleDay || !startTime || !endTime) {
-		throw new ValidationError(
-			'All fields are required.'
-		);
+		throw new ValidationError('All fields are required.');
 	}
 };
 
@@ -319,5 +317,5 @@ module.exports = {
 	validateUpdatingScheduleInput,
 	validateClientDeletion,
 	validateCreatingDoctorInput,
-	validateUpdatingDoctorInput
+	validateUpdatingDoctorInput,
 };
