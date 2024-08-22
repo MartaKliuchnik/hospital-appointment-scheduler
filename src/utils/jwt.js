@@ -71,15 +71,18 @@ function createJWT(header, payload, secret) {
  * @returns {Object|null} -  The decoded payload if the token is valid, otherwise null.
  */
 function verifyJWT(token, secret) {
+	if (!token) return null;
+
 	const [encodedHeader, encodedPayload, signature] = token.split('.');
+	if (!encodedHeader || !encodedPayload || !signature) return null;
+
 	const data = `${encodedHeader}.${encodedPayload}`;
 	const expectedSignature = replaceSpecialChars(
 		crypto.createHmac('sha256', secret).update(data).digest('base64')
 	);
+	if (signature !== expectedSignature) return null;
 
-	return signature === expectedSignature
-		? JSON.parse(Buffer.from(encodedPayload, 'base64').toString())
-		: null;
+	return JSON.parse(Buffer.from(encodedPayload, 'base64').toString());
 }
 
 module.exports = { createJWT, verifyJWT };
