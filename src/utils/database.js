@@ -38,7 +38,7 @@ const executeSqlFile = async (filePath) => {
 			await promisePool.execute(command);
 		}
 	} catch (error) {
-		console.error('Error executing SQL file:', error.message);
+		// console.error('Error executing SQL file:', error.message);
 		throw new Error('Failed to execute SQL file');
 	}
 };
@@ -64,7 +64,7 @@ const createDatabase = async () => {
 
 		console.log('Database and tables created successfully.');
 	} catch (err) {
-		console.error('Error creating database and tables:', err.message);
+		// console.error('Error creating database and tables:', err.message);
 		throw err; // Re-throw the error to ensure the server does not start if database setup fails
 	}
 };
