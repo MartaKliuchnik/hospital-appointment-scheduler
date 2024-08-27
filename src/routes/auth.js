@@ -18,4 +18,11 @@ router.post('/login', authController.postLogin);
  */
 router.post('/register', authController.postRegister);
 
+/**
+ * @route DELETE /api/v1/auth/logout
+ * @description Log out the user and invalidate the session/token
+ * @access Private
+ */
+router.delete('/logout', authController.logout);
+
 module.exports = router;

@@ -11,6 +11,7 @@ const {
 	ConflictError,
 } = require('../utils/customErrors');
 const { sendSuccessResponse } = require('../utils/responseHandlers');
+const { pool } = require('../utils/database');
 
 /**
  * Handle login requests.
@@ -36,7 +37,8 @@ exports.postLogin = async (req, res, next) => {
 			throw new AuthenticationError('Incorrect email or password.');
 		}
 
-		const token = client.createAuthToken();
+		await checkExistingSession(client.clientId);
+		const token = await createAndStoreSession(client);
 
 		sendSuccessResponse(res, 200, 'User logged successfully.', {
 			token,
@@ -53,6 +55,61 @@ exports.postLogin = async (req, res, next) => {
 				new DatabaseError('An unexpected error occurred during login.', error)
 			);
 		}
+	}
+};
+
+/**
+ * Check if an existing session already exists for the client.
+ * @param {*} clientId - The ID of the client to check for an existing session.
+ * @returns {Promise<void>} - Resolves if no existing session is found; otherwise, throws an AuthenticationError.
+ */
+async function checkExistingSession(clientId) {
+	const queryGetExistedClient =
+		'SELECT sessionId FROM session WHERE clientId = ?';
+
+	const existingSession = await pool.execute(queryGetExistedClient, [clientId]);
+	if (existingSession[0].length > 0) {
+		throw new AuthenticationError('You are already logged in.');
+	}
+}
+
+/**
+ * Create and store a new session for the client.
+ * @param {object} client - The client object containing the client's details.
+ * @returns {Promise<string>} - The authentication token created and stored in the session.
+ */
+async function createAndStoreSession(client) {
+	const token = client.createAuthToken();
+
+	const query = `INSERT INTO session (clientId, token, expiresAt) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))`;
+	// Store the token in the session table
+	await pool.execute(query, [client.clientId, token]);
+
+	return token;
+}
+
+/**
+ * Handle user logout requests.
+ * @param {*} req - The request object, containing the authorization token in the headers.
+ * @param {*} res - The response object.
+ * @param {*} next - The next middleware function.
+ * @returns {Promise<void>} - Sends a JSON response with a success message if the logout is successful, or an error message if not.
+ */
+exports.logout = async (req, res, next) => {
+	const token = req.headers.authorization?.split(' ')[1];
+
+	if (!token) {
+		return next(new AuthenticationError('No token provided.'));
+	}
+
+	console.log(token);
+	try {
+		await pool.execute('DELETE FROM session WHERE token = ?', [token]);
+		sendSuccessResponse(res, 200, 'User logged out successfully.');
+	} catch (error) {
+		next(
+			new DatabaseError('An unexpected error occurred during logout.', error)
+		);
 	}
 };
 

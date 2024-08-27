@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS schedule (
     scheduleDay ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY') NOT NULL,
     startTime TIME NOT NULL,
     endTime TIME NOT NULL,
-    FOREIGN KEY (doctorId) REFERENCES doctor(doctorId)
+    FOREIGN KEY (doctorId) REFERENCES doctor(doctorId) 
 );
 
 CREATE TABLE IF NOT EXISTS appointment (
@@ -36,5 +36,14 @@ CREATE TABLE IF NOT EXISTS appointment (
     deletedAt DATETIME DEFAULT NULL,
     FOREIGN KEY (doctorId) REFERENCES doctor(doctorId),
     FOREIGN KEY (clientId) REFERENCES client(clientId)
+);
+
+CREATE TABLE IF NOT EXISTS session (
+    sessionId INT AUTO_INCREMENT PRIMARY KEY,
+    clientId INT NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expiresAt DATETIME DEFAULT NULL,
+    FOREIGN KEY (clientId) REFERENCES client(clientId) ON DELETE CASCADE
 );
 

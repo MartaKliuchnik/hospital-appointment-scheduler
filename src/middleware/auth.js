@@ -22,7 +22,7 @@ exports.checkAuth = (req, res, next) => {
 
 		if (!decodedPayload) {
 			req.client = null; // Set req.client to null if invalid token
-			return next(); 
+			return next();
 		}
 
 		req.client = {
@@ -34,7 +34,7 @@ exports.checkAuth = (req, res, next) => {
 		next();
 	} catch (error) {
 		console.error('Token verification error:', error);
-		req.client = null; 
+		req.client = null;
 		next();
 	}
 };
