@@ -37,11 +37,11 @@ exports.postLogin = async (req, res, next) => {
 			throw new AuthenticationError('Incorrect email or password.');
 		}
 
-		await checkExistingSession(client.clientId);
-		const token = await createAndStoreSession(client);
+		const { token, refreshToken } = await handleSession(client);
 
 		sendSuccessResponse(res, 200, 'User logged successfully.', {
 			token,
+			refreshToken,
 			client: client.toSafeObject(),
 		});
 	} catch (error) {
@@ -59,17 +59,44 @@ exports.postLogin = async (req, res, next) => {
 };
 
 /**
- * Check if an existing session already exists for the client.
- * @param {*} clientId - The ID of the client to check for an existing session.
- * @returns {Promise<void>} - Resolves if no existing session is found; otherwise, throws an AuthenticationError.
+ * Handle the session management for a client, either refreshing an existing session or creating a new one.
+ * @param {object} client - The client object containing the client's details.
+ * @returns {Promise<string>} - Returns the refreshed or newly created session token.
  */
-async function checkExistingSession(clientId) {
-	const queryGetExistedClient =
-		'SELECT sessionId FROM session WHERE clientId = ?';
+async function handleSession(client) {
+	const existingSession = await getExistingSession(client.clientId);
 
-	const existingSession = await pool.execute(queryGetExistedClient, [clientId]);
-	if (existingSession[0].length > 0) {
-		throw new AuthenticationError('You are already logged in.');
+	if (existingSession) {
+		return refreshSession(existingSession.sessionId, client);
+	} else {
+		return createNewSession(client);
+	}
+}
+
+/**
+ * Check if an existing session already exists for the client.
+ * @param {number} clientId - The ID of the client to check for an existing session.
+ * @returns {Promise<object|null>} - Returns the existing session object if found; otherwise, returns null.
+ */
+async function getExistingSession(clientId) {
+	const columns = [
+		'sessionId',
+		'clientId',
+		'token',
+		'tokenExpiresAt',
+		'refreshToken',
+		'refreshTokenExpiresAt',
+	];
+	const queryGetExistingSession = `SELECT ${columns.join(
+		', '
+	)} FROM session WHERE clientId = ? AND tokenExpiresAt > NOW()`;
+
+	try {
+		const [sessions] = await pool.execute(queryGetExistingSession, [clientId]);
+		return sessions[0] || null;
+	} catch (error) {
+		console.error('Error retrieving existing session:', error);
+		throw new DatabaseError('Failed to retrieve session.');
 	}
 }
 
@@ -78,14 +105,43 @@ async function checkExistingSession(clientId) {
  * @param {object} client - The client object containing the client's details.
  * @returns {Promise<string>} - The authentication token created and stored in the session.
  */
-async function createAndStoreSession(client) {
+async function createNewSession(client) {
 	const token = client.createAuthToken();
+	const refreshToken = client.createRefreshToken();
 
-	const query = `INSERT INTO session (clientId, token, expiresAt) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))`;
-	// Store the token in the session table
-	await pool.execute(query, [client.clientId, token]);
+	try {
+		const query = `INSERT INTO session (clientId, token, refreshToken, tokenExpiresAt, refreshTokenExpiresAt) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR), DATE_ADD(NOW(), INTERVAL 7 DAY))`;
+		await pool.execute(query, [client.clientId, token, refreshToken]);
 
-	return token;
+		return { token, refreshToken };
+	} catch (error) {
+		console.error('Error creating and storing a new session:', error);
+		throw new DatabaseError('Failed to create and store a new session.');
+	}
+}
+
+/**
+ * Refresh the session by updating the access token and refresh token.
+ * @param {number} sessionId - The session ID.
+ * @param {object} client - The client object containing the client's details.
+ * @returns {Promise<object>} - The new tokens generated.
+ */
+async function refreshSession(sessionId, client) {
+	const newToken = client.createAuthToken();
+	const newRefreshToken = client.createRefreshToken();
+
+	try {
+		const query = `UPDATE session SET token = ?, refreshToken = ?, tokenExpiresAt = DATE_ADD(NOW(), INTERVAL 1 HOUR), refreshTokenExpiresAt = DATE_ADD(NOW(), INTERVAL 7 DAY) WHERE sessionId = ?`;
+		await pool.execute(query, [newToken, newRefreshToken, sessionId]);
+
+		return { token: newToken, refreshToken: newRefreshToken };
+	} catch (error) {
+		console.error(
+			'Error updating existing access token and refresh token:',
+			error
+		);
+		throw new DatabaseError('Failed to update access token and refresh token.');
+	}
 }
 
 /**
@@ -102,7 +158,6 @@ exports.logout = async (req, res, next) => {
 		return next(new AuthenticationError('No token provided.'));
 	}
 
-	console.log(token);
 	try {
 		await pool.execute('DELETE FROM session WHERE token = ?', [token]);
 		sendSuccessResponse(res, 200, 'User logged out successfully.');

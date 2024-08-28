@@ -82,7 +82,11 @@ function verifyJWT(token, secret) {
 	);
 	if (signature !== expectedSignature) return null;
 
-	return JSON.parse(Buffer.from(encodedPayload, 'base64').toString());
+	const payload = JSON.parse(Buffer.from(encodedPayload, 'base64').toString());
+	const currentTime = Math.floor(Date.now() / 1000);
+	if (payload.exp < currentTime) return null;
+
+	return payload;
 }
 
 module.exports = { createJWT, verifyJWT };

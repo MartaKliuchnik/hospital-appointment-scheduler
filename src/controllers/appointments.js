@@ -36,6 +36,12 @@ exports.createAppointment = async (req, res, next) => {
 	const clientRole = req.client?.role;
 
 	try {
+		if (!req.client) {
+			throw new AuthenticationError(
+				'Authentication required to create an appointment.'
+			);
+		}
+
 		await validateAppointmentCreation(
 			clientId,
 			doctorId,

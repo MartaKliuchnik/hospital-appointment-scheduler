@@ -226,6 +226,7 @@ module.exports = class Client {
 			lastName: this.lastName,
 			role: this.role,
 			iat: Math.floor(Date.now() / 1000),
+			exp: Math.floor(Date.now() / 1000) + 60 * 60,
 		};
 
 		try {
@@ -237,6 +238,30 @@ module.exports = class Client {
 		} catch (error) {
 			// console.error('JWT creation error:', error);
 			throw new DatabaseError('Error creating authentication token.');
+		}
+	}
+
+	/**
+	 * Create a refresh token (JWT) for a given client.
+	 * @returns {string} - The created refresh token.
+	 * @throws {Error} - Throws an error if token creation fails.
+	 */
+	createRefreshToken() {
+		const payload = {
+			clientId: this.clientId,
+			iat: Math.floor(Date.now() / 1000),
+			exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+		};
+
+		try {
+			return createJWT(
+				{ alg: 'HS256', typ: 'JWT' },
+				payload,
+				process.env.JWT_SECRET_REFRESH
+			);
+		} catch (error) {
+			// console.error('JWT creation error:', error);
+			throw new DatabaseError('Error creating refresh token.');
 		}
 	}
 

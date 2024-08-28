@@ -1,4 +1,6 @@
-const { verifyJWT } = require('../utils/jwt');
+const Client = require('../models/client');
+const { pool } = require('../utils/database');
+const { verifyJWT, createJWT } = require('../utils/jwt');
 
 /**
  * Middleware to check the authentication of a request.
@@ -8,7 +10,7 @@ const { verifyJWT } = require('../utils/jwt');
  * @returns {void} - This middleware does not return a value.
  * @throws {Error} - If there is an error during token verification or if the token is missing/invalid.
  */
-exports.checkAuth = (req, res, next) => {
+exports.checkAuth = async (req, res, next) => {
 	const token = req.headers.authorization?.split(' ')[1];
 
 	if (!token) {
@@ -18,11 +20,37 @@ exports.checkAuth = (req, res, next) => {
 
 	try {
 		const secret = process.env.JWT_SECRET;
-		const decodedPayload = verifyJWT(token, secret);
+		let decodedPayload = verifyJWT(token, secret);
 
 		if (!decodedPayload) {
-			req.client = null; // Set req.client to null if invalid token
-			return next();
+			// Access token is invalid or expired, check for session and refresh token
+			const session = await findSessionByToken(token);
+
+			if (
+				session &&
+				new Date() + 'Z' < new Date(session?.refreshTokenExpiresAt)
+			) {
+				// Refresh token is valid; generate a new access token
+				const clientId = session.clientId;
+				const client = await Client.findById(clientId);
+
+				const newAccessToken = client.createAuthToken();
+
+				// Update session with new access token
+				await updateSessionToken(session.sessionId, newAccessToken);
+
+				// Set new access token in response header
+				res.setHeader('Authorization', `Bearer ${newAccessToken}`);
+				decodedPayload = verifyJWT(newAccessToken, secret);
+			} else {
+				// Refresh token is invalid or expired, invalidate session
+				// await pool.execute(
+				// 	'DELETE FROM session WHERE sessionId = ?',
+				// 	session?.sessionId
+				// );
+				req.client = null;
+				return next();
+			}
 		}
 
 		req.client = {
@@ -38,3 +66,37 @@ exports.checkAuth = (req, res, next) => {
 		next();
 	}
 };
+
+/**
+ * Find the session by access token.
+ * @param {string} token - The access token.
+ * @returns {Promise<object|null>} - Returns the session if found, null otherwise.
+ */
+async function findSessionByToken(token) {
+	const columns = [
+		'sessionId',
+		'clientId',
+		'token',
+		'tokenExpiresAt',
+		'refreshToken',
+		'refreshTokenExpiresAt',
+	];
+	const [session] = await pool.execute(
+		`SELECT ${columns.join(', ')} FROM session WHERE token = ?`,
+		[token]
+	);
+
+	return session[0] || null;
+}
+
+/**
+ * Update the session with a new access token.
+ * @param {number} sessionId - The session ID.
+ * @param {string} newToken - The new access token.
+ * @returns {Promise<void>}
+ */
+async function updateSessionToken(sessionId, newToken) {
+	const query =
+		'UPDATE session SET token = ?, tokenExpiresAt = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE sessionId = ?';
+	await pool.execute(query, [newToken, sessionId]);
+}
