@@ -30,7 +30,7 @@ jest.mock('../../src/utils/jwt', () => ({
  * Includes methods for registering, validating email, and constructing Client instances.
  */
 describe('Client Model', () => {
-	let mockClientData;
+	let mockClientData, mockConnection;
 	beforeEach(() => {
 		mockClientData = {
 			clientId: 1,

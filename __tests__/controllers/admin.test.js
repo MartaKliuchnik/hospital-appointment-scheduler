@@ -44,7 +44,7 @@ describe('Admin contoroller', () => {
 			jest.clearAllMocks(); // Clears all mocks after each test
 		});
 
-		it('should update user role successfully ', async () => {
+		it('should update user role successfully', async () => {
 			const clientId = 1;
 			const newRole = Role.ADMIN;
 			req.params = { clientId };

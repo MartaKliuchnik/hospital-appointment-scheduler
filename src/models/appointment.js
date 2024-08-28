@@ -92,16 +92,11 @@ module.exports = class Appointment {
 			', '
 		)} FROM appointment WHERE appointmentId = ?`;
 
-		try {
-			const [results] = await pool.execute(querySelectAppointment, [
-				appointmentId,
-			]);
+		const [results] = await pool.execute(querySelectAppointment, [
+			appointmentId,
+		]);
 
-			return results.length > 0 ? results[0] : null;
-		} catch (error) {
-			// console.error('Error retrieving appointment:', error);
-			throw error;
-		}
+		return results.length > 0 ? results[0] : null;
 	}
 
 	/**

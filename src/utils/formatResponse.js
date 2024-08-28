@@ -21,10 +21,11 @@ const formatClientAppointmentsResponse = (serverResponse) => {
 const formatSingleAppointment = (appointment) => {
 	const { clientId, ...formattedAppointment } =
 		Appointment.formatAppointmentResponse(appointment);
+	console.log(`Client ID: ${clientId}`);
 	return formattedAppointment;
 };
 
-/**
+/**s
  * Transforms the doctor schedule data by removing redundant doctorId information from individual schedules.
  * @param {Array} serverResponse - The server response containing doctor schedules.
  * @returns {Object} - A new object with the doctor ID and a formatted list of schedules.
@@ -45,6 +46,7 @@ const formatDoctorScheduleResponse = (serverResponse) => {
  */
 const formatSingleSchedule = (schedule) => {
 	const { doctorId, ...formattedSchedule } = schedule;
+	console.log(`Doctor ID: ${doctorId}`);
 	return formattedSchedule;
 };
 

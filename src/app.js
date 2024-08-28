@@ -1,10 +1,8 @@
 const express = require('express');
-const path = require('path');
 require('dotenv').config();
 
 const authMiddleware = require('./middleware/auth');
 
-const rootDir = require('./utils/path');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments');
 const doctorRoutes = require('./routes/doctors');

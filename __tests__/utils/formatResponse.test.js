@@ -3,7 +3,6 @@ const Appointment = require('../../src/models/appointment');
 const {
 	formatClientAppointmentsResponse,
 	formatDoctorScheduleResponse,
-	formatSingleSchedule,
 } = require('../../src/utils/formatResponse');
 
 // Mock the Appointment.formatAppointmentResponse method

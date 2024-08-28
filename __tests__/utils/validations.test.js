@@ -85,7 +85,7 @@ describe('Validations', () => {
 			jest.clearAllMocks();
 		});
 
-		it('should throw ValidationError if any field is missing', () => {
+		it('should throw ValidationError if any field is missing', async () => {
 			const invalidInputs = [
 				{ ...validInput, firstName: '' },
 				{ ...validInput, lastName: '' },
@@ -96,7 +96,7 @@ describe('Validations', () => {
 
 			for (const input of invalidInputs) {
 				// Expect ValidationError to be thrown when any field is an empty string
-				expect(
+				await expect(
 					validateRegistrationInput(
 						input.firstName,
 						input.lastName,
@@ -108,11 +108,11 @@ describe('Validations', () => {
 			}
 		});
 
-		it('should throw ValidationError if email is invalid', () => {
+		it('should throw ValidationError if email is invalid', async () => {
 			Client.validateEmail.mockReturnValue(false); // Mock email validation failure
 
 			// Expect ValidationError with a specific message when the email is invalid
-			expect(
+			await expect(
 				validateRegistrationInput(
 					validInput.firstName,
 					validInput.lastName,
@@ -125,12 +125,12 @@ describe('Validations', () => {
 			expect(Client.validateEmail).toHaveBeenCalledWith('invalid-email');
 		});
 
-		it('should throw ValidationError if phone number is invalid', () => {
+		it('should throw ValidationError if phone number is invalid', async () => {
 			Client.validateEmail.mockReturnValue(true); // Mock email validation success
 			Client.validatePhone.mockReturnValue(false); // Mock phone number validation failure
 
 			// Expect ValidationError with a specific message when the phone number is invalid
-			expect(
+			await expect(
 				validateRegistrationInput(
 					validInput.firstName,
 					validInput.lastName,
@@ -220,18 +220,18 @@ describe('Validations', () => {
 
 	// Tests for appointment creation validation
 	describe('Validation of appointment creation', () => {
-		it('should throw AuthenticationError if clientId is missing', () => {
+		it('should throw AuthenticationError if clientId is missing', async () => {
 			// Expect an AuthenticationError if clientId is not provided
-			expect(
+			await expect(
 				validateAppointmentCreation(null, 1, '2024-08-17 10:00:00', 'PATIENT')
 			).rejects.toThrow(
 				new AuthenticationError('Authentication failed: Missing client ID.')
 			);
 		});
 
-		it('should throw ValidationError if doctorId is missing', () => {
+		it('should throw ValidationError if doctorId is missing', async () => {
 			// Expect a ValidationError if doctorId is not provided
-			expect(
+			await expect(
 				validateAppointmentCreation(1, null, '2024-08-17 10:00:00', 'PATIENT')
 			).rejects.toThrow(
 				new ValidationError(
@@ -240,9 +240,11 @@ describe('Validations', () => {
 			);
 		});
 
-		it('should throw ValidationError if appointmentTime is missing', () => {
+		it('should throw ValidationError if appointmentTime is missing', async () => {
 			// Expect a ValidationError if appointmentTime is not provided
-			expect(validateAppointmentCreation(1, 1, '', 'PATIENT')).rejects.toThrow(
+			await expect(
+				validateAppointmentCreation(1, 1, '', 'PATIENT')
+			).rejects.toThrow(
 				new ValidationError(
 					'Invalid request: doctorId and appointmentTime are required parameters.'
 				)
@@ -268,13 +270,13 @@ describe('Validations', () => {
 			).rejects.toThrow(new NotFoundError('Doctor not found.'));
 		});
 
-		it('should throw ValidationError if appointment time is invalid', () => {
+		it('should throw ValidationError if appointment time is invalid', async () => {
 			Client.findById.mockResolvedValue(mockClient); // Mock client found
 			Doctor.getById.mockResolvedValue(mockDoctor); // Mock doctor found
 			Appointment.isValidAppointmentTime.mockReturnValue(false); // Mock invalid appointment time
 
 			// Expect a ValidationError if the appointment time is not valid
-			expect(
+			await expect(
 				validateAppointmentCreation(1, 1, '2024-08-17 10:00:00', 'PATIENT')
 			).rejects.toThrow(
 				new ValidationError(
@@ -283,13 +285,13 @@ describe('Validations', () => {
 			);
 		});
 
-		it('should not throw ValidationError with valid input', () => {
+		it('should not throw ValidationError with valid input', async () => {
 			Client.findById.mockResolvedValue(mockClient); // Mock client found
 			Doctor.getById.mockResolvedValue(mockDoctor); // Mock doctor found
 			Appointment.isValidAppointmentTime.mockReturnValue(true); // Mock valid appointment time
 
 			// Expect no error to be thrown with valid clientId, doctorId, appointmentTime, and clientRole
-			expect(
+			await expect(
 				validateAppointmentCreation(1, 1, '2024-08-17 10:00:00', 'PATIENT')
 			).resolves.not.toThrow();
 		});
@@ -340,9 +342,11 @@ describe('Validations', () => {
 
 	// Tests for appointment deletion validation
 	describe('Validation of appointment deletion', () => {
-		it('should throw AuthenticationError if clientId is missing', () => {
+		it('should throw AuthenticationError if clientId is missing', async () => {
 			// Expect AuthenticationError if clientId is not provided
-			expect(validateAppointmentDeletion(3, null, 'PATIENT')).rejects.toThrow(
+			await expect(
+				validateAppointmentDeletion(3, null, 'PATIENT')
+			).rejects.toThrow(
 				new AuthenticationError('Authentication failed: Missing client ID.')
 			);
 		});
@@ -409,12 +413,12 @@ describe('Validations', () => {
 			).rejects.toThrow(new NotFoundError("Appointment doesn't exist."));
 		});
 
-		it('should throw ValidationError if appointment time is invalid', () => {
+		it('should throw ValidationError if appointment time is invalid', async () => {
 			Appointment.getAppointmentById.mockResolvedValue(mockAppointment); // Mock appointment found
 			Appointment.isValidAppointmentTime.mockReturnValue(false); // Mock invalid appointment time
 
 			// Expect ValidationError if the appointment time is invalid
-			expect(
+			await expect(
 				validateAppointmentUpdate(3, 2, 'invalid', 'PATIENT')
 			).rejects.toThrow(
 				new ValidationError(
@@ -426,9 +430,9 @@ describe('Validations', () => {
 
 	// Tests for ID validation functions
 	describe('Validation of IDs', () => {
-		it('should throw ValidationError if doctorId is not a valid number', () => {
+		it('should throw ValidationError if doctorId is not a valid number', async () => {
 			// Expect ValidationError if doctorId is invalid
-			expect(() => validateDoctorId('invalidDoctorId')).toThrow(
+			await expect(() => validateDoctorId('invalidDoctorId')).toThrow(
 				new ValidationError('Invalid doctor ID.')
 			);
 		});
@@ -555,12 +559,12 @@ describe('Validations', () => {
 
 	// Tests for validation of client deletion
 	describe('Validation of client deletion', () => {
-		it('should throw ValidationError if clientId is missing or invalid', () => {
+		it('should throw ValidationError if clientId is missing or invalid', async () => {
 			// Expect ValidationError if clientId is invalid or missing
-			expect(validateClientDeletion('invalid')).rejects.toThrow(
+			await expect(validateClientDeletion('invalid')).rejects.toThrow(
 				new ValidationError('Invalid client ID.')
 			);
-			expect(validateClientDeletion(undefined)).rejects.toThrow(
+			await expect(validateClientDeletion(undefined)).rejects.toThrow(
 				new ValidationError('Invalid client ID.')
 			);
 		});

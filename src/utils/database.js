@@ -37,8 +37,7 @@ const executeSqlFile = async (filePath) => {
 		for (const command of commands) {
 			await promisePool.execute(command);
 		}
-	} catch (error) {
-		// console.error('Error executing SQL file:', error.message);
+	} catch {
 		throw new Error('Failed to execute SQL file');
 	}
 };
@@ -49,24 +48,19 @@ const executeSqlFile = async (filePath) => {
  * @throws {Error} - Throws an error if database creation or schema setup fails.
  */
 const createDatabase = async () => {
-	try {
-		// Create the database if it doesn't exist
-		await promisePool.execute(
-			'CREATE DATABASE IF NOT EXISTS hospitalAppointmentScheduler'
-		);
+	// Create the database if it doesn't exist
+	await promisePool.execute(
+		'CREATE DATABASE IF NOT EXISTS hospitalAppointmentScheduler'
+	);
 
-		// Use the created database
-		await promisePool.query('USE hospitalAppointmentScheduler');
+	// Use the created database
+	await promisePool.query('USE hospitalAppointmentScheduler');
 
-		// Execute SQL schema file
-		const schemaFilePath = path.join(__dirname, '..', '../01-schema.sql');
-		await executeSqlFile(schemaFilePath);
+	// Execute SQL schema file
+	const schemaFilePath = path.join(__dirname, '..', '../01-schema.sql');
+	await executeSqlFile(schemaFilePath);
 
-		console.log('Database and tables created successfully.');
-	} catch (err) {
-		// console.error('Error creating database and tables:', err.message);
-		throw err; // Re-throw the error to ensure the server does not start if database setup fails
-	}
+	console.log('Database and tables created successfully.');
 };
 
 module.exports = {

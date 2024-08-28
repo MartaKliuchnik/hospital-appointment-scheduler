@@ -12,7 +12,6 @@ const {
 	DatabaseError,
 	AuthorizationError,
 } = require('../../src/utils/customErrors');
-const { createTestAppointment } = require('../../src/utils/testHelpers');
 
 // Mock dependencies to isolate unit tests
 jest.mock('../../src/utils/responseHandlers'); // Controls response handling

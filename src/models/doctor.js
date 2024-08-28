@@ -47,7 +47,7 @@ module.exports = class Doctor {
 
 			this.doctorId = result.insertId;
 			return this.doctorId;
-		} catch (error) {
+		} catch {
 			// console.error('Error inserting doctor:', error);
 			throw new DatabaseError('Failed to insert doctor.');
 		}
@@ -74,7 +74,7 @@ module.exports = class Doctor {
 		try {
 			const [results] = await pool.execute(querySelectDoctors);
 			return results.length > 0 ? results : [];
-		} catch (error) {
+		} catch {
 			// console.error('Error retrieving doctors:', error);
 			throw new DatabaseError('Failed to retrieve doctors.');
 		}
@@ -104,7 +104,7 @@ module.exports = class Doctor {
 		try {
 			const [results] = await pool.execute(querySelectDoctorById, [doctorId]);
 			return results.length > 0 ? results[0] : null;
-		} catch (error) {
+		} catch {
 			// console.error('Error retrieving doctor:', error);
 			throw new DatabaseError('Failed to retrieve doctor.');
 		}
@@ -199,7 +199,7 @@ module.exports = class Doctor {
 		try {
 			const [results] = await pool.execute(query, [doctorId]);
 			return results[0].count > 0 ? results[0] : null;
-		} catch (error) {
+		} catch {
 			// console.error('Error checking doctor appointments:', error);
 			throw new DatabaseError('Failed to check doctor appointments.');
 		}
@@ -236,7 +236,7 @@ module.exports = class Doctor {
 				specialization,
 			]);
 			return result.length > 0 ? new Doctor(result[0]) : null;
-		} catch (error) {
+		} catch {
 			throw new DatabaseError(
 				'Failed to retrieve doctor by name and specialization.'
 			);

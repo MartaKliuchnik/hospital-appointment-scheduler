@@ -8,7 +8,6 @@ const {
 	ValidationError,
 	DatabaseError,
 } = require('../../src/utils/customErrors');
-const Role = require('../../src/enums/Role');
 
 // Mock dependencies to isolate unit tests
 jest.mock('../../src/utils/responseHandlers'); // Controls response handling
@@ -21,7 +20,7 @@ jest.mock('../../src/utils/validations'); // Simulates validation outcomes
  * This suite tests functionalities like updating, deleting, and retrieving schedules.
  */
 describe('Schedule controller', () => {
-	let res, req, next, mockDoctorData;
+	let res, req, next, mockScheduleData;
 
 	beforeEach(() => {
 		req = { params: {}, body: {}, client: {} };
@@ -471,7 +470,6 @@ describe('Schedule controller', () => {
 				'All fields are required.'
 			);
 		});
-
 
 		it('should throw NotFoundError when no changes applied to the schedule', async () => {
 			req.params.scheduleId = 1;

@@ -357,7 +357,7 @@ describe('Appointment Model', () => {
 			expect(mockConnection.rollback).toHaveBeenCalled();
 		});
 
-		it('should throw ValidationError if the selected appointment time is not available', async () => {
+		it('should throw ValidationError if no changes were made to the appointment', async () => {
 			// Mock getting the current appointment by ID
 			jest
 				.spyOn(Appointment, 'getAppointmentById')

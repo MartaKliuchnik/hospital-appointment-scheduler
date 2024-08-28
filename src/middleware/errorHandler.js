@@ -14,7 +14,7 @@ const { sendErrorResponse } = require('../utils/responseHandlers');
  * @param {function} next - The next middleware function.
  * @returns {void}
  */
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res) => {
 	console.error('Error:', err);
 
 	if (err instanceof ValidationError) {

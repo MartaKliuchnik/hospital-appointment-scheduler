@@ -46,7 +46,7 @@ module.exports = class Client {
 	 */
 	static validateEmail(email) {
 		const emailRegex =
-			/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+			/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 		return emailRegex.test(email);
 	}
 
@@ -70,8 +70,7 @@ module.exports = class Client {
 	async verifyPassword(inputPassword) {
 		try {
 			return await comparePassword(inputPassword, this.password);
-		} catch (error) {
-			// console.error('Password comparison error:', error);
+		} catch {
 			throw new DatabaseError('Error during authentication.');
 		}
 	}
@@ -98,8 +97,7 @@ module.exports = class Client {
 
 			this.clientId = client.insertId;
 			return this.clientId;
-		} catch (error) {
-			// console.error('Error registering client:', error);
+		} catch {
 			throw new DatabaseError('Failed to register client.');
 		}
 	}
@@ -139,8 +137,7 @@ module.exports = class Client {
 				clientData.clientId,
 				clientData.deletedAt
 			);
-		} catch (error) {
-			// console.error('Error finding client by email:', error);
+		} catch {
 			throw new DatabaseError('Failed to find client by email.');
 		}
 	}
@@ -180,8 +177,7 @@ module.exports = class Client {
 				clientData.clientId,
 				clientData.deletedAt
 			);
-		} catch (error) {
-			// console.error('Error finding client by id:', error);
+		} catch {
 			throw new DatabaseError('Failed to find client by ID.');
 		}
 	}
@@ -208,8 +204,7 @@ module.exports = class Client {
 		try {
 			const [results] = await pool.execute(querySelectClients);
 			return results.length > 0 ? results : [];
-		} catch (error) {
-			// console.error('Error retrieving clients:', error);
+		} catch {
 			throw new DatabaseError('Failed to retrieve clients.');
 		}
 	}
@@ -234,8 +229,7 @@ module.exports = class Client {
 				payload,
 				process.env.JWT_SECRET
 			);
-		} catch (error) {
-			// console.error('JWT creation error:', error);
+		} catch {
 			throw new DatabaseError('Error creating authentication token.');
 		}
 	}
@@ -282,8 +276,7 @@ module.exports = class Client {
 			}
 
 			return false;
-		} catch (error) {
-			// console.error('Error updating user role:', error);
+		} catch {
 			throw new DatabaseError('Failed to update user role.');
 		}
 	}
@@ -325,8 +318,7 @@ module.exports = class Client {
 				clientData.clientId,
 				clientData.deletedAt
 			);
-		} catch (error) {
-			// console.error('Error finding client by phone number:', error);
+		} catch {
 			throw new DatabaseError('Failed to find client by phone number.');
 		}
 	}

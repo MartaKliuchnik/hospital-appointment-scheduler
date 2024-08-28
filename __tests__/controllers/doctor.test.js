@@ -1,7 +1,5 @@
 const doctorController = require('../../src/controllers/doctors');
 const Doctor = require('../../src/models/doctor');
-const Appointment = require('../../src/models/appointment');
-const { pool } = require('../../src/utils/database');
 const Role = require('../../src/enums/Role');
 const responseHandlers = require('../../src/utils/responseHandlers');
 const {
@@ -516,5 +514,4 @@ describe('Doctor controller', () => {
 			expect(next).toHaveBeenCalledWith(expect.any(DatabaseError));
 		});
 	});
-
 });
