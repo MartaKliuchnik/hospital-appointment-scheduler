@@ -44,7 +44,7 @@
    - Endpoint **/api/v1/schedules/doctor-schedule/:doctorId**
 
 6. [Install](#install)
-7. [Running in Docker ContainerRun](#running-in-docker-container)
+7. [Run the application](#run-the-application)
 
 ## Description
 
@@ -2585,7 +2585,7 @@ request.
 
 ## Install
 
-1. Clone current repository into a your directory:
+#### 1. Clone current repository into a your directory:
 
 ```
 
@@ -2593,7 +2593,7 @@ git clone https://github.com/MartaKliuchnik/hospital-appointment-scheduler.git
 
 ```
 
-2. Switch to project folder:
+#### 2. Switch to project folder:
 
 ```
 
@@ -2601,7 +2601,7 @@ cd hospital-appointment-scheduler
 
 ```
 
-3. Install the dependencies:
+#### 3. Install the dependencies:
 
 ```
 
@@ -2609,24 +2609,73 @@ npm install
 
 ```
 
-## Running in Docker Container
+## Run the application 
 
-To run the application in a Docker container, you should have Docker installed
-on your system. Use the following commands:
+To run the Hospital Appointment Scheduler application in a Docker container, ensure that Docker and Docker Compose are installed on your system.
 
-1. Build and run the application:
+### 1. Using Docker Compose
+
+#### Step 1: Build and run the application
+With the repository cloned and your terminal in the project directory, start the application by running:
 
 ```
-
 docker compose up
+```
+This command will build and start all the services defined in the docker-compose.yml file.
+
+#### Step 2: Access the application
+Once the containers are running, you can access the API at:
+
+`http://localhost:8080/api/v1/`
+
+Note: Ensure that your MySQL database is correctly set up and accessible according to the configuration in your docker-compose.yml.
+
+#### Step 3: Stop the application
+When you’re finished, stop the application and clean up the resources by running:
 
 ```
-
-2. Stop the application
-
-```
-
 docker compose down
+```
+This command will stop and remove the containers, networks, and volumes that were created by the docker-compose.yml file.
+
+### 2. Using docker pull and docker run
+
+#### Step 1: Pull the docker image
+Download the Docker image from Docker Hub:
 
 ```
+docker pull martakey/hospital-appointment-scheduler:latest
+```
+
+#### Step 2: Run the container
+Start the application by running the container with the following command:
+
+```
+docker run -p 8080:8080 \
+  -e DB_HOST=your_mysql_host \
+  -e DB_USER=your_db_user \
+  -e DB_PASSWORD=your_db_password \
+  -e DB_NAME=your_db_name \
+  martakey/hospital-appointment-scheduler:latest
+```
+Replace your_mysql_host, your_db_user, your_db_password, and your_db_name with your MySQL database credentials.
+
+#### Step 3: Access the application
+Once the containers are running, you can access the API at:
+
+`http://localhost:8080/api/v1/`
+
+#### Step 4: Stop the container
+To stop the container, find the container ID by running:
+
+```
+docker ps
+```
+
+Then stop it with:
+
+```
+docker stop container_id
+```
+Replace container_id with the actual ID of your running container.
 
